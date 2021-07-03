@@ -17,7 +17,7 @@ export async function prepareNewImport(shelf) {
         return;
 
     if (shelf === EVERYTHING) {
-        return backend.wipeEveritying();
+        return backend.wipeEverything();
     }
     else {
         shelf = await backend.queryShelf(shelf);

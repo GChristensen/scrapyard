@@ -1,3 +1,14 @@
+export const ENTITY_NODE = "nodes";
+export const ENTITY_BLOB = "blobs";
+export const ENTITY_INDEX = "index";
+export const ENTITY_NOTES = "notes";
+export const ENTITY_NOTES_INDEX = "index_notes";
+export const ENTITY_TAG = "tags";
+export const ENTITY_ICON = "icons";
+export const ENTITY_COMMENTS = "comments";
+export const ENTITY_COMMENTS_INDEX = "index_comments";
+export const ENTITY_EXPORT_ITEM = "export_storage";
+
 export const NODE_TYPE_SHELF = 1;
 export const NODE_TYPE_GROUP = 2;
 export const NODE_TYPE_BOOKMARK = 3;
@@ -55,10 +66,10 @@ export const DONE_SHELF_UUID = DONE_SHELF_NAME;
 export const EVERYTHING = "everything";
 
 export const DEFAULT_SHELF_NAME = "default";
-export const DEFAULT_SHELF_UUID = DEFAULT_SHELF_ID.toString();
+export const DEFAULT_SHELF_UUID = DEFAULT_SHELF_NAME;
 
 export const FIREFOX_SHELF_NAME = "firefox";
-export const FIREFOX_SHELF_UUID = "browser_bookmarks";
+export const FIREFOX_SHELF_UUID = FIREFOX_SHELF_NAME;
 export const FIREFOX_BOOKMARK_MENU = "menu________";
 export const FIREFOX_BOOKMARK_UNFILED = "unfiled_____";
 export const FIREFOX_BOOKMARK_TOOLBAR = "toolbar_____";
@@ -68,7 +79,7 @@ export const FIREFOX_SPECIAL_FOLDERS = [FIREFOX_BOOKMARK_MENU, FIREFOX_BOOKMARK_
 
 export const CLOUD_SHELF_NAME = "cloud";
 export const CLOUD_SHELF_UUID = CLOUD_SHELF_NAME;
-export const CLOUD_EXTERNAL_NAME = "cloud";
+export const CLOUD_EXTERNAL_NAME = CLOUD_SHELF_NAME;
 
 export const RDF_EXTERNAL_NAME = "rdf";
 
@@ -98,7 +109,7 @@ export const NODE_PROPERTIES =
      "has_comments",
      "external",
      "external_id",
-     "container",
+     "container", // tab cookie container id
      "content_type",
      "_uuid",
      "_unlisted"

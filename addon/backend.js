@@ -1,7 +1,6 @@
 import {settings} from "./settings.js"
-import {delegateProxy} from "./proxy.js";
 import IDBStorage from "./storage_idb.js";
-import LocalStorage from "./storage_local.js";
+import BookmarkStorage from "./storage_bookmarks.js";
 import {rdfBackend} from "./backend_rdf.js";
 import {cloudBackend} from "./backend_cloud.js";
 import {browserBackend} from "./backend_browser.js";
@@ -31,7 +30,6 @@ import {
 import {readBlob} from "./utils_io.js";
 import {getFavicon} from "./favicon.js";
 import {indexWords} from "./utils_html.js";
-import {notes2html} from "./notes_render.js";
 
 // a proxy class that calls handlers of the registered external backends if they are implemented
 // an external backend may have the "initialize" method which is called after the settings are loaded
@@ -78,7 +76,7 @@ class ExternalEventProvider {
     }
 }
 
-export class Backend extends LocalStorage {
+export class Backend extends BookmarkStorage {
 
     constructor() {
         super(IDBStorage.STORAGE_TYPE_ID);
@@ -870,7 +868,7 @@ export class Backend extends LocalStorage {
         //update.name = await this.ensureUnique(update.parent_id, update.name)
 
         update.tag_list = this._splitTags(update.tags);
-        this.addTags(update.tag_list);
+        //this.addTags(update.tag_list);
 
         await this.externalEvents.updateBookmark(update);
 
