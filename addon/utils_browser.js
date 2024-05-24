@@ -35,13 +35,19 @@ export const injectScriptFile = _MANIFEST_V3? injectScriptFileMV3: browser.tabs?
 
 async function scriptsAllowedMV3(tabId, frameId = 0) {
     try {
-        await browser.scripting.executeScript({
+        const scriptResult = await browser.scripting.executeScript({
             target: {tabId, frameIds: [frameId]},
             injectImmediately: true,
-            func: () => true,
+            // check if it is a builtin Firefox image page
+            func: () => document.head.querySelectorAll("link[href='resource://content-accessible/ImageDocument.css']")?.length,
         });
 
-        return true;
+        let isHTML = true;
+
+        if (scriptResult && scriptResult[0] && scriptResult[0].result > 0)
+            isHTML = false;
+
+        return isHTML;
     }
     catch (e) {}
 
@@ -50,12 +56,19 @@ async function scriptsAllowedMV3(tabId, frameId = 0) {
 
 async function scriptsAllowedMV2(tabId, frameId = 0) {
     try {
-        await browser.tabs.executeScript(tabId, {
+        const scriptResult = await browser.tabs.executeScript(tabId, {
             frameId: frameId,
             runAt: "document_start",
-            code: "true"
+            // check if it is a builtin Firefox image page
+            code: "document.head.querySelectorAll(\"link[href='resource://content-accessible/ImageDocument.css']\")?.length"
         });
-        return true;
+
+        let isHTML = true;
+
+        if (scriptResult && scriptResult[0] && scriptResult[0] > 0)
+            isHTML = false;
+
+        return isHTML;
     } catch (e) {}
 }
 

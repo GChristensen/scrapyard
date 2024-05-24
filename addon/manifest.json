@@ -1,52 +1,47 @@
 {
-    "version": "2.2",
-    "applications": {
-        "gecko": {
-            "id": "scrapyard@firefox",
-            "strict_min_version": "102.0"
-        }
-    },
-    "manifest_version": 2,
+    "version": "2.2.1",
+    "manifest_version": 3,
     "name": "Scrapyard",
     "description": "Advanced bookmark manager with page archiving functionality.",
-    "homepage_url": "https://gchristensen.github.io/#scrapyard",
+    "homepage_url": "https://gchristensen.github.io/scrapyard",
     "default_locale": "en",
     "icons": {
-        "16": "icons/scrapyard.svg",
-        "24": "icons/scrapyard.svg",
-        "32": "icons/scrapyard.svg",
-	    "64": "icons/scrapyard.svg",
-        "128": "icons/scrapyard.svg"
+        "16": "icons/logo16.png",
+        "24": "icons/logo24.png",
+        "32": "icons/logo32.png",
+        "96": "icons/logo96.png",
+        "128": "icons/logo128.png"
     },
-    "content_security_policy": "script-src 'self'; object-src 'self';",
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self';"
+    },
     "permissions": [
-        "<all_urls>",
         "tabs",
         "activeTab",
-        "tabHide",
         "alarms",
         "bookmarks",
-        "menus",
-        "contextMenus",
         "downloads",
         "nativeMessaging",
         "notifications",
         "storage",
         "unlimitedStorage",
         "webNavigation",
-        "webRequest",
-        "webRequestBlocking",
         "management",
-        "cookies",
-        "contextualIdentities"
+        "scripting",
+        "declarativeNetRequest"
     ],
-    "sidebar_action": {
-        "default_title": "Scrapyard",
-        "default_panel": "ui/sidebar.html",
-        "default_icon": "icons/scrapyard.svg"
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "declarative_net_request": {
+        "rule_resources": [{
+            "id": "ruleset_1",
+            "enabled": true,
+            "path": "net_rules.json"
+        }]
     },
     "commands": {
-        "_execute_sidebar_action": {
+        "toggle_sidebar_window": {
             "suggested_key": {
                 "default": "Alt+Y"
             },
@@ -66,12 +61,16 @@
         }
     },
     "background": {
-        "page": "background.html",
-        "persistent": true
+        "service_worker": "background_worker.js",
+        "type": "module"
     },
-    "browser_action": {
+    "action": {
         "default_icon": {
-            "64": "icons/scrapyard.svg"
+            "16": "icons/logo16.png",
+            "24": "icons/logo24.png",
+            "32": "icons/logo32.png",
+            "96": "icons/logo96.png",
+            "128": "icons/logo128.png"
         },
         "default_title": "Scrapyard",
         "default_popup": "ui/popup.html"
@@ -81,19 +80,15 @@
         "page": "ui/options.html"
     },
     "web_accessible_resources": [
-        "icons/lock.svg",
-        "icons/scrapyard.svg",
-        "ui/edit_toolbar.css",
-        "savepage/shadowloader.js",
-        "ui/site_capture.html",
-        "ui/notes_iframe.html",
-        "ui/notes.html"
-    ],
-    "protocol_handlers": [
         {
-            "protocol": "ext+scrapyard",
-            "name": "Scrapyard",
-            "uriTemplate": "reference.html#%s"
+            "resources": [
+                "icons/lock.svg",
+                "ui/site_capture.html",
+                "reference.html",
+                "ui/notes_iframe.html",
+                "ui/notes.html"
+            ],
+            "matches": ["*://*/*"]
         }
     ],
     "omnibox": {

@@ -3,5 +3,5 @@
 "description": "Scrapyard backend application",
 "path": "D:\\dev\\browser\\scrapyard\\backend\\debug.cmd",
 "type": "stdio",
-"allowed_origins": ["chrome-extension://fhgomkcfijbifanbkppjhgmcdkmbacep/", "chrome-extension://jlpgjeiblkojkaedoobnfkgobdddimon/"]
+"allowed_origins": ["chrome-extension://eljecjmpgeldgcjnefcedhhcobnghplj/", "chrome-extension://eljecjmpgeldgcjnefcedhhcobnghplj/"]
 }

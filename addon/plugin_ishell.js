@@ -17,7 +17,7 @@ class IShellPlugin {
         if (settings.platform.firefox)
             return `ishell${this._isExtensionPrivate()? "": "-we"}@gchristensen.github.io`;
         else if (settings.platform.chrome) {
-            return this._isExtensionPrivate()? "ofekoiaebgjkhfbcafmllpgffadbpphb": "hdjdmgedflhjhbflaijohpnognlhacoc";
+            return this._isExtensionPrivate()? "hpadlaipeifcpbpfnkkediojdlcgfiin": "hdjdmgedflhjhbflaijohpnognlhacoc";
         }
     }
 
@@ -28,7 +28,7 @@ class IShellPlugin {
             if (settings.platform.firefox)
                 return !id.includes("-we");
             else
-                return id === "fhgomkcfijbifanbkppjhgmcdkmbacep";
+                return id === "eljecjmpgeldgcjnefcedhhcobnghplj";
         }
 
         return false;
