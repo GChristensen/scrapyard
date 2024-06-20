@@ -674,7 +674,7 @@ function initialize(optionsOnly)
 
         if (!("options-allowpassive" in object)) object["options-allowpassive"] = false;
 
-        if (!("options-refererheader" in object)) object["options-refererheader"] = 0;
+        if (!("options-crossorigin" in object)) object["options-crossorigin"] = 0;
 
         if (!("options-useautomation" in object)) object["options-useautomation"] = false;
 
@@ -702,7 +702,7 @@ function initialize(optionsOnly)
 
         allowPassive = object["options-allowpassive"];
 
-        refererHeader = object["options-refererheader"];
+        refererHeader = object["options-crossorigin"];
 
         // Scrapyard //////////////////////////////////////////////////////////////////
         // <deleted>
@@ -808,9 +808,9 @@ function addListeners()
                 /* unless passive mixed content allowed by user option */
 
                 safeContent = (message.location.substr(0,6) == "https:" ||
-                               (message.location.substr(0,5) == "http:" && message.referer.substr(0,5) == "http:" && message.pagescheme == "http:"));
+                               (message.location.substr(0,5) == "http:" && message.referer?.substr(0,5) == "http:" && message.pagescheme == "http:"));
 
-                mixedContent = (message.location.substr(0,5) == "http:" && (message.referer.substr(0,6) == "https:" || message.pagescheme == "https:"));
+                mixedContent = (message.location.substr(0,5) == "http:" && (message.referer?.substr(0,6) == "https:" || message.pagescheme == "https:"));
 
                 if (safeContent || (mixedContent && message.passive && allowPassive))
                 {
@@ -822,15 +822,15 @@ function addListeners()
 
                         xhr.open("GET",message.location,true);
 
-                        refererURL = new URL(message.referer);
-
                         /* Referer Header must not be set if http: resource in https: page or https: referer */
                         /* Referer Header must not be set if file: or data: resource */
                         /* Referer Header only set if allowed by user option */
                         /* Referer Header has restricted referer URL */
 
-                        if (safeContent && message.referer.substr(0,5) != "file:" && message.referer.substr(0,5) != "data:")
+                        if (safeContent && message.referer?.substr(0,5) != "file:" && message.referer?.substr(0,5) != "data:")
                         {
+                            refererURL = new URL(message.referer);
+
                             if (refererHeader > 0)
                             {
                                 if (refererHeader == 1) refererValue = refererURL.origin;  /* referer URL restricted to origin */

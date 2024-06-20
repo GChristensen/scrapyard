@@ -41,7 +41,7 @@ async function loadCaptureSettings() {
     loadValue("options-maxresourcetime");
     loadCheck("options-allowpassive");
 
-    $(`#options-refererheader input[name="header"]`, "").val([object["options-refererheader"]]);
+    $(`#options-refererheader input[name="header"]`, "").val([object["options-crossorigin"]]);
 
     if (object["options-lazyloadtype"] === "1")
         loadCheck("options-lazyloadtype-1", true);
@@ -87,7 +87,7 @@ async function storeCaptureSettings(e) {
         "options-maxresourcesize": +$("#options-maxresourcesize").val(),
         "options-maxresourcetime": +$("#options-maxresourcetime").val(),
         "options-allowpassive": $("#options-allowpassive").is(":checked"),
-        "options-refererheader": +$(`#options-refererheader input[name="header"]:checked`).val(),
+        "options-crossorigin": +$(`#options-refererheader input[name="header"]:checked`).val(),
         "options-removeelements": $("#options-removeelements").is(":checked"),
         "options-lazyloadtype": lazyLoadType
     };
@@ -120,8 +120,8 @@ function configureCaptureSettingsPage() {
 
     setSaveCheckHandler("option-save-unpacked-archives", "save_unpacked_archives");
 
-    if (settings.platform.firefox && !settings.storage_mode_internal())
-        $("#save-options-row").show();
+    // if (settings.platform.firefox && !settings.storage_mode_internal())
+    //     $("#save-options-row").show();
 }
 
 export async function load() {

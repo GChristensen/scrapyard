@@ -149,6 +149,7 @@ async function injectSavePageScripts(tab, onError) {
     try {
         try {
             await injectScriptFile(tab.id, {file: "/savepage/content-frame.js", allFrames: true});
+            await injectScriptFile(tab.id, {file: "/savepage/content-fontface.js", allFrames: true});
         } catch (e) {
             console.error(e);
         }

@@ -4,9 +4,9 @@
 /*                                                                      */
 /*      Javascript for Saving Content Pages (all frames)                */
 /*                                                                      */
-/*      Last Edit - 09 Nov 2020                                         */
+/*      Last Edit - 25 Nov 2022                                         */
 /*                                                                      */
-/*      Copyright (C) 2016-2020 DW-dev                                  */
+/*      Copyright (C) 2016-2022 DW-dev                                  */
 /*                                                                      */
 /*      Distributed under the GNU General Public License version 2      */
 /*      See LICENCE.txt file and http://www.gnu.org/licenses/           */
@@ -222,6 +222,20 @@ function frameScript()
                                     if (datauri != "") element.setAttribute("data-savepage-blobdatauri",datauri);
                                 }
                             });
+
+                        document.querySelectorAll("canvas").forEach(
+                        function (element)
+                        {
+                            var datauri;
+
+                            try
+                            {
+                                datauri = element.toDataURL("image/png","");
+
+                                if (datauri != "") element.setAttribute("data-savepage-canvasdatauri",datauri);
+                            }
+                            catch (e) {}
+                        });
 
                         doctype = document.doctype;
 

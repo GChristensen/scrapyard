@@ -4,9 +4,9 @@
 /*                                                                      */
 /*      Javascript for Saving Content Pages (main frame)                */
 /*                                                                      */
-/*      Last Edit - 19 Apr 2022                                         */
+/*      Last Edit - 31 Mar 2023                                         */
 /*                                                                      */
-/*      Copyright (C) 2016-2022 DW-dev                                  */
+/*      Copyright (C) 2016-2023 DW-dev                                  */
 /*                                                                      */
 /*      Distributed under the GNU General Public License version 2      */
 /*      See LICENCE.txt file and http://www.gnu.org/licenses/           */
@@ -176,7 +176,7 @@ var maxFrameDepth;
 var maxResourceSize;
 var maxResourceTime;
 var allowPassive;
-var refererHeader;
+var crossOrigin;
 var useAutomation;
 
 var pageType;  /* 0 = normal page, 1 = saved page, 2 = saved page with resource loader */
@@ -185,8 +185,9 @@ var menuAction;
 var savedItems;
 var toggleLazy;
 var extractSrcUrl;
-var multipleSaves;
 var swapDevices;  /* from Print Edit WE*/
+var multipleSaves;
+var cspRestriction;
 
 var skipLazyLoad,cancelSave;
 
@@ -202,7 +203,7 @@ var frameFonts = new Array();
 var resourceCount;
 
 var resourceLocation = new Array();
-var resourceReferer = new Array();
+var resourceReferrer = new Array();
 var resourceMimeType = new Array();
 var resourceCharSet = new Array();
 var resourcePassive = new Array();
@@ -384,7 +385,7 @@ function(object)
 
     allowPassive = object["options-allowpassive"];
 
-    refererHeader = object["options-refererheader"];
+    crossOrigin = object["options-crossorigin"];
 
     useAutomation = object["options-useautomation"];
 
@@ -485,7 +486,7 @@ function addListeners()
 
         if ("options-allowpassive" in changes) allowPassive = changes["options-allowpassive"].newValue;
 
-        if ("options-refererheader" in changes) refererHeader = changes["options-refererheader"].newValue;
+        if ("options-crossorigin" in changes) crossOrigin = changes["options-crossorigin"].newValue;
 
         if ("options-useautomation" in changes) useAutomation = changes["options-useautomation"].newValue;
     });
@@ -502,15 +503,17 @@ function addListeners()
             /* Messages from background page */
 
             case "performAction":
-
+                // Scrapyard //////////////////////////////////////////////////////////////////
                 sendResponse({ });  /* to confirm content script has been loaded */
+                ////////////////////////////////////////////////////////////////// Scrapyard //
 
                 menuAction = message.menuaction;
                 savedItems = message.saveditems;
                 toggleLazy = message.togglelazy;
                 extractSrcUrl = message.extractsrcurl;
-                multipleSaves = message.multiplesaves;
                 swapDevices = message.swapdevices;
+                multipleSaves = message.multiplesaves;
+                cspRestriction = message.csprestriction;
 
                 cancelSave = false;
 
@@ -608,9 +611,9 @@ function addListeners()
                 break;
 
             case "loadSuccess":
-                // Scrapyard //////////////////////////////////////////////////////////////////
-                loadSuccess(message.index,message.content,message.contenttype,message.alloworigin,message.filename);
-                ////////////////////////////////////////////////////////////////// Scrapyard //
+
+                loadSuccess(message.index,message.reason,message.content,message.mimetype,message.charset);
+
                 break;
 
             case "loadFailure":
@@ -700,7 +703,7 @@ function performAction()
         else  /* not saved page with resource loader */
         {
             if (pageType == 1) showMessage("Remove Resource Loader failed","Remove","This page was not loaded using resource loader.\n\nCannot perform this operation.",null,null);
-            else showMessage("Remove Resource Loader failed","Remove","This page was not saved by Save Page WE.\n\nCannot perform this operation..",null,null);
+            else showMessage("Remove Resource Loader failed","Remove","This page was not saved by Save Page WE.\n\nCannot perform this operation.",null,null);
         }
     }
     else if (menuAction == 4)  /* extract saved page media (image/audio/video) */
@@ -999,7 +1002,7 @@ function initializeBeforeSave()
     ////////////////////////////////////////////////////////////////// Scrapyard //
 
     resourceLocation.length = 0;
-    resourceReferer.length = 0;
+    resourceReferrer.length = 0;
     resourceMimeType.length = 0;
     resourceCharSet.length = 0;
     resourcePassive.length = 0;
@@ -1324,7 +1327,7 @@ function findOtherResources(depth,frame,element,crossframe,nosrcframe,loadedfont
                     if (element.charset != "") charset = element.charset;
                     else charset = element.ownerDocument.characterSet;
 
-                    rememberURL(element.src,baseuri,"application/javascript",charset,false);
+                    rememberURL(element.src,baseuri,"text/javascript",charset,false);
                 }
             }
         }
@@ -1463,6 +1466,10 @@ function findOtherResources(depth,frame,element,crossframe,nosrcframe,loadedfont
         /* Firefox - workaround because element.currentSrc may be empty string in cross-origin frames */
 
         currentsrc = (element.currentSrc != "") ? element.currentSrc : (element.getAttribute("src") ? element.src : "");
+
+        /* Chrome - workaround because element.currentSrc may have wrong fragment identifier for SVG images */
+
+        currentsrc = (element.currentSrc.indexOf("#") < 0) ? element.currentSrc : (element.getAttribute("src") ? element.src : "");
 
         if (currentsrc != "")
         {
@@ -1987,7 +1994,7 @@ function rememberCSSImageURL(url,baseuri,mimetype,charset,passive,framekey)
             if (i == resourceLocation.length)  /* new resource */
             {
                 resourceLocation[i] = location;
-                resourceReferer[i] = baseuri;
+                resourceReferrer[i] = baseuri;
                 resourceMimeType[i] = mimetype;  /* default if load fails */
                 resourceCharSet[i] = charset;  /* default if load fails */
                 resourcePassive[i] = passive;
@@ -2038,7 +2045,7 @@ function rememberURL(url,baseuri,mimetype,charset,passive)
             if (i == resourceLocation.length)  /* new resource */
             {
                 resourceLocation[i] = location;
-                resourceReferer[i] = baseuri;
+                resourceReferrer[i] = baseuri;
                 resourceMimeType[i] = mimetype;  /* default if load fails */
                 resourceCharSet[i] = charset;  /* default if load fails */
                 resourcePassive[i] = passive;
@@ -2087,35 +2094,16 @@ function unescapeCSSValue(value)
 
 /* After first or second pass - load resources */
 
-// Scrapyard //////////////////////////////////////////////////////////////////
 async function loadResources()
-////////////////////////////////////////////////////////////////// Scrapyard //
 {
-    var i,documentURL,useCORS;
+    var i;
 
     timeStart[passNumber+3] = performance.now();
 
     resourceCount = 0;
 
     for (i = 0; i < resourceLocation.length; i++)
-    {
-        if (resourceStatus[i] == "pending")
-        {
-            resourceCount++;
-
-            documentURL = new URL(document.baseURI);
-
-            useCORS = (resourceMimeType[i] == "application/font-woff");
-            // Scrapyard //////////////////////////////////////////////////////////////////
-            const result = chrome.runtime.sendMessage({ type: "loadResource", index: i, location: resourceLocation[i], referer: resourceReferer[i],
-                                         passive: resourcePassive[i], pagescheme: documentURL.protocol, usecors: useCORS,
-                                         bookmark: scrapyardBookmark });
-
-            if (saveUnpacked)
-                await result;
-            ////////////////////////////////////////////////////////////////// Scrapyard //
-        }
-    }
+        if (resourceStatus[i] == "pending") resourceCount++;
 
     if (resourceCount <= 0)
     {
@@ -2126,46 +2114,134 @@ async function loadResources()
         else if (passNumber == 2) await generateHTML();
         ////////////////////////////////////////////////////////////////// Scrapyard //
     }
+    else
+    {
+        for (i = 0; i < resourceLocation.length; i++)
+        {
+            if (resourceStatus[i] == "pending")
+            {
+                if (safeContentOrAllowedMixedContent(i))
+                {
+                    loadResource(i,resourceLocation[i],resourceReferrer[i],getReferrerPolicy());
+                }
+                else loadFailure(i,"mixed");
+            }
+        }
+    }
+}
+
+async function loadResource(index,location,referrer,referrerPolicy)
+{
+    var controller,timeout,response;
+    var i,contentType,contentLength,mimetype,charset,buffer,byteArray,binaryString;
+    var matches = [];
+
+    resourceStatus[index] = "loading";
+
+    controller = new AbortController();
+
+    timeout = window.setTimeout(
+        function()
+        {
+            controller.abort();
+        },maxResourceTime*1000);
+
+    try  /* load resource in content script */
+    {
+        response = await fetch(location,{ method: "GET", mode: "cors", cache: "no-cache", referrer: referrer, referrerPolicy: referrerPolicy, signal: controller.signal });
+
+        if (debugEnable) console.log("Content Fetch - index: " + index + " - status: " + response.status + " - referrer: " + referrer + " - policy: " + referrerPolicy + " - location: " + location);
+
+        window.clearTimeout(timeout);
+
+        if (response.status == 200)
+        {
+            contentType = response.headers.get("Content-Type");
+            if (contentType == null) contentType = "";
+
+            contentLength = +response.headers.get("Content-Length");
+            if (contentLength == null) contentLength = 0;
+
+            if (contentLength > maxResourceSize*1024*1024)
+            {
+                loadFailure(index,"maxsize");
+            }
+            else
+            {
+                matches = contentType.match(/([^;]+)/i);
+                if (matches != null) mimetype = matches[1].toLowerCase();
+                else mimetype = "";
+
+                // Scrapyard //////////////////////////////////////////////////////////////////
+                matches = contentType.match(/;\s*charset=([^;]+)/i);
+                ////////////////////////////////////////////////////////////////// Scrapyard //
+                if (matches != null) charset = matches[1].toLowerCase();
+                else charset = "";
+
+                buffer = await response.arrayBuffer();
+
+                byteArray = new Uint8Array(buffer);
+
+                binaryString = "";
+                for (i = 0; i < byteArray.byteLength; i++) binaryString += String.fromCharCode(byteArray[i]);
+
+                loadSuccess(index,"",binaryString,mimetype,charset);
+            }
+        }
+        else  /* load resource in background script */
+        {
+            if (resourceMimeType[index] == "application/font-woff")
+            {
+                /* Fonts must be loaded with CORS - but cannot be sure of CORS in background script */
+
+                loadFailure(index,"corsfail");
+            }
+            else
+            {
+                /* Most likely resource for <link>/<script>/<img>/<audio>/<video> element with crossorigin attribute requiring background fetch */
+
+                chrome.runtime.sendMessage({ type: "loadResource", index: index, location: location, referrer: referrer, referrerPolicy: referrerPolicy });
+            }
+        }
+    }
+    catch (e)
+    {
+        window.clearTimeout(timeout);
+
+        if (e.name == "AbortError")
+        {
+            loadFailure(index,"maxtime");
+        }
+        else  /* load resource in background script */
+        {
+            if (resourceMimeType[index] == "application/font-woff")
+            {
+                /* Fonts must be loaded with CORS - but cannot be sure of CORS in background script */
+
+                loadFailure(index,"corsfail");
+            }
+            else
+            {
+                /* Most likely resource for <link>/<script>/<img>/<audio>/<video> element with crossorigin attribute requiring background fetch */
+
+                chrome.runtime.sendMessage({ type: "loadResource", index: index, location: location, referrer: referrer, referrerPolicy: referrerPolicy });
+            }
+        }
+    }
 }
 
 // Scrapyard //////////////////////////////////////////////////////////////////
-async function loadSuccess(index,content,contenttype,alloworigin,filename)
+async function loadSuccess(index,reason,content,mimetype,charset)
 ////////////////////////////////////////////////////////////////// Scrapyard //
 {
-    var i,mimetype,charset,resourceURL,frameURL,csstext,baseuri,regex,documentURL;
-    var matches = new Array();
-
-    /* Extract file MIME type and character set */
-
-    matches = contenttype.match(/([^;]+)/i);
-    if (matches != null) mimetype = matches[1].toLowerCase();
-    else mimetype = "";
-
-    matches = contenttype.match(/;\s*charset=([^;]+)/i);
-    if (matches != null) charset = matches[1].toLowerCase();
-    else charset = "";
+    var i,resourceURL,frameURL,csstext,baseuri,regex,documentURL;
+    var matches = [];
 
     /* Process file based on expected MIME type */
 
-    switch (resourceMimeType[index]?.toLowerCase())  /* expected MIME type */
+    switch (resourceMimeType[index]/* SY */?.toLowerCase())  /* expected MIME type */
     {
         case "application/font-woff":  /* font file */
-
-            /* CORS check required */
-
-            if (alloworigin != "*")  /* restricted origin */
-            {
-                resourceURL = new URL(resourceLocation[index]);
-                frameURL = new URL(resourceReferer[index]);
-
-                if (resourceURL.origin != frameURL.origin &&  /* cross-origin resource */
-                    (alloworigin == "" || alloworigin != frameURL.origin))  /* either no header or no origin match */
-                {
-                    await loadFailure(index,"cors");
-
-                    return;
-                }
-            }
 
             /* font file - fall through */
 
@@ -2195,12 +2271,17 @@ async function loadSuccess(index,content,contenttype,alloworigin,filename)
 
             /* svg file - fall through */
 
-        case "application/javascript":  /* javascript file */
+        case "text/javascript":  /* javascript file */
 
             if (mimetype != "image/svg+xml")  /* svg file */
             {
-                if (mimetype != "application/javascript" && mimetype != "application/x-javascript" && mimetype != "application/ecmascript" &&
-                    mimetype != "application/json" && mimetype != "text/javascript" && mimetype != "text/x-javascript" && mimetype != "text/json")  /* incorrect MIME type */
+                /* See Mozilla source/dom/base/nsContentUtils.cpp for list of supported JavaScript MIME types */
+
+                if (mimetype != "text/javascript" && mimetype != "text/ecmascript" &&
+                    mimetype != "application/javascript" && mimetype != "application/ecmascript" && mimetype != "application/x-javascript" && mimetype != "application/x-ecmascript" &&
+                    mimetype != "text/javascript1.0" && mimetype != "text/javascript1.1" && mimetype != "text/javascript1.2" && mimetype != "text/javascript1.3" &&
+                    mimetype != "text/javascript1.4" && mimetype != "text/javascript1.5" &&
+                    mimetype != "text/x-ecmascript"&& mimetype != "text/x-javascript")  /* incorrect MIME type */
                 {
                     await loadFailure(index,"mime");
 
@@ -2287,17 +2368,15 @@ async function loadSuccess(index,content,contenttype,alloworigin,filename)
                 {
                     i = rememberURL(matches[1],baseuri,"text/css",resourceCharSet[index],false);
 
-                    if (i >= 0)  /* style sheet not found */
+                    if (i >= 0)  /* new style sheet */
                     {
                         resourceCount++;
 
-                        documentURL = new URL(document.baseURI);
-
-                        // Scrapyard //////////////////////////////////////////////////////////////////
-                        chrome.runtime.sendMessage({ type: "loadResource", index: i, location: resourceLocation[i], referer: resourceReferer[i],
-                                                     passive: resourcePassive[i], pagescheme: documentURL.protocol, useCORS: false,
-                                                     bookmark: scrapyardBookmark });
-                        ////////////////////////////////////////////////////////////////// Scrapyard //
+                        if (safeContentOrAllowedMixedContent(i))
+                        {
+                            loadResource(i,resourceLocation[i],resourceReferrer[i],getReferrerPolicy());
+                        }
+                        else loadFailure(i,"mixed");
                     }
                 }
             }
@@ -2306,9 +2385,8 @@ async function loadSuccess(index,content,contenttype,alloworigin,filename)
     }
 
     resourceStatus[index] = "success";
-    // Scrapyard //////////////////////////////////////////////////////////////////
-    resourceFileName[index] = filename;
-    ////////////////////////////////////////////////////////////////// Scrapyard //
+
+    resourceReason[index] = reason;
 
     if (--resourceCount <= 0)
     {
@@ -2336,6 +2414,37 @@ async function loadFailure(index,reason)
         else if (passNumber == 2) await generateHTML();
         ////////////////////////////////////////////////////////////////// Scrapyard //
     }
+}
+
+function safeContentOrAllowedMixedContent(index)
+{
+    var documentURL,pagescheme,safeContent,mixedContent;
+
+    /* Load request must not be sent if http: resource in https: page or https: referrer */
+    /* unless passive mixed content and allowed by user option */
+
+    documentURL = new URL(document.baseURI);
+
+    pagescheme = documentURL.protocol;
+
+    safeContent = (resourceLocation[index].substr(0,6) == "https:" || (resourceLocation[index].substr(0,5) == "http:" && resourceReferrer[index].substr(0,5) == "http:" && pagescheme == "http:"));
+
+    mixedContent = (resourceLocation[index].substr(0,5) == "http:" && (resourceReferrer[index].substr(0,6) == "https:" || pagescheme == "https:"));
+
+    if (safeContent || (mixedContent && resourcePassive[index] && allowPassive)) return true;
+
+    return false;
+}
+
+function getReferrerPolicy()
+{
+    var  incognito;
+
+    incognito = chrome.extension.inIncognitoContext;
+
+    if (crossOrigin == 0 || incognito) return "strict-origin-when-cross-origin";
+
+    return "no-referrer-when-downgrade";
 }
 
 function convertUTF8ToUTF16(utf8str)
@@ -2422,7 +2531,7 @@ function loadShadowLoader()
     var xhr;
 
     xhr = new XMLHttpRequest();
-    xhr.overrideMimeType("application/javascript");
+    xhr.overrideMimeType("text/javascript");
     xhr.open("GET",chrome.runtime.getURL("shadowloader-compressed.js"),true);
     xhr.onload = complete;
     xhr.send();
@@ -2483,7 +2592,7 @@ function checkResources()
                     if (resourceRemembered[i] == 1)
                     {
                         resourceLocation.splice(i,1);
-                        resourceReferer.splice(i,1);
+                        resourceReferrer.splice(i,1);
                         resourceMimeType.splice(i,1);
                         resourceCharSet.splice(i,1);
                         resourcePassive.splice(i,1);
@@ -2569,7 +2678,7 @@ function checkResources()
             "    •  Scroll to the bottom of the page before saving.\n" +
             "    •  Use normal browsing instead of private browsing.\n" +
             "    •  Enable the 'Allow passive mixed content' option.\n" +
-            "    •  Select one of the 'Send referer header with origin ...' options.\n" +
+            "    •  Select the 'Send referrer headers with origin and path' option.\n" +
             "    •  Increase the 'Maximum time for loading a resource' option value.",
             function savecontinue()
             {
@@ -2919,7 +3028,7 @@ async function generateHTML()
                                                   ("    " + resourceRemembered[i]).substr(-4) + "  " +
                                                   ("    " + resourceReplaced[i]).substr(-4) + "  " +
                                                   resourceStatus[i] + "  " +
-                                                  (resourceReason[i] + "        ").substr(0,8) + "  " +
+                                                  (resourceReason[i] + "         ").substr(0,9) + "  " +
                                                   (mimetype + "          ").substr(0,10) + "  " +
                                                   (charset + "        ").substr(0,8) + "  " +
                                                   ("        " + resourceContent[i].length).substr(-8) + "    " +
@@ -2938,7 +3047,7 @@ async function generateHTML()
     frameFonts.length = 0;
 
     resourceLocation.length = 0;
-    resourceReferer.length = 0;
+    resourceReferrer.length = 0;
     resourceMimeType.length = 0;
     resourceCharSet.length = 0;
     resourcePassive.length = 0;
@@ -3107,21 +3216,17 @@ function createLargeTestFile()
 async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,parentpreserve,indent)
 ////////////////////////////////////////////////////////////////// Scrapyard //
 {
-    // Scrapyard //////////////////////////////////////////////////////////////////
-    if (scrapyardExcludeElement(element))
-        return;
-    ////////////////////////////////////////////////////////////////// Scrapyard //
-
-    var i,j,startTag,textContent,endTag,inline,preserve,style,display,position,whitespace,displayed,csstext,baseuri,documenturi,separator,origurl,datauri,origstr,dupelement,dupsheet,location,newurl;
+    var i,j,tagName,startTag,textContent,endTag,inline,preserve,style,display,position,whitespace,displayed,csstext,baseuri,documenturi,separator,origurl,datauri,origstr,dupelement,dupsheet,location,newurl;
     var visible,width,height,currentsrc,svgstr,parser,svgdoc,svgfragid,svgelement,svghref,subframekey,startindex,endindex,htmltext,origsrcdoc,origsandbox,framedoc,prefix,shadowroot;
     var doctype,target,text,asciistring,date,datestr,pubelement,pubstr,pubzone,pubdate,pubdatestr,pageurl,state;
     var pubmatches = new Array();
     var metadataElements = new Array("base","link","meta","noscript","script","style","template","title");  /* HTML Living Standard 3.2.5.2.1 Metadata Content */
-    var voidElements = new Array("area","base","br","col","command","embed","frame","hr","img","input","keygen","link","menuitem","meta","param","source","track","wbr");  /* W3C HTML5 4.3 Elements + menuitem */
+    var voidElements = new Array("area","base","br","col","command","embed","frame","hr","img","input","keygen","link","menuitem","meta","param","source","track","wbr");  /* W3C HTML5 2011 4.3 Elements + menuitem */
     var retainElements = new Array("html","head","body","base","command","link","meta","noscript","script","style","template","title");
-    var hiddenElements = new Array("area","base","datalist","head","link","meta","param","rp","script","source","style","template","track","title");  /* W3C HTML5 10.3.1 Hidden Elements */
+    var hiddenElements = new Array("area","base","datalist","head","link","meta","param","rp","script","source","style","template","track","title");  /* W3C HTML5 2014 10.3.1 Hidden Elements */
 
     // Scrapyard //////////////////////////////////////////////////////////////////
+    // TODO: deprecate saveUnpacked
     async function saveFrame(uri, persist, sandboxed) {
         origurl = element.getAttribute("src");
 
@@ -3139,9 +3244,14 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
     }
     ////////////////////////////////////////////////////////////////// Scrapyard //
 
+    /* Check for <button> element inside ancestor <button> element - W3C HTML5 2011 4.10.8 The button Element (no interactive content) */
+
+    if (element.localName == "button" && element.parentElement != null && element.parentElement.closest("button") != null) tagName = "span";
+    else tagName = element.localName;
+
     /* Create element start and end tags */
 
-    startTag = "<" + element.localName;
+    startTag = "<" + tagName;
     for (i = 0; i < element.attributes.length; i++)
     {
         if (element.attributes[i].name != "zoompage-fontsize")
@@ -3152,7 +3262,7 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
             startTag += "\"";
         }
     }
-    if (element.parentElement != null && element.parentElement.localName == "head" && metadataElements.indexOf(element.localName) < 0)
+    if (element.parentElement != null && element.parentElement.localName == "head" && metadataElements.indexOf(tagName) < 0)
     {
         /* Non-metadata element in head will be moved to body when saved page is opened */
         /* Add hidden attribute to keep element hidden */
@@ -3163,8 +3273,8 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
 
     textContent = "";
 
-    if (voidElements.indexOf(element.localName) >= 0) endTag = "";
-    else endTag = "</" + element.localName + ">";
+    if (voidElements.indexOf(tagName) >= 0) endTag = "";
+    else endTag = "</" + tagName + ">";
 
     /* Determine if element is phrasing content - set inline based on CSS display value */
 
@@ -3473,6 +3583,11 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
                             {
                                 csstext = resourceContent[i];
 
+                                /* Converting <link> into <style> means that CSS rules are embedded in saved HTML file */
+                                /* Therefore need to escape any </style> end tags that may appear inside CSS strings */
+
+                                csstext = csstext.replace(/<\/style>/gi,"<\\/style>");
+
                                 baseuri = element.href;
 
                                 documenturi = element.href;
@@ -3482,6 +3597,7 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
                                 if (swapDevices) textContent = swapScreenAndPrintDevices(textContent);
 
                                 // Scrapyard //////////////////////////////////////////////////////////////////
+                                // TODO: deprecate save unpacked
                                 if (saveUnpacked) {
                                     origurl = element.getAttribute("href");
 
@@ -3676,6 +3792,10 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
 
             currentsrc = (element.currentSrc != "") ? element.currentSrc : (element.getAttribute("src") ? element.src : "");
 
+            /* Chrome - workaround because element.currentSrc may have wrong fragment identifier for SVG images */
+
+            currentsrc = (element.currentSrc.indexOf("#") < 0) ? element.currentSrc : (element.getAttribute("src") ? element.src : "");
+
             if (currentsrc != "")  /* currentSrc set from src or srcset attribute */
             {
                     if (replaceableResourceURL(currentsrc))
@@ -3800,22 +3920,27 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
 
     else if (element.localName == "canvas")
     {
-        try
-        {
-            datauri = element.toDataURL();
+        csstext = "background-attachment: scroll !important; " + "background-blend-mode: normal !important; " +
+                  "background-clip: content-box !important; " + "background-color: transparent !important; " +
+                  "background-origin: content-box !important; " + "background-position: center center !important; " +
+                  "background-repeat: no-repeat !important; " + "background-size: 100% 100% !important;";
 
-            csstext = "/*savepage-canvas-image*/ " +
-                      "background-image: url(" + datauri + ") !important; " +
-                      "background-attachment: scroll !important; " +
-                      "background-blend-mode: normal !important; " +
-                      "background-clip: content-box !important; " +
-                      "background-color: transparent !important; " +
-                      "background-origin: content-box !important; " +
-                      "background-position: center center !important; " +
-                      "background-repeat: no-repeat !important; " +
-                      "background-size: 100% 100% !important;";
+        if (element.hasAttribute("data-savepage-canvasdatauri"))  /* canvas data url */
+        {
+            datauri = element.getAttribute("data-savepage-canvasdatauri");
+
+            csstext = "/*savepage-canvas-image*/ " + "background-image: url(" + datauri + ") !important; " + csstext;
         }
-        catch (e) { csstext = "/*savepage-canvas-dirty*/"; }
+        else
+        {
+            try
+            {
+                    datauri = element.toDataURL("image/png","");
+
+                    csstext = "/*savepage-canvas-image*/ " + "background-image: url(" + datauri + ") !important; " + csstext;
+            }
+            catch (e) { csstext = "/*savepage-canvas-dirty*/"; }
+        }
 
         if (element.hasAttribute("style"))
         {
@@ -4484,7 +4609,7 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
             if (doctype != null)
             {
                 htmltext = '<!DOCTYPE ' + doctype.name + (doctype.publicId ? ' PUBLIC "' + doctype.publicId + '"' : '') +
-                           ((doctype.systemId && !doctype.publicId) ? ' SYSTEM' : '') + (doctype.systemId ? ' "' + doctype.systemId + '"' : '') + '>\n';
+                  /* SY */ ((doctype.systemId && !doctype.publicId) ? ' SYSTEM' : '') + (doctype.systemId ? ' "' + doctype.systemId + '"' : '') + '>\n';
 
                 htmlStrings[htmlStrings.length] = htmltext;
             }
@@ -4781,11 +4906,11 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
                     pageurl = (pageType == 0) ? document.URL : document.querySelector("meta[name='savepage-url']").content;
 
                     pageInfoBarText = pageInfoBarText.replace(/%URL%/,pageurl);
-                    pageInfoBarText = pageInfoBarText.replace(/%DECODED-URL%/,decodeURIComponent(pageurl));
+                    pageInfoBarText = pageInfoBarText.replace(/%DECODED-URL%/,decodeURIComponent(pageurl).replace(/'/g,"\\'"));
                     pageInfoBarText = pageInfoBarText.replace(/%DATE%/,date.toDateString().substr(8,2) + " " + date.toDateString().substr(4,3) + " " + date.toDateString().substr(11,4));
                     pageInfoBarText = pageInfoBarText.replace(/%TIME%/,date.toTimeString().substr(0,8));
 
-                    htmltext = prefix + "<script id=\"savepage-pageinfo-bar-insert\" type=\"application/javascript\">";
+                    htmltext = prefix + "<script id=\"savepage-pageinfo-bar-insert\" type=\"text/javascript\">";
                     htmltext += prefix + "  \"use strict\";";
                     htmltext += prefix + "  window.addEventListener('load',function(event) {";
                     htmltext += prefix + "    var parser = new DOMParser();";
@@ -4860,8 +4985,7 @@ async function extractHTML(depth,frame,element,crossframe,nosrcframe,framekey,pa
                 if (removeElements) state += " Remove hidden elements;";
                 if (rehideElements) state += " Rehide hidden elements;";
                 if (allowPassive) state += " Allow passive mixed content;";
-                if (refererHeader == 1) state += " Send referer headers with origin only;";
-                else if (refererHeader == 2) state += " Send referer headers with origin and path;";
+                if (crossOrigin == 1) state += " Send referrer headers with origin and path;";
 
                 if (loadLazyContent)
                 {
@@ -4914,10 +5038,10 @@ function enumerateCSSInsetProperty(csstext)
     /* CSS inset property is supported by Firefox but not by Chrome */
     /* So enumerate inset property as top/right/bottom/left properties */
 
-    csstext = csstext.replace(/inset\s*:\s*([^\s]+)\s*;/gi,"top: $1; right: $1; bottom: $1; left: $1;");
-    csstext = csstext.replace(/inset\s*:\s*([^\s]+)\s+([^\s]+)\s*;/gi,"top: $1; right: $2; bottom: $1; left: $2;");
-    csstext = csstext.replace(/inset\s*:\s*([^\s]+)\s+([^\s]+)\s+([^\s]+)\s*;/gi,"top: $1; right: $2; bottom: $3; left: $2;");
-    csstext = csstext.replace(/inset\s*:\s*([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s*;/gi,"top: $1; right: $2; bottom: $3; left: $4;");
+    csstext = csstext.replace(/[{;]\s*inset\s*:\s*([^\s]+)\s*;/gi,"top: $1; right: $1; bottom: $1; left: $1;");
+    csstext = csstext.replace(/[{;]\s*inset\s*:\s*([^\s]+)\s+([^\s]+)\s*;/gi,"top: $1; right: $2; bottom: $1; left: $2;");
+    csstext = csstext.replace(/[{;]\s*inset\s*:\s*([^\s]+)\s+([^\s]+)\s+([^\s]+)\s*;/gi,"top: $1; right: $2; bottom: $3; left: $2;");
+    csstext = csstext.replace(/[{;]\s*inset\s*:\s*([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s*;/gi,"top: $1; right: $2; bottom: $3; left: $4;");
 
     return csstext;
 }
@@ -5658,7 +5782,9 @@ function removeResourceLoader()
             if (matches != null) mimetype = matches[1].toLowerCase();
             else mimetype = "";
 
+            // Scrapyard //////////////////////////////////////////////////////////////////
             matches = contenttype.match(/;\s*charset=([^;]+)/i);
+            ////////////////////////////////////////////////////////////////// Scrapyard //
             if (matches != null) charset = matches[1].toLowerCase();
             else charset = "";
 
