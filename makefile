@@ -70,10 +70,10 @@ backend-cli:
 	echo "DEBUG = False" > ./backend/cli-installer/scrapyard_backend/scrapyard/server_debug.py
 	cd backend; cp -r ./manifests ./cli-installer/scrapyard_backend/
 	cd backend; rm -r -f ./cli-installer/scrapyard_backend/manifests/debug_manifest*
-	cd backend; cp -r ./setup.py ./cli-installer/scrapyard_backend/
+	cd backend; cp -r ./pyproject.toml ./cli-installer/scrapyard_backend/
 	cd backend; rm -f scrapyard-backend.tgz
 	cd backend; 7za.exe a -ttar -so -an ./cli-installer/* -xr!__pycache__ | 7za.exe a -si scrapyard-backend.tgz
-	cd backend; rm ./cli-installer/scrapyard_backend/setup.py
+	cd backend; rm ./cli-installer/scrapyard_backend/pyproject.toml
 	cd backend; rm -r -f ./cli-installer/scrapyard_backend/scrapyard
 	cd backend; rm -r -f ./cli-installer/scrapyard_backend/manifests
 

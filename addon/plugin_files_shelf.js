@@ -261,7 +261,7 @@ export class FilesShelfPlugin {
 
         for (const rootId of filesRoots) {
             const fileNodes = await Query.fullSubtree(rootId);
-            const filesRoot = fileNodes.find(n => n.external_id.startsWith(FILES_EXTERNAL_ROOT_PREFIX));
+            const filesRoot = fileNodes.find(n => n.external_id?.startsWith(FILES_EXTERNAL_ROOT_PREFIX));
             const details = JSON.parse(filesRoot.details);
             const files = await this.#listDirectoryFiles(filesRoot.uri, details.file_mask);
 

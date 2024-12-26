@@ -4,4 +4,6 @@ if [ `id -u` -eq 0 ]
   exit
 fi
 
-python3 ./scrapyard_backend/installer.py
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+python3 "${SCRIPT_DIR}/scrapyard_backend/installer.py"

@@ -6,6 +6,8 @@ import os
 
 from pathlib import Path
 
+PLATFORM_NAME = platform.system()
+
 
 def check_binary(base_path, ext):
     if os.path.exists(base_path + ext):
@@ -14,7 +16,7 @@ def check_binary(base_path, ext):
 
 
 def get_binary_path(base_path):
-    if platform.system() == "Windows":
+    if PLATFORM_NAME == "Windows":
         binaries = [
             check_binary(base_path, ".exe"),
             check_binary(base_path, ".cmd"),
@@ -33,7 +35,7 @@ def write_manifest(template, destination, executable_path):
         manifest_text = manifest_in.read()
 
         executable_manifest_path = executable_path
-        if platform.system() == "Windows":
+        if PLATFORM_NAME == "Windows":
             executable_manifest_path = executable_path.replace("/", "\\")
             executable_manifest_path = executable_manifest_path.replace("\\", "\\\\")
 
@@ -57,21 +59,28 @@ def write_reg_hklm_value(path, value):
 backend_base = "scrapyard_backend"
 native_base = "scrapyard_helper"
 
-package_path = os.path.abspath(os.path.dirname(__file__))
-subprocess.check_call([sys.executable, "-m", "pip", "install", package_path, "--user"])
+base_path = str(Path(__file__).parent.parent.resolve())
+package_path = str(Path(__file__).parent.resolve())
 
-executable_base_path = site.getuserbase() + f"/bin/{backend_base}"
+subprocess.check_call([sys.executable, "-m", "venv", "venv"])
 
-if platform.system() == "Windows":
-    executable_base_path = os.path.dirname(site.getusersitepackages()) + f"\\Scripts\\{backend_base}"
 
+scripts_dir = "Scripts" if PLATFORM_NAME == "Windows" else "bin"
+binary_ext = ".exe" if PLATFORM_NAME == "Windows" else ""
+venv_scripts = base_path + "/venv/" + scripts_dir
+venv_python = venv_scripts + "/python" + binary_ext
+
+subprocess.check_call([venv_python, "-m", "pip", "install", "--upgrade", "pip"])
+subprocess.check_call([venv_python, "-m", "pip", "install", package_path])
+
+executable_base_path = venv_scripts + f"/{backend_base}"
 executable_path = get_binary_path(executable_base_path)
 
 firefox_manifest_path = os.path.expanduser(f"~/.mozilla/native-messaging-hosts/{native_base}.json")
 
-if platform.system() == "Windows":
+if PLATFORM_NAME == "Windows":
     firefox_manifest_path = executable_base_path + ".json.firefox"
-elif platform.system() == "Darwin":
+elif PLATFORM_NAME == "Darwin":
     firefox_manifest_path = \
         os.path.expanduser(f"~/Library/Application Support/Mozilla/NativeMessagingHosts/{native_base}.json")
 
@@ -80,19 +89,19 @@ write_manifest(package_path + f"/manifests/{backend_base}.json.firefox", firefox
 chrome_manifest_path = os.path.expanduser(f"~/.config/google-chrome/NativeMessagingHosts/{native_base}.json")
 chromium_manifest_path = chrome_manifest_path.replace("google-chrome", "chromium")
 
-if platform.system() == "Windows":
+if PLATFORM_NAME == "Windows":
     chrome_manifest_path = executable_base_path + ".json.chrome"
-elif platform.system() == "Darwin":
+elif PLATFORM_NAME == "Darwin":
     chrome_manifest_path = \
         os.path.expanduser(f"~/Library/Application Support/Google/Chrome/NativeMessagingHosts/{native_base}.json")
     chromium_manifest_path = chrome_manifest_path.replace("Chrome", "Chromium")
 
 write_manifest(package_path + f"/manifests/{backend_base}.json.chrome", chrome_manifest_path, executable_path)
 
-if platform.system() != "Windows":
+if PLATFORM_NAME != "Windows":
     write_manifest(package_path + f"/manifests/{backend_base}.json.chrome", chromium_manifest_path, executable_path)
 
-if platform.system() == "Windows":
+if PLATFORM_NAME == "Windows":
     import winreg
 
     write_reg_hklm_value(f"Software\\Mozilla\\NativeMessagingHosts\\{native_base}", firefox_manifest_path)

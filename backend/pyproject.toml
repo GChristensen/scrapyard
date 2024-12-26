@@ -1,0 +1,23 @@
+[project]
+name = "scrapyard_backend"
+version = "2.1.2"
+description = ""
+authors = [
+    { name = "gchristnsn", email = "gchristnsn@gmail.com" }
+]
+requires-python = ">=3.7"
+
+dependencies = [
+    "Flask==3.0.3",
+    "beautifulsoup4==4.12.3",
+    "regex==2024.9.11"
+]
+
+[project.scripts]
+scrapyard_backend = "scrapyard.backend:main"
+
+[tool.setuptools.package-data]
+"scrapyard_backend" = ["resources/*", "resources/*/*"]
+
+[tool.setuptools.packages]
+find = {}
