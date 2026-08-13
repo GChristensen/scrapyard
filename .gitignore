@@ -14,3 +14,4 @@ backend/dist/
 backend/*.exe
 backend/*.zip
 backend/*.tgz
+/addon/.amo-upload-uuid

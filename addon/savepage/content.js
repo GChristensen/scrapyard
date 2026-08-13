@@ -254,7 +254,6 @@ var isReddit = location.origin.includes("reddit.com");
 
 function lockDocument() {
     if (document.body.firstChild && document.body.firstChild.id !== "scrapyard-waiting") {
-        const imgDomains = ["reddit.com"];
         const lock = document.createElement("div");
         lock.id = "scrapyard-waiting";
 
@@ -271,13 +270,10 @@ function lockDocument() {
         lock.style.alignItems = "center";
         lock.style.justifyContent = "center";
 
-        const useImg = imgDomains.some(d => location.origin.includes(d));
-        const elementTagName = useImg? "img": "object";
-        const propertyName = useImg? "src": "data";
-
-        const image = document.createElement(elementTagName);
-        image.setAttribute(propertyName, browser.runtime.getURL(`icons/lock.svg`));
-        image.setAttribute("type", "image/svg+xml");
+        // an <object> element would be blocked by strict page CSPs (object-src),
+        // <img> is loaded under the more permissive img-src and works everywhere
+        const image = document.createElement("img");
+        image.setAttribute("src", browser.runtime.getURL(`icons/lock.svg`));
         lock.appendChild(image);
 
         document.body.insertBefore(lock, document.body.firstChild);
