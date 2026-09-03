@@ -144,11 +144,7 @@ export function indexString(string) {
 }
 
 export function indexHTML(string) {
-    const textExtractor = _BACKGROUND_PAGE
-        ? extractTextRecursive
-        : removeTags;
-
-    return createIndex(string, textExtractor)
+    return createIndex(string, removeTags)
 }
 
 function createIndex(string, textExtractor) {
@@ -168,25 +164,6 @@ function createIndex(string, textExtractor) {
         console.log("Index creation has failed.")
         return [];
     }
-}
-
-function extractTextRecursive(string, parser) {
-    if (!parser)
-        parser = new DOMParser();
-
-    const doc = parser.parseFromString(string, "text/html");
-    removeScriptTags(doc);
-
-    let text = doc.body.textContent;
-
-    doc.querySelectorAll("iframe").forEach(
-        function (element) {
-            const html = element.srcdoc;
-            if (html)
-                text += " " + extractTextRecursive(html, parser);
-        });
-
-    return text;
 }
 
 export function instantiateIFramesRecursive(doc, parser, acc = [], topIFrames) {
@@ -253,18 +230,159 @@ export async function assembleUnpackedIndex(node) {
     }
 }
 
-function removeTags(string) {
-    return string.replace(/<iframe[^>]*srcdoc="([^"]*)"[^>]*>/igs, (m, d) => d)
-        .replace(/<title.*?<\/title>/igs, "")
-        .replace(/<style.*?<\/style>/igs, "")
-        .replace(/<script.*?<\/script>/igs, "")
-        .replace(/&[0-9#a-zA-Z]+;/igs, ' ')
-        .replace(/<[^>]+>/gs, ' ');
+const RX_IFRAME_TAG = /<iframe\s[^>]*>/ig;
+const RX_SRCDOC_ATTR = /\ssrcdoc\s*=/i;
+const RX_SRC_ATTR = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
+
+// The string counterpart of assembleUnpackedIndex, for the paths that only need the text of an
+// unpacked archive: returns the HTML of its index and of every local file it embeds, without
+// building a single document. Iframes with srcdoc are left alone, since removeTags inlines those.
+export async function assembleUnpackedContent(node, file = "index.html", acc = [], visited = new Set()) {
+    if (visited.has(file))
+        return acc;
+
+    visited.add(file);
+
+    const html = await Archive.getFile(node, file);
+
+    if (typeof html !== "string")
+        return acc;
+
+    acc.push(html);
+
+    for (const tag of html.match(RX_IFRAME_TAG) || []) {
+        if (RX_SRCDOC_ATTR.test(tag))
+            continue;
+
+        const src = tag.match(RX_SRC_ATTR);
+        const path = src? (src[1] ?? src[2] ?? src[3]): null;
+
+        if (path && !path.startsWith("http"))
+            await assembleUnpackedContent(node, unescapeHtml(path), acc, visited);
+    }
+
+    return acc;
 }
 
-function removeScriptTags(doc) {
-    $("body script", doc).remove();
-    $("body style", doc).remove();
+const RX_IFRAME_SRCDOC = /<iframe[^>]*\ssrcdoc=(?:"([^"]*)"|'([^']*)')[^>]*>/igs;
+const RX_REFERENCE = /&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/ig;
+
+// Only the references that produce letters need to be decoded precisely, since createIndex
+// discards everything else anyway. An unknown name degrades to a space, as it always has.
+// The case of a name is irrelevant here, because the indexed words are lowercased.
+const NAMED_REFERENCES = {
+    amp:    "&", lt:     "<", gt:     ">", quot:   '"', apos:   "'", nbsp:   " ",
+    agrave: "à", aacute: "á", acirc:  "â", atilde: "ã", auml:   "ä", aring:  "å",
+    aelig:  "æ", ccedil: "ç", egrave: "è", eacute: "é", ecirc:  "ê", euml:   "ë",
+    igrave: "ì", iacute: "í", icirc:  "î", iuml:   "ï", eth:    "ð", ntilde: "ñ",
+    ograve: "ò", oacute: "ó", ocirc:  "ô", otilde: "õ", ouml:   "ö", oslash: "ø",
+    ugrave: "ù", uacute: "ú", ucirc:  "û", uuml:   "ü", yacute: "ý", yuml:   "ÿ",
+    thorn:  "þ", szlig:  "ß", oelig:  "œ", scaron: "š", fnof:   "ƒ", micro:  "µ"
+};
+
+// The text level elements, which may occur inside a word: `re<b>cord</b>` is one word and has to
+// stay one, so these are dropped without a trace. Everything else becomes a space, because the
+// text on the two sides of it belongs to separate words even when nothing is rendered between
+// them: `<p>foo</p><p>bar</p>` is not `foobar`, which is what Node.textContent would produce.
+// Absent here on purpose: `br` and `img`, which do separate words, and `rt`, whose content is a
+// ruby annotation rather than a part of the surrounding text.
+const INLINE_TAGS = new Set([
+    "a", "abbr", "acronym", "b", "bdi", "bdo", "big", "cite", "code", "data", "del", "dfn", "em",
+    "font", "i", "ins", "kbd", "mark", "nobr", "q", "s", "samp", "small", "span", "strike",
+    "strong", "sub", "sup", "time", "tt", "u", "var", "wbr"
+]);
+
+// Extracts the plain text of an HTML string without the DOM API, which is unavailable in the
+// MV3 service worker. Character references are decoded, and the tags are erased or turned into a
+// word boundary depending on their level, so the words of the resulting index are neither damaged
+// nor invented.
+function removeTags(string) {
+    return string
+        // the content of srcdoc is escaped, so it has to be decoded before its own tags are removed
+        .replace(RX_IFRAME_SRCDOC, (m, doubleQuoted, singleQuoted) =>
+            ` ${inlined(removeTags(decodeReferences(doubleQuoted ?? singleQuoted)))} `)
+        .replace(/<title.*?<\/title>/igs, " ")
+        .replace(/<style.*?<\/style>/igs, " ")
+        .replace(/<script.*?<\/script>/igs, " ")
+        .replace(/<[^>]+>/gs, replaceTag)
+        // the references are decoded last: a decoded '<' should not be taken for a tag
+        .replace(RX_REFERENCE, decodeReference);
+}
+
+function replaceTag(tag) {
+    // an end tag separates the words no less than its start tag does, so both are looked up alike
+    let start = tag.charCodeAt(1) === 47? 2: 1;
+    let end = start;
+
+    // a name ends at whitespace, at the slash of an empty element tag, or at the closing bracket;
+    // a comment or a doctype yields a name that is in no case inline, and so becomes a space
+    while (end < tag.length) {
+        const c = tag.charCodeAt(end);
+
+        if (c <= 32 || c === 47 || c === 62)
+            break;
+
+        end += 1;
+    }
+
+    return INLINE_TAGS.has(tag.substring(start, end).toLowerCase())? "": " ";
+}
+
+// keeps the markup characters of an already processed fragment from being
+// interpreted for the second time in the enclosing document
+function inlined(text) {
+    return text.replace(/[<>&]/g, " ");
+}
+
+function decodeReferences(string) {
+    return string.replace(RX_REFERENCE, decodeReference);
+}
+
+function decodeReference(match, reference) {
+    if (reference[0] === "#") {
+        const code = reference[1] === "x" || reference[1] === "X"
+            ? parseInt(reference.substring(2), 16)
+            : parseInt(reference.substring(1), 10);
+
+        // NaN fails the comparison along with the out of range code points
+        return code > 0 && code <= 0x10FFFF? String.fromCodePoint(code): " ";
+    }
+
+    return NAMED_REFERENCES[reference.toLowerCase()] || " ";
+}
+
+// Reduces markup text and a query to the same shape so a phrase can be found across tags and
+// punctuation, which is what mark.js approximates with acrossElements and ignorePunctuation.
+// Punctuation is dropped rather than turned into a separator, so that "dont" still finds
+// "don't" and "email" still finds "e-mail"; only whitespace separates words, which keeps
+// "foo bar" from matching "foo,bar" exactly as the mark.js regexes do.
+function normalizeForMatching(string) {
+    return string.toLocaleLowerCase()
+        .replace(/[^\p{L}\p{N}\s]+/ug, "")
+        .replace(/\s+/ug, " ")
+        .trim();
+}
+
+// Counts the occurrences of a phrase in an HTML string without building a document. The query is
+// normalized once, so the matcher can be reused across the documents of an entire search.
+export function phraseMatcher(query) {
+    const phrase = normalizeForMatching(query || "");
+
+    return {
+        count(html) {
+            if (!phrase || typeof html !== "string")
+                return 0;
+
+            const text = normalizeForMatching(removeTags(html));
+            let count = 0;
+
+            // the matches are non-overlapping and left to right, as they are in mark.js
+            for (let i = text.indexOf(phrase); i !== -1; i = text.indexOf(phrase, i + phrase.length))
+                count += 1;
+
+            return count;
+        }
+    };
 }
 
 export async function isHTMLLink(url, timeout = 10000) {

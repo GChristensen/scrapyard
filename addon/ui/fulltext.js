@@ -1,10 +1,11 @@
 import {send} from "../proxy.js"
 import {settings} from "../settings.js";
 import {
-    assembleUnpackedIndex,
+    assembleUnpackedContent,
     fixDocumentEncoding, injectCSS,
     instantiateIFramesRecursive,
     parseHtml,
+    phraseMatcher,
     rebuildIFramesRecursive
 } from "../utils_html.js";
 import {getActiveTab} from "../utils_browser.js";
@@ -124,7 +125,23 @@ async function previewNotes(query, node) {
 function displayURL(previewURL, node) {
     $(`#found-items td`).css("background-color", "transparent");
     $(`#row_${node.id} .result-row`).css("background-color", "#DDDDDD");
-    $("#search-preview").html(`<iframe class="search-preview-content" src="${previewURL}"></iframe>`);
+
+    // the frame is navigated rather than recreated: rebuilding the element tears the
+    // preview down to an empty box first, which is what makes it blink between results
+    previewFrame().src = previewURL;
+}
+
+function previewFrame() {
+    let frame = document.getElementById("search-preview-content");
+
+    if (!frame) {
+        frame = document.createElement("iframe");
+        frame.id = "search-preview-content";
+        frame.className = "search-preview-content";
+        document.getElementById("search-preview").appendChild(frame);
+    }
+
+    return frame;
 }
 
 async function markDoc(query, doc) {
@@ -192,30 +209,32 @@ async function appendSearchResult(query, node, occurrences) {
     $(`#open_this_tab_${node.id}`).click(async e => send.browseNode({node, tab: await getActiveTab(), preserveHistory: true}));
     $(`#open_${node.id}`).click(e => send.browseNode({node}));
 
-    $("#search-result-count").text(`${++resultsFound} ${resultsFound === 1? "result": "results"} found`);
+    ++resultsFound;
+    updateResultCount();
 }
 
-async function markSearch(query, nodes, acrossElements) {
+async function countSearch(query, nodes) {
     const progressCounter = new ProgressCounter(nodes.length, "fullTextSearchProgress");
+    const matcher = phraseMatcher(query);
+
+    setSearchProgressTotal(nodes.length);
 
     for (const node of nodes) {
         if (!searching)
             break;
 
-        const docs = await getArchiveFrames(node) || [];
-
         let total = 0;
-        for (const doc of docs) {
-            if (!searching)
-                break;
 
-            const count = await markSearchDoc(query, doc, acrossElements);
-
-            if (count)
-                total += count;
-
-            progressCounter.incrementAndNotify();
+        try {
+            for (const content of await getSearchableContent(node))
+                total += matcher.count(content);
         }
+        catch (e) {
+            console.error(e);
+        }
+
+        progressCounter.incrementAndNotify();
+        advanceSearchProgress();
 
         if (total > 0)
             await appendSearchResult(query, node, total);
@@ -224,54 +243,23 @@ async function markSearch(query, nodes, acrossElements) {
     stopSearch(progressCounter);
 }
 
-async function getArchiveFrames(node) {
+// Returns the content of a node as HTML strings. Only their text is needed to count the
+// occurrences, and parsing every archive into a document to obtain it is what made the
+// search slow; the marking of the previewed document is a separate matter.
+async function getSearchableContent(node) {
     if (node.__notes_search) {
         const notes = await Notes.get(node);
-
-        if (notes) {
-            const html = notes2html(notes);
-            return [parseHtml(html)];
-        }
-        else
-            return [];
+        return notes? [notes2html(notes)]: [];
     }
     else if (Archive.isUnpacked(node))
-        return await assembleUnpackedIndex(node);
+        return assembleUnpackedContent(node);
     else {
         const archive = await Archive.get(node);
-        const content = await Archive.reify(archive);
-        const rootDoc = parseHtml(content);
-        const [iframeDocs] = instantiateIFramesRecursive(rootDoc);
-        return [rootDoc, ...iframeDocs];
+        const content = archive? await Archive.reify(archive): null;
+
+        // a binary archive (a PDF or an image) reifies into an array buffer, which has no text
+        return typeof content === "string"? [content]: [];
     }
-}
-
-async function markSearchDoc(query, doc, across) {
-    const mark = new Mark(doc);
-    let found = true;
-
-    let resolveResult;
-    const promise = new Promise(resolve => resolveResult = resolve);
-
-    mark.mark(query, {
-        iframes: true,
-        acrossElements: across,
-        //firstMatchOnly: true,
-        separateWordSearch: false,
-        ignorePunctuation: IGNORE_PUNCTUATION,
-        //filter: (n, t, c) => {return c === 0},
-        noMatch: () => {
-            found = false;
-        },
-        done: c => {
-            if (found)
-                resolveResult(c);
-            else
-                resolveResult(0);
-        }
-    });
-
-    return promise;
 }
 
 async function performSearch() {
@@ -285,7 +273,8 @@ async function performSearch() {
         $("#search-button").val("Cancel");
 
         resultsFound = 0;
-        $("#search-result-count").text("");
+        updateResultCount();
+        startSearchProgress();
 
         $("title").text("Full Text Search: " + searchQuery);
 
@@ -314,9 +303,9 @@ async function performSearch() {
         nodes = [...noteNodes, ...nodes];
 
         $("#found-items").empty();
-        $("#search-preview").empty();
+        previewFrame().src = "about:blank";
 
-        markSearch(searchQuery, nodes, searchQuery.indexOf(" ") > 0);
+        countSearch(searchQuery, nodes);
     }
     else
         searching = false;
@@ -327,10 +316,69 @@ function stopSearch(progressCounter) {
     $("#search-button").val("Search");
     send.stopProcessingIndication();
     progressCounter.finish();
-
-    if (resultsFound === 0)
-        $("#search-result-count").text(`not found`);
+    stopSearchProgress();
+    updateResultCount();
 
     if (searchQuery !== $("#search-query").val())
         performSearch();
+}
+
+function updateResultCount() {
+    if (searching)
+        $("#search-result-count").text(`searching… ${resultsFound} found`);
+    else if (resultsFound === 0)
+        $("#search-result-count").text("not found");
+    else
+        $("#search-result-count").text(`${resultsFound} ${resultsFound === 1? "result": "results"} found`);
+}
+
+// The page has to indicate its own progress: the ProgressCounter messages that the search
+// sends are received by the sidebar, which is a different document and is not necessarily
+// even open, so nothing of them is visible here.
+const PROGRESS_DELAY_MS = 200;
+
+let progressTimeout;
+let progressTotal;
+let progressDone;
+
+function startSearchProgress() {
+    progressTotal = 0;
+    progressDone = 0;
+    renderSearchProgress();
+
+    // a search that completes at once should not flash the bar on and off
+    clearTimeout(progressTimeout);
+    progressTimeout = setTimeout(() => $("#search-progress").show(), PROGRESS_DELAY_MS);
+}
+
+function setSearchProgressTotal(total) {
+    progressTotal = total;
+    renderSearchProgress();
+}
+
+function advanceSearchProgress() {
+    progressDone += 1;
+    renderSearchProgress();
+}
+
+function stopSearchProgress() {
+    clearTimeout(progressTimeout);
+
+    const bar = $("#search-progress");
+
+    if (bar.is(":visible")) {
+        // let the bar run out rather than vanish half way, as the sidebar one does
+        bar.css("width", "100%");
+        progressTimeout = setTimeout(() => bar.hide().css("width", 0), 200);
+    }
+    else
+        bar.hide().css("width", 0);
+}
+
+function renderSearchProgress() {
+    const progress = progressTotal? (progressDone / progressTotal) * 100: 0;
+
+    // the bar keeps a visible stub from the outset, so that the index query and a slow
+    // first archive do not look like a stall
+    $("#search-progress").css("width", `${Math.max(progress, 2)}%`);
 }

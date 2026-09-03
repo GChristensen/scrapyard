@@ -15,3 +15,5 @@ backend/*.exe
 backend/*.zip
 backend/*.tgz
 /addon/.amo-upload-uuid
+/CLAUDE.md
+/.claude/
