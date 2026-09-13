@@ -4,7 +4,7 @@ import {send} from "../../proxy.js";
 import {EVERYTHING_SHELF_NAME, NODE_TYPE_ARCHIVE, NODE_TYPE_BOOKMARK} from "../../storage.js";
 import {getFaviconFromContent} from "../../favicon.js";
 import {fetchWithTimeout} from "../../utils_io.js";
-import {confirm} from "../dialog.js";
+import {alert, confirm} from "../dialog.js";
 import {showNotification} from "../../utils_browser.js";
 import {Node} from "../../storage_entities.js";
 import {Path} from "../../path.js";
@@ -244,6 +244,9 @@ export class LinkChecker {
             if (updateIcons)
                 await DiskStorage.closeBatchSession();
         }
+
+        if (!this.resultCount && !this.abortCheckLinks)
+            await alert("Link Check", "No outdated links found.");
     }
 
     async _checkForDuplicates() {

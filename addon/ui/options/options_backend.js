@@ -1,3 +1,4 @@
+import {settings} from "../../settings.js";
 import {fetchWithTimeout} from "../../utils_io.js";
 import {send} from "../../proxy.js";
 
@@ -48,6 +49,16 @@ async function loadHelperAppLinks() {
             .replace("%%%", "not installed"));
 }
 
+function configureBackendSettingsPage() {
+    $("#option-helper-port").val(settings.helper_port_number());
+
+    $("#option-helper-port").on("input", async e => {
+        await settings.load();
+        settings.helper_port_number(+e.target.value);
+    });
+}
+
 export async function load() {
-    loadHelperAppLinks();
+    configureBackendSettingsPage();
+    await loadHelperAppLinks();
 }

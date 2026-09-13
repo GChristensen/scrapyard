@@ -71,11 +71,6 @@ function configureScrapyardSettingsPage() {
         await settings.number_of_bookmarks_toolbar_references(value);
     });
 
-    $("#option-helper-port").on("input", async e => {
-        await settings.load();
-        settings.helper_port_number(+e.target.value);
-    });
-
     $("#transfer-content").on("click", async e => {
         e.preventDefault();
 
@@ -149,7 +144,6 @@ function loadScrapyardSettings() {
     $("#option-sidebar-filter-partial-match").prop("checked", settings.sidebar_filter_partial_match());
     $("#option-remember-last-filtering-mode").prop("checked", settings.remember_last_filtering_mode());
     $("#option-undo-failed-imports").prop("checked", settings.undo_failed_imports());
-    $("#option-helper-port").val(settings.helper_port_number());
 
     selectricRefresh($("#option-sidebar-theme"));
     selectricRefresh($("#option-storage-mode"));
