@@ -1175,14 +1175,14 @@ class BookmarkTree {
                             }
                         }
                     },
-                    pocketItem: {
-                        label: "Pocket",
-                        icon: "/icons/pocket.svg",
-                        action: async () => {
-                            if (selectedNodes)
-                                await send.shareToPocket({nodes: selectedNodes.map(n => o(n))});
-                        }
-                    },
+                    // pocketItem: {
+                    //     label: "Pocket",
+                    //     icon: "/icons/pocket.svg",
+                    //     action: async () => {
+                    //         if (selectedNodes)
+                    //             await send.shareToPocket({nodes: selectedNodes.map(n => o(n))});
+                    //     }
+                    // },
                     dropboxItem: {
                         label: "Dropbox",
                         icon: "/icons/dropbox.png",

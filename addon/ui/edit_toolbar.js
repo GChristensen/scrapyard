@@ -71,6 +71,11 @@ class EditToolbar {
                         // document.body or ancestors
                     }
                 }
+                else {
+                    /** cursor is over the toolbar itself (or no element under it), clear any stale border */
+                    this.last = null;
+                    this.targetBorder.hide();
+                }
             }
         });
     }
@@ -94,7 +99,7 @@ class EditToolbar {
         this.last = null;
         this.erasing = on;
         this.targetBorder.hide();
-        $(this.editBar).find("input[type=button]").prop("disabled", on);
+        $(this.editBar).find("input[type=button]").not("#scrapyard-save-doc-button").prop("disabled", on);
         document.body.style.cursor = this.erasing? "crosshair": "";
     }
 
@@ -134,6 +139,8 @@ class EditToolbar {
 
         let doc = document.documentElement.cloneNode(true);
         $(`#scrapyard-edit-bar-container, #scrapyard-dom-eraser-border`, doc).remove();
+        /** the DOM Eraser cursor is transient UI state, must not leak into the saved archive */
+        $(doc).find("body").css("cursor", "");
 
         this._fixDocumentEncoding(doc);
 
@@ -198,6 +205,15 @@ class EditToolbar {
                 e.target.className = erasing? "yellow-button": "blue-button";
                 $(e.target).prop("disabled", false);
             });
+
+        /** if the toolbar is hidden while DOM Eraser is still on, turn it off instead of leaving it dangling */
+        const exitEraserIfActive = () => {
+            if (erasing) {
+                erasing = false;
+                this.toggleDomEraser(false);
+                $("#scrapyard-dom-eraser-button", editBar).removeClass("yellow-button").addClass("blue-button");
+            }
+        };
 
         append(`<input id="scrapyard-marker-button" type="button" class="blue-button" value="Marker Pen">`)
             .on("click", e => {
@@ -315,6 +331,8 @@ class EditToolbar {
 
         append(`<input id="scrapyard-hide-button" type="button" class="blue-button" value="Hide">`)
             .on("click", e => {
+                exitEraserIfActive();
+
                 scrapyardHideToolbar = true;
                 document.body.style.marginBottom = documentMarginBottom;
                 $(rootContainer).hide();
@@ -336,6 +354,10 @@ class EditToolbar {
 
         $(document).on("keydown", e => {
             if (e.code === "KeyT" && e.ctrlKey && e.altKey) {
+                const willHide = !scrapyardHideToolbar;
+                if (willHide)
+                    exitEraserIfActive();
+
                 $(rootContainer).toggle();
                 scrapyardHideToolbar = !scrapyardHideToolbar;
                 document.body.style.marginBottom =
