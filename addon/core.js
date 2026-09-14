@@ -4,7 +4,7 @@ import {systemInitialization} from "./bookmarks_init.js";
 import {browserShelf} from "./plugin_browser_shelf.js";
 import {cloudShelf} from "./plugin_cloud_shelf.js";
 import {addBookmarkOnCommand, setBookmarkedActionIcon} from "./bookmarking.js";
-import {toggleSidebarWindow} from "./utils_sidebar.js";
+import {openSidePanel, toggleSidebarWindow} from "./utils_sidebar.js";
 import {undoManager} from "./bookmarks_undo.js";
 import {helperApp} from "./helper_app.js";
 import {settings} from "./settings.js";
@@ -79,11 +79,15 @@ if (browser.webRequest) {
     );
 }
 
-browser.commands.onCommand.addListener(function(command) {
-    if (!_SIDEBAR && command === "toggle_sidebar_window")
-        toggleSidebarWindow();
+browser.commands.onCommand.addListener(function(command, tab) {
+    if (command === "toggle_sidebar_window") {
+        if (_SIDE_PANEL)
+            openSidePanel(tab?.windowId);
+        else if (!_SIDEBAR)
+            toggleSidebarWindow();
+    }
     else
-        addBookmarkOnCommand(command);
+        addBookmarkOnCommand(command, tab);
 });
 
 browser.tabs.onActivated.addListener(async activeInfo => {

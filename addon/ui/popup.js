@@ -14,7 +14,7 @@ import {getFaviconFromTab} from "../favicon.js";
 import {Query} from "../storage_query.js";
 import {BookmarkTree} from "./tree.js";
 import {send} from "../proxy.js";
-import {toggleSidebarWindow} from "../utils_sidebar.js";
+import {openSidePanel, toggleSidebarWindow} from "../utils_sidebar.js";
 import {isSpecialPage} from "../bookmarking.js";
 import {settings} from "../settings.js";
 
@@ -22,6 +22,7 @@ let tree;
 let bookmarkFolderSelect;
 let folderHistory;
 let crawlerMode;
+let windowId;
 
 $(init);
 
@@ -42,6 +43,9 @@ async function init() {
     tree.update(nodes);
 
     await saveActiveTabProperties();
+
+    if (_SIDE_PANEL)
+        windowId = (await browser.windows.getCurrent()).id;
 
     $("#new-shelf").on("click", () => createNewFolder(NODE_TYPE_SHELF));
     $("#new-folder").on("click", () => createNewFolder(NODE_TYPE_FOLDER));
@@ -188,6 +192,9 @@ async function addBookmark(nodeType) {
 function toggleSidebar() {
     if (browser.sidebarAction)
         browser.sidebarAction.toggle();
+    else if (_SIDE_PANEL) {
+        openSidePanel(windowId).then(() => window.close());
+    }
     else
         toggleSidebarWindow();
 }

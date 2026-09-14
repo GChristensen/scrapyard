@@ -2,10 +2,19 @@
 set windows-shell := ["sh", "-c"]
 
 test:
+    just firefox-mv2
     cd addon && cmd //c start web-ext run -p "${FIREFOX_PROFILES}/debug.scrapyard" --keep-profile-changes
 
 test-nightly:
     cd addon && cmd //c start web-ext run -p "${FIREFOX_PROFILES}/debug.scrapyard.nightly" --firefox=nightly --keep-profile-changes
+
+# leaves the Chrome manifest in place, use `just firefox-mv2` to restore the Firefox one
+# Chrome writes indexed declarativeNetRequest rulesets to addon/_metadata on each load,
+# watching it makes web-ext reload the extension endlessly
+test-chrome:
+    just chrome-mv3
+    mkdir -p "${FIREFOX_PROFILES}/debug.scrapyard.chrome"
+    cd addon && cmd //c start web-ext run -t chromium --chromium-profile "${FIREFOX_PROFILES}/debug.scrapyard.chrome" --keep-profile-changes -i "_metadata" "_metadata/**/*"
 
 set-version version:
     echo {{version}} > ./addon/version.txt

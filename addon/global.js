@@ -13,6 +13,8 @@ globalThis._BACKGROUND_PAGE = !!_MANIFEST.background?.page;
 
 globalThis._SIDEBAR = !!globalThis.browser.sidebarAction;
 
+globalThis._SIDE_PANEL = !globalThis._SIDEBAR && !!globalThis.browser.sidePanel;
+
 globalThis._log = console.log.bind(console);
 
 globalThis._tm = (name = "timer") => console.time(name);

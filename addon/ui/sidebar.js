@@ -47,7 +47,7 @@ import {Folder} from "../bookmarks_folder.js";
 import {Icon, Node} from "../storage_entities.js";
 import {undoManager} from "../bookmarks_undo.js";
 import {systemInitialization} from "../bookmarks_init.js";
-import {getSidebarWindow} from "../utils_sidebar.js";
+import {getSidebarWindow, isInSidebarWindow} from "../utils_sidebar.js";
 import {helperApp} from "../helper_app.js";
 import {ExternalStorage} from "../storage_external.js";
 import {setBookmarkedActionIcon} from "../bookmarking.js";
@@ -72,6 +72,9 @@ let randomBookmark;
 let randomBookmarkTimeout;
 
 let browseNode;
+
+let sidebarWindowId;
+let inSidebarWindow = false;
 
 window.addEventListener('DOMContentLoaded', () => {
     const shelfListPlaceholderDiv = $("#shelfList-placeholder");
@@ -269,6 +272,19 @@ async function init() {
     tree.performExport = performExport;
     tree.addFilesDirectory = addFilesDirectory;
 
+    if (!_SIDEBAR) {
+        inSidebarWindow = await isInSidebarWindow();
+        sidebarWindowId = (await browser.windows.getCurrent()).id;
+
+        // there may be a side panel in each browser window, only the one chosen as a host
+        // should process messages addressed to a particular window
+        receive.messageFilter = message =>
+            message.hostWindowId === undefined || message.hostWindowId === sidebarWindowId;
+    }
+
+    if (_SIDE_PANEL)
+        browser.storage.session.onChanged.addListener(onSessionStorageChanged);
+
     receive.startListener();
     receiveExternal.startListener();
 
@@ -276,7 +292,7 @@ async function init() {
 }
 
 window.onbeforeunload = function() {
-    if (!_SIDEBAR) {
+    if (inSidebarWindow) {
         getSidebarWindow().then(w => {
             const position = {top: w.top, left: w.left, height: w.height, width: w.width};
             settings.sidebar_window_position(position);
@@ -376,6 +392,20 @@ async function getPreselectedShelf() {
         if (externalShelf) {
             browser.storage.session.remove("sidebar-select-shelf");
             return externalShelf;
+        }
+    }
+}
+
+// an already opened side panel does not read the preselected shelf at startup
+async function onSessionStorageChanged(changes) {
+    const shelfId = changes["sidebar-select-shelf"]?.newValue;
+
+    if (shelfId && shelfList) {
+        const lastFocused = await browser.windows.getLastFocused({windowTypes: ["normal"]});
+
+        if (lastFocused?.id === sidebarWindowId) {
+            await browser.storage.session.remove("sidebar-select-shelf");
+            await switchShelf(shelfId, false);
         }
     }
 }
@@ -906,8 +936,12 @@ receive.displayRandomBookmark = message => {
 };
 
 receive.reloadSidebar = message => {
-    const sidebarUrl = browser.runtime.getURL(`/ui/sidebar.html#shelf-list-height-${message.height}`);
-    browser.sidebarAction.setPanel({panel: sidebarUrl});
+    if (_SIDEBAR) {
+        const sidebarUrl = browser.runtime.getURL(`/ui/sidebar.html#shelf-list-height-${message.height}`);
+        browser.sidebarAction.setPanel({panel: sidebarUrl});
+    }
+    else
+        settings.load().then(() => location.reload());
 };
 
 receive.toggleAbortMenu = message => {

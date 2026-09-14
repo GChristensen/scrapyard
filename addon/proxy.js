@@ -51,11 +51,15 @@ class ReceiveHandler {
     constructor(camelCase = true) {
         this.methods = new Map();
         this.listener = null;
+        this.filter = null;
         this.camelCase = camelCase;
     }
 
     set(target, key, value, receiver) {
-        this.methods.set(key, value);
+        if (key === "messageFilter")
+            this.filter = value;
+        else
+            this.methods.set(key, value);
         return true;
     }
 
@@ -88,6 +92,10 @@ class ReceiveHandler {
         const method = this.methods.get(type);
 
         if (method) {
+            // a rejected message is left for other listeners, sendResponse should not be called
+            if (this.filter && !this.filter(message))
+                return;
+
             if (_BACKGROUND_PAGE)
                 return method.apply(null, arguments);
             else {

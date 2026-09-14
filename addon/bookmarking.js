@@ -23,7 +23,7 @@ import {Bookmark} from "./bookmarks_bookmark.js";
 import * as crawler from "./crawler.js";
 import {Folder} from "./bookmarks_folder.js";
 import {isHTMLLink, parseHtml} from "./utils_html.js";
-import {getSidebarWindow, toggleSidebarWindow} from "./utils_sidebar.js";
+import {getSidebarWindow, openSidePanel, toggleSidebarWindow} from "./utils_sidebar.js";
 import {helperApp} from "./helper_app.js";
 
 const SCRAPYARD_FOLDER_NAME = "Scrapyard";
@@ -345,11 +345,13 @@ export async function packUrlExt(url, hide_tab) {
     return packPage(url, {}, b => b.__url_packing = true, resolver, hide_tab);
 }
 
-export function addBookmarkOnCommand(command) {
+export function addBookmarkOnCommand(command, tab) {
     let type = command === "archive_to_default_shelf"? NODE_TYPE_ARCHIVE: NODE_TYPE_BOOKMARK;
 
     if (settings.platform.firefox)
         addBookmarkOnCommandFirefox(type);
+    else if (_SIDE_PANEL)
+        addBookmarkOnCommandSidePanel(type, tab);
     else
         addBookmarkOnCommandNonFirefox(type);
 }
@@ -383,6 +385,18 @@ async function addBookmarkOnCommandNonFirefox(type) {
             await toggleSidebarWindow();
         }
     }
+}
+
+// requires non-async function: the side panel could be opened only in response to a user gesture
+function addBookmarkOnCommandSidePanel(type, tab) {
+    if (settings.open_sidebar_from_shortcut()) {
+        browser.storage.session.set({"sidebar-select-shelf": DEFAULT_SHELF_ID});
+        openSidePanel(tab?.windowId);
+    }
+
+    getActiveTabMetadata()
+        .then(payload => addBookmarkOnCommandSendPayload(type, payload))
+        .catch(e => console.error(e));
 }
 
 async function addBookmarkOnCommandSendPayload(type, payload) {

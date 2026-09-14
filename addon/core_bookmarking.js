@@ -32,7 +32,7 @@ import {Archive, Node} from "./storage_entities.js";
 import {undoManager} from "./bookmarks_undo.js";
 import {browseNodeBackground} from "./browse.js";
 import UUID from "./uuid.js";
-import {ensureSidebarWindow} from "./utils_sidebar.js";
+import {ensureSidebarHost} from "./utils_sidebar.js";
 import {getFaviconFromContent, getFaviconFromTab} from "./favicon.js";
 
 async function canUseBookmarking() {
@@ -376,8 +376,8 @@ receive.uploadFiles = async message => {
 
 receive.browseNode = async message => {
     if (!_BACKGROUND_PAGE && settings.storage_mode_internal()) {
-        await ensureSidebarWindow();
-        return send.browseNodeSidebar(message);
+        const hostWindowId = await ensureSidebarHost();
+        return send.browseNodeSidebar({...message, hostWindowId});
     }
     else
         return browseNodeBackground(message.node, message);

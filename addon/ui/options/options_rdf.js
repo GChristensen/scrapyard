@@ -2,7 +2,7 @@ import {send} from "../../proxy.js";
 import {isBuiltInShelf} from "../../storage.js";
 import {showNotification} from "../../utils_browser.js";
 import {Query} from "../../storage_query.js";
-import {ensureSidebarWindow} from "../../utils_sidebar.js";
+import {ensureSidebarHost} from "../../utils_sidebar.js";
 import {selectricRefresh, simpleSelectric} from "../shelf_list.js";
 import {settings} from "../../settings.js";
 
@@ -96,10 +96,12 @@ async function onStartRDFImport(e) {
 
     browser.runtime.onMessage.addListener(importListener);
 
+    let hostWindowId;
     if (!_BACKGROUND_PAGE)
-        await ensureSidebarWindow(1000);
+        hostWindowId = await ensureSidebarHost(1000);
 
     send.importFile({
+        hostWindowId,
         file: path,
         file_name: shelf,
         file_ext: "RDF",
