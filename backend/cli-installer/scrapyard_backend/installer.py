@@ -106,3 +106,9 @@ if PLATFORM_NAME == "Windows":
 
     write_reg_hklm_value(f"Software\\Mozilla\\NativeMessagingHosts\\{native_base}", firefox_manifest_path)
     write_reg_hklm_value(f"Software\\Google\\Chrome\\NativeMessagingHosts\\{native_base}", chrome_manifest_path)
+
+print("Native messaging manifests installed at:")
+print(f"  Firefox: {firefox_manifest_path}")
+print(f"  Chrome: {chrome_manifest_path}")
+if PLATFORM_NAME != "Windows":
+    print(f"  Chromium: {chromium_manifest_path}")

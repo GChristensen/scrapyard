@@ -180,7 +180,8 @@ function configureImpExpPanel() {
         // download link
         const file = new Blob([JSON.stringify(exported, null, 2)], {type: "application/json"});
         const url = URL.createObjectURL(file);
-        const filename = "scrapyard-settings.json"
+        const isoDate = now.toISOString().split("T")[0];
+        const filename = `scrapyard-settings-${isoDate}.json`
 
         const download = await browser.downloads.download({url: url, filename: filename, saveAs: true});
 

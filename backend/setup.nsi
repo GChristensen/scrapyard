@@ -32,6 +32,7 @@ SetCompressor LZMA
 !define MUI_ABORTWARNING
 
 !insertmacro MUI_PAGE_WELCOME
+Page custom CloseBrowsersPageCreate
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -41,6 +42,8 @@ SetCompressor LZMA
 
 ; Set languages (first is default language)
 !insertmacro MUI_LANGUAGE "English"
+
+Var PreviousInstallFound
 
 function StrReplace
   Exch $0 ;this will replace wrong characters
@@ -91,6 +94,7 @@ function StrReplace
 FunctionEnd
 
 !include LogicLib.nsh
+!include "nsDialogs.nsh"
 
 !macro UninstallExisting exitcode uninstcommand
     Push `${uninstcommand}`
@@ -134,6 +138,25 @@ Function UninstallExisting
     #Exch $1 ; exitcode
     StrCpy $1 0
     Exch $1
+FunctionEnd
+
+Function CloseBrowsersPageCreate
+    ${If} $PreviousInstallFound != "1"
+        Abort
+    ${EndIf}
+
+    !insertmacro MUI_HEADER_TEXT "Close Browsers" "An existing installation was found"
+
+    nsDialogs::Create 1018
+    Pop $0
+    ${If} $0 == error
+        Abort
+    ${EndIf}
+
+    ${NSD_CreateLabel} 0 0 100% 60u "IMPORTANT! Before the installation please completely close all browsers (Firefox, Chrome, etc.) in which the Scrapyard extension is installed before continuing with the installation."
+    Pop $1
+
+    nsDialogs::Show
 FunctionEnd
 
 Section "Scrapyard Backend" Section1
@@ -236,6 +259,13 @@ SectionEnd
 Function .onInit
 
 	#!insertmacro MUI_LANGDLL_DISPLAY
+
+	ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "UninstallString"
+	${If} $0 != ""
+		StrCpy $PreviousInstallFound "1"
+	${Else}
+		StrCpy $PreviousInstallFound "0"
+	${EndIf}
 
 FunctionEnd
 
