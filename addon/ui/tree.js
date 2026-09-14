@@ -1175,14 +1175,6 @@ class BookmarkTree {
                             }
                         }
                     },
-                    // pocketItem: {
-                    //     label: "Pocket",
-                    //     icon: "/icons/pocket.svg",
-                    //     action: async () => {
-                    //         if (selectedNodes)
-                    //             await send.shareToPocket({nodes: selectedNodes.map(n => o(n))});
-                    //     }
-                    // },
                     dropboxItem: {
                         label: "Dropbox",
                         icon: "/icons/dropbox.png",
@@ -1519,7 +1511,6 @@ class BookmarkTree {
                 delete items.copyLinkItem;
                 //delete items.shareItem;
                 if (items.shareItem) {
-                    delete items.shareItem.submenu.pocketItem;
                     delete items.shareItem.submenu.dropboxItem;
                     delete items.shareItem.submenu.oneDriveItem;
                 }
@@ -1543,7 +1534,6 @@ class BookmarkTree {
                 break;
             case NODE_TYPE_NOTES:
             case NODE_TYPE_FILE:
-                delete items.shareItem.submenu.pocketItem;
                 delete items.newItem.submenu.newNotesItem;
                 delete items.openInContainerItem;
                 delete items.copyLinkItem;

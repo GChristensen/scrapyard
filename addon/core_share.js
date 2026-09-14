@@ -1,5 +1,4 @@
 import {receive} from "./proxy.js";
-import {GetPocket} from "./lib/pocket.js";
 import {settings} from "./settings.js";
 import {showNotification} from "./utils_browser.js";
 import {NODE_TYPE_ARCHIVE, NODE_TYPE_BOOKMARK, NODE_TYPE_FILE, NODE_TYPE_NOTES} from "./storage.js";
@@ -8,42 +7,6 @@ import {dropboxClient} from "./cloud_client_dropbox.js";
 import {oneDriveClient} from "./cloud_client_onedrive.js";
 import {CONTENT_TYPE_TO_EXT} from "./utils.js";
 import {Archive, Notes} from "./storage_entities.js";
-
-receive.shareToPocket = async message => {
-    const auth_handler = auth_url => new Promise(async (resolve, reject) => {
-        let pocket_tab = await browser.tabs.create({url: auth_url});
-        let listener = async (id, changed, tab) => {
-            if (id === pocket_tab.id) {
-                if (changed.url && !changed.url.includes("getpocket.com")) {
-                    await browser.tabs.onUpdated.removeListener(listener);
-                    browser.tabs.remove(pocket_tab.id);
-                    resolve();
-                }
-            }
-        };
-        browser.tabs.onUpdated.addListener(listener);
-    });
-
-    let pocket = new GetPocket({
-        consumer_key: "87251-b8d5db3009affab6297bc799",
-        access_token: settings.pocket_access_token(),
-        redirect_uri: "https://gchristensen.github.io/scrapyard/",
-        auth_handler: auth_handler,
-        persist_token: token => settings.pocket_access_token(token)
-    });
-
-    let actions = message.nodes.map(n => ({
-        action: "add",
-        title: n.name,
-        url: n.uri,
-        tags: n.tags
-    }));
-    await pocket.modify(actions).catch(e => console.error(e));
-
-    showNotification(`Successfully added bookmark${message.nodes.length > 1
-        ? "s"
-        : ""} to Pocket.`)
-};
 
 receive.shareToDropbox = async message => {
     let shared = false;
