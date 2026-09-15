@@ -90,10 +90,10 @@ export class BookmarkManager extends EntityManager {
         return node;
     }
 
-    async addSeparator(parentId) {
+    async addSeparator(parentId, name = "-") {
         const parent = await Node.get(parentId);
         const options = {
-            name: "-",
+            name,
             type: NODE_TYPE_SEPARATOR,
             parent_id: parentId,
             external: parent.external

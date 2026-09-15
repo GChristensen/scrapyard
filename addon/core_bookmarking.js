@@ -46,7 +46,7 @@ receive.createFolder = message => Folder.add(message.parent, message.name);
 
 receive.renameFolder = message => Folder.rename(message.id, message.name);
 
-receive.addSeparator = message => Bookmark.addSeparator(message.parent_id);
+receive.addSeparator = message => Bookmark.addSeparator(message.parent_id, message.name);
 
 receive.createBookmark = async message => {
     if (!settings.storage_mode_internal() && !settings.data_folder_path())

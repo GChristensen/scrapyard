@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   width="16"
+   height="16"
+   viewBox="0 0 16 16"
+   version="1.1"
+   id="svg825">
+  <rect
+     style="fill:#666666;fill-opacity:1;stroke:none"
+     id="rect-line-left"
+     x="1.2717161"
+     y="6.7796612"
+     width="4.1282839"
+     height="2.3559322" />
+  <rect
+     style="fill:#666666;fill-opacity:1;stroke:none"
+     id="rect-line-right"
+     x="10.6"
+     y="6.7796612"
+     width="4.1282841"
+     height="2.3559322" />
+  <rect
+     style="fill:#666666;fill-opacity:1;stroke:none"
+     id="rect-a-top"
+     x="6.725"
+     y="4.985"
+     width="2.55"
+     height="0.85" />
+  <rect
+     style="fill:#666666;fill-opacity:1;stroke:none"
+     id="rect-a-left-leg"
+     x="5.875"
+     y="5.835"
+     width="0.85"
+     height="5.1" />
+  <rect
+     style="fill:#666666;fill-opacity:1;stroke:none"
+     id="rect-a-right-leg"
+     x="9.275"
+     y="5.835"
+     width="0.85"
+     height="5.1" />
+  <rect
+     style="fill:#666666;fill-opacity:1;stroke:none"
+     id="rect-a-crossbar"
+     x="6.725"
+     y="7.535"
+     width="2.55"
+     height="0.85" />
+</svg>

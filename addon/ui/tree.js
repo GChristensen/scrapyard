@@ -396,7 +396,10 @@ class BookmarkTree {
             }
         }
         else if (node.type === NODE_TYPE_SEPARATOR) {
-            jnode.text = "─".repeat(60);
+            const label = node.name && node.name !== "-"? node.name: "";
+            jnode.text = label
+                ? ` <span class="separator-label">${label}</span> ${"─".repeat(60)}`
+                : "─".repeat(60);
             jnode.icon = false;
             jnode.a_attr = {
                 class: "separator-node"

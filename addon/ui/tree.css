@@ -180,6 +180,18 @@
     font-family: "Courier New", monospace;
 }
 
+.separator-node .separator-label {
+    font-family: "Helvetica",
+    "Arial",
+    "Lucida Sans Unicode",
+    "Lucida Sans",
+    "Trebuchet MS",
+    "Open Sans",
+    "Fira Sans",
+    "Liberation Sans",
+    sans-serif;
+}
+
 .jstree-default .separator-node::before {
     content: "──";
 }

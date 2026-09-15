@@ -372,6 +372,28 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                         bookmarkTree.reorderNodes(jparent);
                     }
                 },
+                newLabeledSeparatorItem: {
+                    label: "Labeled Separator",
+                    icon: `/icons/labeled_separator${lightTheme? "": "2"}.svg`,
+                    action: async () => {
+                        const options = await showDlg("prompt", {caption: "Labeled Separator", label: "Label:"});
+                        if (!options?.title)
+                            return;
+
+                        const jparent = tree.get_node(ctxJNode.parent);
+                        const position = $.inArray(ctxJNode.id, jparent.children);
+                        let separator = {id: Bookmark.setTentativeId({}), type: NODE_TYPE_SEPARATOR,
+                                         name: options.title, parent_id: o(jparent).id};
+
+                        const jnode = bookmarkTree.constructor.toJsTreeNode(separator);
+                        const separatorJNode = tree.get_node(tree.create_node(jparent, jnode, position + 1));
+
+                        separator = await send.addSeparator({parent_id: o(jparent).id, name: options.title});
+                        tree.set_id(separatorJNode.id, separator.id);
+                        Object.assign(o(separatorJNode), separator);
+                        bookmarkTree.reorderNodes(jparent);
+                    }
+                },
             }
         },
         cutItem: {
@@ -728,6 +750,25 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                             }
                         });
                         break;
+                    case NODE_TYPE_SEPARATOR: {
+                        const currentLabel = node.name && node.name !== "-"? node.name: "";
+                        const options = await showDlg("prompt", {caption: "Labeled Separator", label: "Label:",
+                                                                   title: currentLabel});
+                        if (!options)
+                            return;
+
+                        const name = options.title || "-";
+
+                        bookmarkTree.startProcessingIndication();
+                        await send.updateBookmark({node: {id: node.id, name}});
+                        bookmarkTree.stopProcessingIndication();
+
+                        node.name = name;
+                        const text = bookmarkTree.constructor.toJsTreeNode(node).text;
+                        ctxJNode.original.text = text;
+                        tree.rename_node(ctxJNode, text);
+                        break;
+                    }
                 }
             }
         },
@@ -844,6 +885,7 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
 
     if (ctxNode.type === NODE_TYPE_SEPARATOR) {
         const deleteItem = items.deleteItem;
+        const renameItem = items.renameItem;
 
         items.newSiblingFolderItem = items.newItem.submenu.newSiblingFolderItem;
         items.newSiblingFolderItem.icon = undefined;
@@ -853,6 +895,7 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
             if (!["newSiblingFolderItem"].find(s => s === k))
                 delete items[k];
 
+        items.renameItem = renameItem;
         items.deleteItem = deleteItem;
     }
 
