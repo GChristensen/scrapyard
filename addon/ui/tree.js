@@ -30,7 +30,7 @@ import {getActiveTabFromSidebar, showNotification} from "../utils_browser.js";
 import {IMAGE_FORMATS} from "../utils.js";
 import {formatShelfName, setBookmarkedActionIcon} from "../bookmarking.js";
 import {Bookmark} from "../bookmarks_bookmark.js";
-import {Icon} from "../storage_entities.js";
+import {Comments, Icon} from "../storage_entities.js";
 import {DiskStorage, ExternalStorage} from "../storage_external.js";
 import {buildContextMenu} from "./tree_context_menu.js";
 
@@ -105,6 +105,7 @@ class BookmarkTree {
 
         $(document).on("mousedown", ".jstree-node", e => this.handleMouseClick(e));
         $(document).on("click", ".jstree-anchor", e => this.handleMouseClick(e));
+        $(document).on("mouseenter", ".jstree-node", e => this.handleNodeHover(e));
         // $(document).on("auxclick", ".jstree-anchor", e => e.preventDefault());
 
         this.iconCache = new Map();
@@ -265,6 +266,26 @@ class BookmarkTree {
                 }
             }
             return false;
+        }
+    }
+
+    async handleNodeHover(e) {
+        let element = e.target;
+
+        while (element && !$(element).hasClass("jstree-node"))
+            element = element.parentNode;
+
+        if (!element || element.__comment_tooltip_checked || !$(element).hasClass("show_tooltip"))
+            return;
+
+        element.__comment_tooltip_checked = true;
+
+        const node = o(this._jstree.get_node(element.id));
+
+        if (node?.has_comments) {
+            const comment = await Comments.get(node);
+            if (comment)
+                element.title = BookmarkTree._formatNodeTooltip(node) + "\x0A💬 " + comment;
         }
     }
 
