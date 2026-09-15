@@ -180,16 +180,32 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
             label: "Open in Container",
             submenu: containersSubmenu
         },
-        sortItem: {
-            label: "Sort by Name",
-            action: () => {
-                let jchildren = ctxJNode.children.map(c => tree.get_node(c));
-                jchildren.sort((a, b) => a.text.localeCompare(b.text));
-                jchildren.sort((a, b) => byContainer(o(a), o(b)));
-                ctxJNode.children = jchildren.map(c => c.id);
+        orderItem: {
+            label: "Order",
+            submenu: {
+                sortItem: {
+                    label: "Sort by Name",
+                    action: () => {
+                        let jchildren = ctxJNode.children.map(c => tree.get_node(c));
+                        jchildren.sort((a, b) => a.text.localeCompare(b.text));
+                        jchildren.sort((a, b) => byContainer(o(a), o(b)));
+                        ctxJNode.children = jchildren.map(c => c.id);
 
-                tree.redraw_node(ctxJNode, true, false, true);
-                bookmarkTree.reorderNodes(ctxJNode);
+                        tree.redraw_node(ctxJNode, true, false, true);
+                        bookmarkTree.reorderNodes(ctxJNode);
+                    }
+                },
+                reverseItem: {
+                    label: "Reverse",
+                    action: () => {
+                        let jchildren = ctxJNode.children.map(c => tree.get_node(c));
+                        jchildren.reverse();
+                        ctxJNode.children = jchildren.map(c => c.id);
+
+                        tree.redraw_node(ctxJNode, true, false, true);
+                        bookmarkTree.reorderNodes(ctxJNode);
+                    }
+                }
             }
         },
         addFilesDirectoryItem: {
@@ -792,7 +808,7 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
         case NODE_TYPE_BOOKMARK:
             delete items.openOriginalItem;
         case NODE_TYPE_ARCHIVE:
-            delete items.sortItem;
+            delete items.orderItem;
             delete items.openAllItem;
             delete items.newItem.submenu.newFolderItem;
             delete items.renameItem;
@@ -859,7 +875,7 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
 
     if (multiselect) {
         items["newItem"] && (items["newItem"]._disabled = true);
-        items["sortItem"] && (items["sortItem"]._disabled = true);
+        items["orderItem"] && (items["orderItem"]._disabled = true);
         items["uploadItem"] && (items["uploadItem"]._disabled = true);
         items["exportItem"] && (items["exportItem"]._disabled = true);
         items["renameItem"] && (items["renameItem"]._disabled = true);
