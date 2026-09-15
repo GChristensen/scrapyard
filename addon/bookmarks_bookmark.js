@@ -281,6 +281,11 @@ export class BookmarkManager extends EntityManager {
         await this._Node.batchUpdate(n => n[posProperty] = id2pos.get(n.id), Array.from(id2pos.keys()));
     }
 
+    async reorderUndoable(positions, oldPositions, posProperty = "pos") {
+        await undoManager.pushReordered(oldPositions, posProperty);
+        return this.reorder(positions, posProperty);
+    }
+
     async move(ids, destId, moveLast) {
         const dest = await Node.get(destId);
         const nodes = await Node.get(ids);

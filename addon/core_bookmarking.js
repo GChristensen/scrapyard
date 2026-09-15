@@ -6,7 +6,8 @@ import {
     NODE_TYPE_ARCHIVE,
     NODE_TYPE_BOOKMARK,
     NODE_TYPE_NOTES,
-    UNDO_DELETE
+    UNDO_DELETE,
+    UNDO_REORDER
 } from "./storage.js";
 import {askCSRPermission, getActiveTab, gettingStarted, showNotification, updateTabURL} from "./utils_browser.js";
 import {HELPER_APP_v2_IS_REQUIRED, helperApp} from "./helper_app.js";
@@ -281,6 +282,13 @@ receive.reorderNodes = async message => {
     return Bookmark.reorder(message.positions, message.posProperty);
 };
 
+receive.reorderNodesUndoable = async message => {
+    if (!await canUseBookmarking())
+        return;
+
+    return Bookmark.reorderUndoable(message.positions, message.oldPositions, message.posProperty);
+};
+
 receive.storePageHtml = message => {
     if (message.bookmark.__url_packing)
         return;
@@ -425,6 +433,9 @@ receive.performUndo = async message => {
 
         switch (result.operation) {
             case UNDO_DELETE:
+                send.nodesImported({shelf: result.shelf});
+            break;
+            case UNDO_REORDER:
                 send.nodesImported({shelf: result.shelf});
             break;
         }

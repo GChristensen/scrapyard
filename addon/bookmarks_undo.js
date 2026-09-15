@@ -1,5 +1,5 @@
 import {Undo} from "./storage_undo.js";
-import {NODE_TYPE_SHELF, UNDO_DELETE} from "./storage.js";
+import {NODE_TYPE_SHELF, UNDO_DELETE, UNDO_REORDER} from "./storage.js";
 import {Bookmark} from "./bookmarks_bookmark.js";
 import {Query} from "./storage_query.js";
 import {Node} from "./storage_entities.js";
@@ -17,6 +17,8 @@ class UndoManager {
             switch (undoTop.operation) {
                 case UNDO_DELETE:
                     return this.#undoDelete();
+                case UNDO_REORDER:
+                    return this.#undoReorder();
             }
     }
 
@@ -34,6 +36,47 @@ class UndoManager {
 
             await Undo.add(undoItem);
         }
+    }
+
+    async pushReordered(oldPositions, posProperty = "pos") {
+        const stackIndex = (await Undo.peek()).stack + 1;
+
+        let ctr = 0;
+        for (const p of oldPositions) {
+            await Undo.add({
+                stack: stackIndex,
+                operation: UNDO_REORDER,
+                nodeId: p.id,
+                uuid: p.uuid,
+                parent_id: p.parent_id,
+                external: p.external,
+                external_id: p.external_id,
+                pos: p[posProperty],
+                posProperty: ctr++ === 0? posProperty: undefined
+            });
+        }
+    }
+
+    async #undoReorder() {
+        const batch = await Undo.pop();
+        const posProperty = batch[0].posProperty || "pos";
+
+        const positions = batch.map(u => ({
+            id: u.nodeId, uuid: u.uuid, parent_id: u.parent_id,
+            external: u.external, external_id: u.external_id,
+            [posProperty]: u.pos
+        }));
+
+        await Bookmark.reorder(positions, posProperty);
+
+        const parentId = batch[0].parent_id;
+        let shelf;
+        if (parentId) {
+            const parentNode = await Node.get(parentId);
+            shelf = parentNode.type === NODE_TYPE_SHELF? parentNode: await Query.rootOf(parentNode);
+        }
+
+        return {operation: UNDO_REORDER, shelf};
     }
 
     async #undoDelete() {

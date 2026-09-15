@@ -186,24 +186,36 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                 sortItem: {
                     label: "Sort by Name",
                     action: () => {
+                        const oldPositions = ctxJNode.children.map((c, i) => {
+                            const sibling = o(tree.get_node(c));
+                            return {id: sibling.id, uuid: sibling.uuid, parent_id: sibling.parent_id,
+                                    external: sibling.external, external_id: sibling.external_id, pos: i};
+                        });
+
                         let jchildren = ctxJNode.children.map(c => tree.get_node(c));
                         jchildren.sort((a, b) => a.text.localeCompare(b.text));
                         jchildren.sort((a, b) => byContainer(o(a), o(b)));
                         ctxJNode.children = jchildren.map(c => c.id);
 
                         tree.redraw_node(ctxJNode, true, false, true);
-                        bookmarkTree.reorderNodes(ctxJNode);
+                        bookmarkTree.reorderNodesUndoable(ctxJNode, oldPositions);
                     }
                 },
                 reverseItem: {
                     label: "Reverse",
                     action: () => {
+                        const oldPositions = ctxJNode.children.map((c, i) => {
+                            const sibling = o(tree.get_node(c));
+                            return {id: sibling.id, uuid: sibling.uuid, parent_id: sibling.parent_id,
+                                    external: sibling.external, external_id: sibling.external_id, pos: i};
+                        });
+
                         let jchildren = ctxJNode.children.map(c => tree.get_node(c));
                         jchildren.reverse();
                         ctxJNode.children = jchildren.map(c => c.id);
 
                         tree.redraw_node(ctxJNode, true, false, true);
-                        bookmarkTree.reorderNodes(ctxJNode);
+                        bookmarkTree.reorderNodesUndoable(ctxJNode, oldPositions);
                     }
                 }
             }

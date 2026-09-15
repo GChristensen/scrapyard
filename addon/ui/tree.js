@@ -778,6 +778,26 @@ class BookmarkTree {
             return send.reorderNodes({positions: positions, posProperty});
     }
 
+    async reorderNodesUndoable(jparent, oldPositions, posProperty = "pos") {
+        let jsiblings = jparent.children.map(c => this._jstree.get_node(c));
+
+        let positions = [];
+        for (let i = 0; i < jsiblings.length; ++i) {
+            const sibling = o(jsiblings[i]);
+            const orderNode = {};
+
+            orderNode.id = sibling.id;
+            orderNode.uuid = sibling.uuid;
+            orderNode.parent_id = sibling.parent_id;
+            orderNode.external = sibling.external;
+            orderNode.external_id = sibling.external_id;
+            sibling[posProperty] = orderNode[posProperty] = i;
+            positions.push(orderNode);
+        }
+
+        return send.reorderNodesUndoable({positions, oldPositions, posProperty});
+    }
+
     contextMenu(ctxJNode) {
         return buildContextMenu(this, ctxJNode);
     }
