@@ -162,11 +162,17 @@ class Channel:
 class NativeChannel(Channel):
     """Native messaging over stdin/stdout."""
 
+    # the add-on does not respond if its handler fails, and the waiting request would block all subsequent ones
+    RESPONSE_TIMEOUT = 300
+
     def send_message(self, message):
         encoded_message = encode_message(message)
         sys.stdout.buffer.write(encoded_message['length'])
         sys.stdout.buffer.write(encoded_message['content'])
         sys.stdout.buffer.flush()
+
+    def send_with_response(self, msg, timeout=RESPONSE_TIMEOUT):
+        return super().send_with_response(msg, timeout)
 
 
 class WebSocketChannel(Channel):

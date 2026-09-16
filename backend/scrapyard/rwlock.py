@@ -1,5 +1,6 @@
 import os
 import threading
+import weakref
 from contextlib import contextmanager
 
 
@@ -56,7 +57,8 @@ class RWLock:
             self.release_write()
 
 
-_registry = dict()
+# locks are removed from the registry when no thread holds or waits for them
+_registry = weakref.WeakValueDictionary()
 _registry_mutex = threading.Lock()
 
 
@@ -67,5 +69,6 @@ def path_lock(path):
     with _registry_mutex:
         lock = _registry.get(key, None)
         if lock is None:
-            lock = _registry[key] = RWLock()
+            lock = RWLock()
+            _registry[key] = lock
         return lock

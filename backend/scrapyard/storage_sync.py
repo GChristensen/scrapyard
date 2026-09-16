@@ -119,20 +119,9 @@ def close_session():
 
 def pull_sync_objects(storage_manager, params):
     sync_nodes = json.loads(params["sync_nodes"])
+    payloads = [assemble_node_payload(storage_manager, params, sync_node) for sync_node in sync_nodes]
 
-    result = "["
-    n_nodes = len(sync_nodes)
-
-    for i in range(n_nodes):
-        sync_node = sync_nodes[i]
-        result += assemble_node_payload(storage_manager, params, sync_node)
-
-        if i < n_nodes - 1:
-            result += ","
-
-    result += "]"
-
-    return result
+    return "[" + ",".join(p for p in payloads if p) + "]"
 
 
 def assemble_node_payload(storage_manager, params, sync_node):
@@ -142,8 +131,12 @@ def assemble_node_payload(storage_manager, params, sync_node):
     object_directory_path = storage_manager.get_object_directory(params, uuid)
     node_object_path = storage_manager.get_node_object_path(object_directory_path)
     node_object = storage_manager.read_object_file(node_object_path)
-    if node_object:
-        result += "\"item\":" + node_object
+
+    # the item has been deleted after the synchronization was computed
+    if not node_object:
+        return None
+
+    result += "\"item\":" + node_object
 
     if sync_node["pull_content"]:
         icon_object_path = storage_manager.get_icon_object_path(object_directory_path)

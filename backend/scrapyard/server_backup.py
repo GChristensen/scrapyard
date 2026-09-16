@@ -2,13 +2,13 @@ import logging
 import zipfile
 import os
 import re
-from pathlib import Path
 
 from flask import request, abort
 
 from .browser import current_channel, current_context, StreamAborted
 from .server import app, requires_auth
 from .server_paths import resolve_backup_directory, validate_file_name
+from .utils_fs import atomic_file
 
 # Backup routines
 
@@ -77,9 +77,6 @@ def backup_initialize():
     directory = resolve_backup_directory(request.form["directory"])
     backup_file_path = os.path.join(directory, validate_file_name(request.form["file"]))
 
-    if not os.path.exists(directory):
-        Path(directory).mkdir(parents=True, exist_ok=True)
-
     compress = request.form["compress"] == "true"
     stream_id = request.form.get("stream", None)
     channel = current_channel()
@@ -89,10 +86,8 @@ def backup_initialize():
     else:
         target_path = backup_file_path
 
-    # the backup is written to a temporary file, which is not listed as a backup,
+    # the backup is written to a uniquely named temporary file, which is not listed as a backup,
     # and renamed only if the whole content is received, so an interrupted backup never looks like a complete one
-    part_path = target_path + ".part"
-
     try:
         if compress:
             method = {
@@ -102,28 +97,18 @@ def backup_initialize():
             }.get(request.form["method"], zipfile.ZIP_DEFLATED)
             level = int(request.form["level"])
 
-            with zipfile.ZipFile(part_path, "w", method, compresslevel=level) as zout:
-                with zout.open(request.form["file"], "w") as backup:
-                    for text in channel.read_stream(stream_id):
-                        backup.write(text.encode("utf-8"))
+            with atomic_file(target_path, "wb") as part_file:
+                with zipfile.ZipFile(part_file, "w", method, compresslevel=level) as zout:
+                    with zout.open(request.form["file"], "w") as backup:
+                        for text in channel.read_stream(stream_id):
+                            backup.write(text.encode("utf-8"))
         else:
-            with open(part_path, "w", encoding="utf-8") as backup:
+            with atomic_file(target_path, "w", encoding="utf-8") as backup:
                 for text in channel.read_stream(stream_id):
                     backup.write(text)
-
-        os.replace(part_path, target_path)
-    except BaseException as e:
-        try:
-            if os.path.exists(part_path):
-                os.remove(part_path)
-        except OSError as oe:
-            logging.exception(oe)
-
-        if isinstance(e, StreamAborted):
-            logging.error(f"Backup is aborted: {e}")
-            return f"Backup is aborted: {e}", 409
-
-        raise
+    except StreamAborted as e:
+        logging.error(f"Backup is aborted: {e}")
+        return f"Backup is aborted: {e}", 409
 
     return "OK"
 

@@ -8,8 +8,10 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from . import server
+from .rwlock import path_lock
 from .server_paths import resolve_client_path, safe_join_path
 from .utils import index_text
+from .utils_fs import atomic_write, atomic_file
 
 archive_import_mutex = threading.Lock()
 
@@ -34,7 +36,11 @@ def import_rdf_archive(params):
     result = dict()
 
     if os.path.exists(rdf_archive_directory):
-        with_mutex(lambda: shutil.copytree(rdf_archive_directory, unpacked_archive_directory, dirs_exist_ok=True))
+        def copy_archive():
+            with path_lock(object_directory).write_locked():
+                shutil.copytree(rdf_archive_directory, unpacked_archive_directory, dirs_exist_ok=True)
+
+        with_mutex(copy_archive)
         result["size"] = sum(f.stat().st_size for f in Path(unpacked_archive_directory).glob('**/*') if f.is_file())
         words = build_archive_index(rdf_archive_directory)
         import_archive_index(params, words)
@@ -92,8 +98,7 @@ icon\tfavicon.{params["icon_ext"]}
 source\t{params["source"]}
 comment
 """
-    with open(metadata_file_path, "w", encoding="utf-8") as metadata_file:
-        metadata_file.write(metadata)
+    atomic_write(metadata_file_path, metadata)
 
 
 def read_rdf_metadata(rdf_archive_directory):
@@ -109,10 +114,7 @@ def read_rdf_metadata(rdf_archive_directory):
 
 def write_rdf_metadata(rdf_archive_directory, lines):
     metadata_file_path = os.path.join(rdf_archive_directory, "index.dat")
-
-    with open(metadata_file_path, "w", encoding="utf-8") as metadata_file:
-        content = "".join(lines)
-        metadata_file.write(content)
+    atomic_write(metadata_file_path, "".join(lines))
 
 
 def import_rdf_metadata(rdf_archive_directory, result):
@@ -146,13 +148,15 @@ def import_archive_index(params, words):
 
 def persist_archive(params, files):
     archive_directory_path = resolve_client_path(params["rdf_archive_path"], for_write=True)
-    if not os.path.exists(archive_directory_path):
-        Path(archive_directory_path).mkdir(parents=True, exist_ok=True)
 
-    index_file_path = os.path.join(archive_directory_path, "index.html")
-    files["content"].save(index_file_path)
-    create_rdf_metadata(params)
-    persist_archive_icon(params)
+    with path_lock(archive_directory_path).write_locked():
+        index_file_path = os.path.join(archive_directory_path, "index.html")
+
+        with atomic_file(index_file_path) as index_file:
+            files["content"].save(index_file)
+
+        create_rdf_metadata(params)
+        persist_archive_icon(params)
 
 
 def persist_archive_icon(params):
@@ -162,9 +166,7 @@ def persist_archive_icon(params):
     if icon_data:
         icon_file_path = safe_join_path(archive_directory_path, f"favicon.{params['icon_ext']}")
         icon_bytes = base64.b64decode(icon_data)
-
-        with open(icon_file_path, "wb") as icon_file:
-            icon_file.write(icon_bytes)
+        atomic_write(icon_file_path, icon_bytes)
 
 
 def fetch_archive_file(params):
@@ -182,23 +184,28 @@ def save_archive_file(params, files):
     archive_directory_path = resolve_client_path(params["rdf_archive_path"], for_write=True)
     archive_file_path = safe_join_path(archive_directory_path, params["file"])
 
-    Path(os.path.dirname(archive_file_path)).mkdir(parents=True, exist_ok=True)
-    files["content"].save(archive_file_path)
+    with path_lock(archive_directory_path).write_locked():
+        with atomic_file(archive_file_path) as archive_file:
+            files["content"].save(archive_file)
 
-    index = build_archive_index(archive_directory_path)
+        index = build_archive_index(archive_directory_path)
+
     return json.dumps(index)
 
 
 def persist_comments(params):
     archive_directory_path = resolve_client_path(params["rdf_archive_path"], for_write=True)
-    lines = read_rdf_metadata(archive_directory_path)
     comments = json.loads(params["comments_json"])
 
-    for i in range(len(lines)):
-        if lines[i].startswith("comment"):
-            text = comments["content"].replace("\n", " __BR__ ")
-            lines[i] = f"comment\t{text}\n"
+    # read-modify-write
+    with path_lock(archive_directory_path).write_locked():
+        lines = read_rdf_metadata(archive_directory_path)
 
-    write_rdf_metadata(archive_directory_path, lines)
+        for i in range(len(lines)):
+            if lines[i].startswith("comment"):
+                text = comments["content"].replace("\n", " __BR__ ")
+                lines[i] = f"comment\t{text}\n"
+
+        write_rdf_metadata(archive_directory_path, lines)
 
 

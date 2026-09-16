@@ -1,4 +1,6 @@
+import io
 import logging
+import mimetypes
 import os
 import shutil
 
@@ -11,6 +13,8 @@ from .browser import current_channel
 from .server_paths import resolve_client_path
 from .browse import highlight_words_in_index
 from .cache_dict import CacheDict
+from .rwlock import path_lock
+from .utils_fs import atomic_write
 from .storage_rdf import import_rdf_archive, import_rdf_archive_index, fetch_archive_file, save_archive_file, \
     persist_comments, persist_archive
 from .server import app, requires_auth
@@ -144,7 +148,14 @@ def rdf_browse_content(uuid, file):
 @requires_auth
 def rdf_xml(uuid):
     rdf_file = resolve_client_path(request.form["rdf_file"])
-    return flask.send_file(rdf_file)
+
+    # the content is read at once, an opened file would prevent its replacement on Windows
+    with path_lock(rdf_file).read_locked():
+        with open(rdf_file, "rb") as fp:
+            content = fp.read()
+
+    mime_type = mimetypes.guess_type(rdf_file)[0] or "application/rdf+xml"
+    return flask.send_file(io.BytesIO(content), mimetype=mime_type)
 
 
 # Save Scrapbook rdf file for the given node uuid
@@ -154,9 +165,9 @@ def rdf_xml(uuid):
 def rdf_xml_save(uuid):
     rdf_file = resolve_client_path(request.form["rdf_file"], for_write=True)
 
-    with open(rdf_file, 'w', encoding='utf-8') as fp:
-        fp.write(request.form["rdf_content"])
-        fp.flush()
+    # an interrupted write should not damage the whole RDF tree
+    with path_lock(rdf_file).write_locked():
+        atomic_write(rdf_file, request.form["rdf_content"])
 
     return "", 204
 
@@ -166,9 +177,10 @@ def rdf_xml_save(uuid):
 def rdf_item_delete(uuid):
     rdf_item_path = resolve_client_path(request.form["rdf_archive_directory"], for_write=True)
 
-    try:
-        shutil.rmtree(rdf_item_path)
-    except Exception as e:
-        logging.exception(e)
+    with path_lock(rdf_item_path).write_locked():
+        try:
+            shutil.rmtree(rdf_item_path)
+        except Exception as e:
+            logging.exception(e)
 
     return "", 204

@@ -56,6 +56,12 @@ def start(options):
     global auth_token
     global storage_manager
 
+    # the port is checked first: the temporary directory and the state of a process
+    # that already serves the port should not be affected
+    if httpd or not wait_for_port(options["port"]):
+        logging.error(f"Server port {options['port']} is not available.")
+        return False
+
     port = options["port"]
     auth_token = options["auth"]
 
@@ -67,10 +73,6 @@ def start(options):
     if logging_enabled:
         enable_logging()
     # enable_profiling()
-
-    if not wait_for_port(port):
-        logging.error(f"Server port {port} is not available.")
-        return False
 
     httpd = Httpd(app, port)
     httpd.start()

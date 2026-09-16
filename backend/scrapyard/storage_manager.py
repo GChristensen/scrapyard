@@ -10,10 +10,13 @@ import time
 
 from pathlib import Path
 
+from werkzeug.exceptions import Conflict
+
 from . import storage_sync
+from .rwlock import path_lock
 from .server_paths import validate_uuid, safe_join_path
 from .storage_node_db import NodeDB
-from .utils_fs import atomic_write
+from .utils_fs import atomic_write, atomic_file, atomic_directory, DirectoryLock, DirectoryLockedError
 
 SCRAPYARD_DIRECTORY = "scrapyard"
 CLOUD_DIRECTORY = "cloud"
@@ -51,11 +54,41 @@ class StorageManager:
         self.batch_owner = None
         self.batch_activity = 0
         self.batch_mutex = threading.RLock()
+        self.directory_locks = dict()
+        self.locked_directories = set()
+        self.directory_locks_mutex = threading.Lock()
 
     def get_data_directory(self, params):
+        data_directory = self._get_data_directory(params)
+        self.lock_data_directory(data_directory)
+        return data_directory
+
+    def _get_data_directory(self, params):
         if self.data_path:
             return self.data_path
         return os.path.expanduser(params["data_path"])
+
+    def lock_data_directory(self, data_directory):
+        """Fails if the storage is used by another backend process, the in-process locks do not protect it.
+        A directory that does not exist yet is locked on the first access after it is created."""
+        if data_directory in self.locked_directories:
+            return
+
+        with self.directory_locks_mutex:
+            if data_directory in self.locked_directories or not os.path.isdir(data_directory):
+                return
+
+            # the same directory may be specified by different paths
+            key = os.path.normcase(os.path.realpath(data_directory))
+
+            if key not in self.directory_locks:
+                try:
+                    self.directory_locks[key] = DirectoryLock(data_directory)
+                except DirectoryLockedError as e:
+                    logging.error(str(e))
+                    raise Conflict(str(e))
+
+            self.locked_directories.add(data_directory)
 
     def get_node_db_path(self, params):
         return os.path.join(self.get_data_directory(params), NODE_DB_FILE)
@@ -173,17 +206,28 @@ class StorageManager:
                         logging.exception(e)
 
     def with_node_db(self, params, f):
+        # the mutex is held during the modification of the index file, so a batch session could not be opened
+        # with a copy of the index that misses the modification
         with self.batch_mutex:
             if self.bach_node_db:
                 self.batch_activity = time.monotonic()
                 f(self.bach_node_db)
-                return
+            else:
+                node_db_path = self.get_node_db_path(params)
+                NodeDB.with_file(node_db_path, f)
 
-        node_db_path = self.get_node_db_path(params)
-        NodeDB.with_file(node_db_path, f)
+    def inspect_node_db(self, params, f):
+        """Performs f on the actual index, while it could not be modified by others. The index file is not written."""
+        with self.batch_mutex:
+            if self.bach_node_db:
+                return f(self.bach_node_db)
+            else:
+                node_db_path = self.get_node_db_path(params)
+                return NodeDB.with_file_exclusive(node_db_path, f)
 
     def check_directory(self, params):
-        node_db_path = self.get_node_db_path(params)
+        # does not lock the directory, which may be chosen by mistake
+        node_db_path = os.path.join(self._get_data_directory(params), NODE_DB_FILE)
 
         if os.path.exists(node_db_path):
             return dict(status="populated")
@@ -206,8 +250,18 @@ class StorageManager:
 
         self.with_node_db(params, persist)
 
+    @staticmethod
+    def check_nodes_exist(node_db, nodes):
+        # updates contain only the modified fields, an update of a node that has been deleted
+        # (e.g., by a concurrent request) would add an incomplete node to the index
+        missing = [n["uuid"] for n in nodes if n["uuid"] not in node_db.nodes]
+
+        if missing:
+            raise Conflict(f"Can not update nonexistent items: {', '.join(missing)}")
+
     def update_node(self, params):
         def update(node_db):
+            self.check_nodes_exist(node_db, [params["node"]])
             params["node"] = node_db.update_node(params["node"], params["remove_fields"])
             self.persist_node_object(params)
 
@@ -217,6 +271,8 @@ class StorageManager:
         def update(node_db):
             nodes = params["nodes"]
             remove_fields = params["remove_fields"]
+
+            self.check_nodes_exist(node_db, nodes)
 
             for i in range(len(nodes)):
                 params["node"] = node_db.update_node(nodes[i], remove_fields[i])
@@ -238,27 +294,36 @@ class StorageManager:
     def delete_node_content(self, params):
         for uuid in params["node_uuids"]:
             object_directory_path = self.get_object_directory(params, uuid)
-            try:
-                shutil.rmtree(object_directory_path)
-            except Exception as e:
-                pass
+
+            with path_lock(object_directory_path).write_locked():
+                try:
+                    shutil.rmtree(object_directory_path)
+                except FileNotFoundError:
+                    pass
+                except Exception as e:
+                    # e.g., a file is opened by another process on Windows, the remaining content is orphaned
+                    logging.exception(e)
 
     def wipe_storage(self, params):
         with self.batch_mutex:
             if self.bach_node_db:
                 self.bach_node_db.reset()
 
-        try:
-            node_db_path = self.get_node_db_path(params)
-            NodeDB.delete_file(node_db_path)
-        except Exception as e:
-            logging.exception(e)
+            try:
+                node_db_path = self.get_node_db_path(params)
+                NodeDB.delete_file(node_db_path)
+            except FileNotFoundError:
+                pass
+            except Exception as e:
+                logging.exception(e)
 
-        try:
-            object_root_directory = self.get_object_root_directory(params)
-            shutil.rmtree(object_root_directory)
-        except Exception as e:
-            logging.exception(e)
+            try:
+                object_root_directory = self.get_object_root_directory(params)
+                shutil.rmtree(object_root_directory)
+            except FileNotFoundError:
+                pass
+            except Exception as e:
+                logging.exception(e)
 
     def persist_object(self, object_file_name, params, param_name):
         object_directory_path = self.get_object_directory(params)
@@ -271,27 +336,39 @@ class StorageManager:
         params["node_json"] = json.dumps(params["node"], ensure_ascii=False, separators=(',', ':'))
         self.persist_object(NODE_OBJECT_FILE, params, "node_json")
 
+    # Archive content is replaced atomically, so an interrupted write never damages an existing archive,
+    # and readers do not observe partially written files
+
     def persist_archive_content(self, params, files):
         object_directory_path = self.get_object_directory(params)
 
-        if params.get("contains", None) == StorageManager.ARCHIVE_TYPE_FILES:
-            archive_directory_path = self.get_archive_unpacked_path(object_directory_path)
-            with zipfile.ZipFile(files["content"], "r", zipfile.ZIP_DEFLATED, False) as zip_file:
-                zip_file.extractall(archive_directory_path)
-        else:
-            Path(object_directory_path).mkdir(parents=True, exist_ok=True)
-            content_file_path = os.path.join(object_directory_path, ARCHIVE_CONTENT_FILE)
-            files["content"].save(content_file_path)
+        with path_lock(object_directory_path).write_locked():
+            if params.get("contains", None) == StorageManager.ARCHIVE_TYPE_FILES:
+                archive_directory_path = self.get_archive_unpacked_path(object_directory_path)
 
-    def save_archive_file(self, params, files):
+                with atomic_directory(archive_directory_path) as temp_directory_path:
+                    with zipfile.ZipFile(files["content"], "r", zipfile.ZIP_DEFLATED, False) as zip_file:
+                        zip_file.extractall(temp_directory_path)
+            else:
+                content_file_path = os.path.join(object_directory_path, ARCHIVE_CONTENT_FILE)
+
+                with atomic_file(content_file_path) as content_file:
+                    files["content"].save(content_file)
+
+    def save_archive_file(self, params, files, compute_index=False):
+        """Saves a file of an unpacked archive, returns the word index of the archive if requested."""
+        from .storage_rdf import build_archive_index
+
         object_directory_path = self.get_object_directory(params)
         archive_directory_path = self.get_archive_unpacked_path(object_directory_path)
         archive_file_path = safe_join_path(archive_directory_path, params["file"])
 
-        Path(os.path.dirname(archive_file_path)).mkdir(parents=True, exist_ok=True)
-        files["content"].save(archive_file_path)
+        with path_lock(object_directory_path).write_locked():
+            with atomic_file(archive_file_path) as archive_file:
+                files["content"].save(archive_file)
 
-        return archive_directory_path
+            if compute_index:
+                return build_archive_index(archive_directory_path)
 
     def fetch_object(self, object_file_name, params):
         object_directory_path = self.get_object_directory(params)
@@ -308,10 +385,11 @@ class StorageManager:
         object_directory_path = self.get_object_directory(params)
         archive_directory_path = os.path.join(object_directory_path, ARCHIVE_DIRECTORY)
 
-        if os.path.exists(archive_directory_path):
-            return self.fetch_unpacked_archive(archive_directory_path)
-        else:
-            return self.fetch_packed_archive(object_directory_path)
+        with path_lock(object_directory_path).read_locked():
+            if os.path.exists(archive_directory_path):
+                return self.fetch_unpacked_archive(archive_directory_path)
+            else:
+                return self.fetch_packed_archive(object_directory_path)
 
     def fetch_archive_file(self, params):
         object_directory_path = self.get_object_directory(params)
@@ -356,12 +434,13 @@ class StorageManager:
         archive_directory_path = self.get_archive_unpacked_path(object_directory_path)
         result = None
 
-        if os.path.exists(archive_directory_path):
-            result = dict(size=self.compute_directory_size(archive_directory_path))
-        else:
-            archive_file_path = self.get_archive_content_path(object_directory_path)
-            if os.path.exists(archive_file_path):
-                result = dict(size=os.path.getsize(archive_file_path))
+        with path_lock(object_directory_path).read_locked():
+            if os.path.exists(archive_directory_path):
+                result = dict(size=self.compute_directory_size(archive_directory_path))
+            else:
+                archive_file_path = self.get_archive_content_path(object_directory_path)
+                if os.path.exists(archive_file_path):
+                    result = dict(size=os.path.getsize(archive_file_path))
 
         return result
 
@@ -387,12 +466,16 @@ class StorageManager:
         self.persist_object(NOTES_INDEX_OBJECT_FILE, params, "index_json")
 
     def persist_notes(self, params):
-        existing_notes = self.fetch_notes(params) or "{}"
-        existing_notes = json.loads(existing_notes)
-        new_notes = json.loads(params["notes_json"])
-        new_notes = {**existing_notes, **new_notes}
-        params["notes_json"] = json.dumps(new_notes)
-        self.persist_object(NOTES_OBJECT_FILE, params, "notes_json")
+        notes_file_path = os.path.join(self.get_object_directory(params), NOTES_OBJECT_FILE)
+
+        # read-modify-write
+        with path_lock(notes_file_path).write_locked():
+            existing_notes = self.fetch_notes(params) or "{}"
+            existing_notes = json.loads(existing_notes)
+            new_notes = json.loads(params["notes_json"])
+            new_notes = {**existing_notes, **new_notes}
+            params["notes_json"] = json.dumps(new_notes)
+            self.persist_object(NOTES_OBJECT_FILE, params, "notes_json")
 
     def fetch_notes(self, params):
         return self.fetch_object(NOTES_OBJECT_FILE, params)
@@ -449,27 +532,31 @@ class StorageManager:
 
         if os.path.exists(object_root_directory):
             disk_items = os.listdir(object_root_directory)
-            node_db_path = self.get_node_db_path(params)
-            orphaned_items = []
 
-            def test_orphaned(node_db):
-                for uuid in disk_items:
-                    if uuid not in node_db.nodes:
-                        orphaned_items.append(uuid)
+            # items of an open batch session are not orphaned
+            def find_orphaned(node_db):
+                return [uuid for uuid in disk_items if uuid not in node_db.nodes]
 
-            test_orphaned(NodeDB.from_file(node_db_path))
-            return orphaned_items
+            return self.inspect_node_db(params, find_orphaned)
 
     def delete_orphaned_items(self, params):
-        self.delete_node_content(params)
+        # the items might have been added to the index after they were reported as orphaned
+        def delete(node_db):
+            existing = [uuid for uuid in params["node_uuids"] if uuid in node_db.nodes]
+
+            if existing:
+                raise Conflict(f"Items are not orphaned: {', '.join(existing)}")
+
+            self.delete_node_content(params)
+
+        self.inspect_node_db(params, delete)
 
     def rebuild_item_index(self, params):
         node_db_path = self.get_node_db_path(params)
         object_root_directory = self.get_object_root_directory(params)
 
         def rebuild(node_db):
-            node_db.nodes.clear()
-            node_db.nodes[NodeDB.DEFAULT_SHELF_UUID] = node_db.create_default_shelf()
+            nodes = {NodeDB.DEFAULT_SHELF_UUID: node_db.create_default_shelf()}
 
             for uuid in os.listdir(object_root_directory):
                 node_object_file_path = os.path.join(object_root_directory, uuid, NODE_OBJECT_FILE)
@@ -478,11 +565,17 @@ class StorageManager:
                     with open(node_object_file_path, "r", encoding="utf-8") as node_object_file:
                         node_json = node_object_file.read()
                         node = json.loads(node_json)
-                        node_db.nodes[node["uuid"]] = node
+                        nodes[node["uuid"]] = node
 
-            node_db.nodes = NodeDB.tree_sort_nodes(node_db.nodes)
+            # the index is not modified if any item could not be read
+            node_db.nodes = NodeDB.tree_sort_nodes(nodes)
 
-        NodeDB.with_file(node_db_path, rebuild)
+        with self.batch_mutex:
+            # the index of the batch session would overwrite the rebuilt one
+            if self.bach_node_db:
+                raise Conflict("Can not rebuild the index while a batch operation is in progress.")
+
+            NodeDB.with_file(node_db_path, rebuild)
 
     def debug_get_stored_node_instances(self, params):
         node_db_path = self.get_node_db_path(params)

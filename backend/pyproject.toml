@@ -26,7 +26,7 @@ scrapyard_backend = "scrapyard.backend:main"
 scrapyard_server = "scrapyard.server_main:main"
 
 [tool.setuptools.package-data]
-"scrapyard_backend" = ["resources/*", "resources/*/*"]
+"scrapyard" = ["resources/*", "resources/*/*"]
 
 [tool.setuptools.packages]
-find = {}
+find = { include = ["scrapyard*"] }

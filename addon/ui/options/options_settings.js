@@ -300,7 +300,7 @@ async function setStorageModeToServer() {
     setServerStatus("");
 
     if (await confirm("Warning", "This will reset the Scrapyard browser internal storage "
-            + "and synchronize it with the server. Make sure that you have exported important content. Continue?")) {
+            + "and synchronize it with the server. Continue?")) {
         $("#option-data-folder-path").prop("disabled", true);
         $("#option-synchronize-at-startup")
             .prop("checked", true)

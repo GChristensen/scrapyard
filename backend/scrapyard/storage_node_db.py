@@ -44,6 +44,14 @@ class NodeDB:
                 node_db._write(path)
 
     @classmethod
+    def with_file_exclusive(cls, path, f):
+        """Reads the index file and performs f, while no one else can modify the index. The file is not written."""
+        with path_lock(path).write_locked():
+            node_db = cls()
+            node_db._read(path)
+            return f(node_db)
+
+    @classmethod
     def delete_file(cls, path):
         with path_lock(path).write_locked():
             os.remove(path)

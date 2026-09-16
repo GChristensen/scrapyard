@@ -4,12 +4,12 @@ from flask import request
 
 from . import server, config
 
-from .storage_rdf import build_archive_index
 from .request_queue import RequestQueue
 from .server import app, requires_auth
 
 # JSON Scrapbook support
 
+# all operations that modify the index or remove item content are serialized by the queue
 request_queue = RequestQueue()
 
 
@@ -30,14 +30,14 @@ def open_batch_session():
         session = current_session()
         owner = session.sid if session else None
 
-    server.storage_manager.open_batch_session(request.json, owner)
+    request_queue.run(lambda params: server.storage_manager.open_batch_session(params, owner), request.json)
     return "", 204
 
 
 @app.route("/storage/close_batch_session", methods=['POST'])
 @requires_auth
 def close_batch_session():
-    server.storage_manager.close_batch_session(request.json)
+    request_queue.run(server.storage_manager.close_batch_session, request.json)
     return "", 204
 
 
@@ -85,14 +85,14 @@ def delete_nodes_shallow():
 @app.route("/storage/delete_node_content", methods=['POST'])
 @requires_auth
 def delete_node_content():
-    server.storage_manager.delete_node_content(request.json)
+    request_queue.run(server.storage_manager.delete_node_content, request.json)
     return "", 204
 
 
 @app.route("/storage/wipe", methods=['POST'])
 @requires_auth
 def wipe_storage():
-    server.storage_manager.wipe_storage(request.json)
+    request_queue.run(server.storage_manager.wipe_storage, request.json)
     return "", 204
 
 
@@ -171,14 +171,8 @@ def fetch_archive_file():
 @app.route("/storage/save_archive_file", methods=['POST'])
 @requires_auth
 def save_archive_file():
-    params = request.form
-    server.storage_manager.save_archive_file(params, request.files)
-
-    index = None
-    if request.form.get("compute_index", None):
-        object_directory_path = server.storage_manager.get_object_directory(params)
-        archive_directory_path = server.storage_manager.get_archive_unpacked_path(object_directory_path)
-        index = build_archive_index(archive_directory_path)
+    compute_index = not not request.form.get("compute_index", None)
+    index = server.storage_manager.save_archive_file(request.form, request.files, compute_index)
 
     if index:
         return json.dumps(index)
@@ -293,14 +287,14 @@ def get_orphaned_items():
 @app.route("/storage/delete_orphaned_items", methods=['POST'])
 @requires_auth
 def delete_orphaned_items():
-    server.storage_manager.delete_orphaned_items(request.json)
+    request_queue.run(server.storage_manager.delete_orphaned_items, request.json)
     return "", 204
 
 
 @app.route("/storage/rebuild_item_index", methods=['POST'])
 @requires_auth
 def rebuild_item_index():
-    server.storage_manager.rebuild_item_index(request.json)
+    request_queue.run(server.storage_manager.rebuild_item_index, request.json)
     return "", 204
 
 
