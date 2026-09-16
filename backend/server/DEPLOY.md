@@ -131,6 +131,21 @@ The installer does the following:
 - installs a systemd user unit (Linux) or a launchd agent (macOS), and prints the commands to
   enable it
 
+On Linux, enable the unit as the user who ran the installer. Do not use `sudo` with
+`systemctl --user`: under sudo it runs as root, which has no user session bus. Only the linger
+command needs root:
+
+```sh
+sudo loginctl enable-linger $USER     # run user services without an active login
+systemctl --user daemon-reload
+systemctl --user enable --now scrapyard_server
+systemctl --user status scrapyard_server
+journalctl --user -u scrapyard_server -f
+```
+
+If `systemctl --user` reports that `$XDG_RUNTIME_DIR` is not defined (e.g., in a shell opened
+with `su`), run `export XDG_RUNTIME_DIR=/run/user/$(id -u)` first.
+
 Use `--env-dir <dir>` to place `.env` somewhere other than the installation directory.
 
 ### Docker

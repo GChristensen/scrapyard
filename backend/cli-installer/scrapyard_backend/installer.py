@@ -149,10 +149,13 @@ WantedBy=default.target
 """)
 
     print(f"Systemd user unit installed at: {unit_path}")
-    print("To start the server and run it at boot, execute:")
+    print("To start the server and run it at boot, execute as the current user (only loginctl needs sudo):")
+    print(f"  sudo loginctl enable-linger $USER")
     print(f"  systemctl --user daemon-reload")
     print(f"  systemctl --user enable --now {server_base}")
-    print(f"  sudo loginctl enable-linger $USER")
+    print("If systemctl reports that $XDG_RUNTIME_DIR is not defined (e.g., after su), execute first:")
+    print("  export XDG_RUNTIME_DIR=/run/user/$(id -u)")
+    print(f"To check the server status: systemctl --user status {server_base}")
 
 
 def write_launchd_plist(executable_path, env_path):
