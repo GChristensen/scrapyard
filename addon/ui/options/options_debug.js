@@ -20,6 +20,9 @@ export async function load() {
 
     helperApp.signedURL("/backend_log")
         .then(url => $("#helper-app-log-link").prop("href", url))
-        .catch(e => console.error(e));
+        .catch(e => {
+            console.error(e);
+            $("#helper-app-log-link").prop("href", "#").attr("title", e.message);
+        });
 }
 

@@ -8,7 +8,7 @@ import {
     phraseMatcher,
     rebuildIFramesRecursive
 } from "../utils_html.js";
-import {getActiveTab} from "../utils_browser.js";
+import {getActiveTab, showNotification} from "../utils_browser.js";
 import {ShelfList} from "./shelf_list.js";
 import {Bookmark} from "../bookmarks_bookmark.js";
 import {Archive, Icon, Notes} from "../storage_entities.js";
@@ -203,8 +203,13 @@ async function appendSearchResult(query, node, occurrences) {
         image.src = icon;
     }
 
-    $(`#item_${node.id}`).click(e => previewResult(query, node));
-    $(`#occurrences_${node.id}`).click(e => previewResult(query, node));
+    const preview = () => previewResult(query, node).catch(e => {
+        console.error(e);
+        showNotification(`Can not display the content: ${e.message}`);
+    });
+
+    $(`#item_${node.id}`).click(e => preview());
+    $(`#occurrences_${node.id}`).click(e => preview());
     $(`#select_${node.id}`).click(e => send.selectNode({node}));
     $(`#open_this_tab_${node.id}`).click(async e => send.browseNode({node, tab: await getActiveTab(), preserveHistory: true}));
     $(`#open_${node.id}`).click(e => send.browseNode({node}));

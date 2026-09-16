@@ -22,6 +22,7 @@ import {cleanObject, getMimetypeByExt} from "./utils.js";
 import {getFaviconFromContent} from "./favicon.js";
 import {Archive, Comments, Icon, Node, Notes} from "./storage_entities.js";
 import {undoManager} from "./bookmarks_undo.js";
+import {showNotification} from "./utils_browser.js";
 
 export class BookmarkManager extends EntityManager {
     _Node;
@@ -331,6 +332,7 @@ export class BookmarkManager extends EntityManager {
         const dest = await Node.get(destId);
         let sourceNodes = await Query.fullSubtree(ids, true);
         let newNodes = [];
+        let contentErrors = 0;
 
         for (let newNode of sourceNodes) {
             const sourceNode = {...newNode};
@@ -360,8 +362,13 @@ export class BookmarkManager extends EntityManager {
                 await this.copyContent(sourceNode, newNode);
             } catch (e) {
                 console.error(e);
+                ++contentErrors;
             }
         }
+
+        if (contentErrors)
+            showNotification(`The content of ${contentErrors} item${contentErrors > 1? "s": ""} could not be copied, `
+                + `the copies may be incomplete.`);
 
         let rootNodes = newNodes.filter(n => ids.some(id => id === n.source_node_id));
 

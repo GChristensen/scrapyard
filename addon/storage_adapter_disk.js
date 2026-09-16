@@ -48,7 +48,7 @@ export class StorageAdapterDisk {
                 : helperApp.postJSON(path, fields));
 
             if (!response.ok)
-                throw new Error(`Backend error ${response.status} (${response.statusText})`);
+                throw await helperApp.errorFromResponse(response);
         }
         catch (e) {
             await markStorageDiverged(e);
@@ -63,8 +63,27 @@ export class StorageAdapterDisk {
             return await f();
         }
         catch (e) {
-            throw new Error("Can not connect to the backend application: " + e.message);
+            const backend = helperApp.isServerMode()? "server": "backend application";
+            throw new Error(`Can not connect to the ${backend}: ${e.message}`);
         }
+    }
+
+    // Performs a read request. Returns undefined if the object does not exist (404) and throws
+    // on connection and backend errors, so an unavailable backend is not mistaken for missing content.
+    async _read(path, params) {
+        params.data_path = helperApp.dataPath();
+
+        if (!params.data_path)
+            return;
+
+        const response = await this._request(() => helperApp.postJSON(path, params));
+
+        if (response.ok)
+            return response;
+        else if (response.status === 404)
+            return;
+        else
+            throw await helperApp.errorFromResponse(response);
     }
 
     accepts(node) {
@@ -123,10 +142,16 @@ export class StorageAdapterDisk {
     }
 
     async getArchiveSize(params) {
-        const response = await this._postJSON("/storage/get_archive_size", params);
+        try {
+            const response = await this._read("/storage/get_archive_size", params);
 
-        if (response.ok)
-            return response.json();
+            if (response)
+                return response.json();
+        }
+        catch (e) {
+            // the size is informational
+            console.error(e);
+        }
     }
 
     async fetchArchiveContent(params) {
@@ -134,40 +159,27 @@ export class StorageAdapterDisk {
         delete params.node;
         //archive = archive || await this._fetchJSON("/storage/fetch_archive_object", params);
 
-        params.data_path = helperApp.dataPath();
+        const response = await this._read(`/storage/fetch_archive_content`, params);
 
-        try {
-            const response = await helperApp.postJSON(`/storage/fetch_archive_content`, params);
+        if (response) {
+            let content = await response.arrayBuffer();
 
-            if (response.ok) {
-                let content = await response.arrayBuffer();
-
-                if (!node.contains || node.contains === ARCHIVE_TYPE_TEXT) {
-                    const decoder = new TextDecoder();
-                    content = decoder.decode(content);
-                }
-
-                return content;
+            if (!node.contains || node.contains === ARCHIVE_TYPE_TEXT) {
+                const decoder = new TextDecoder();
+                content = decoder.decode(content);
             }
 
-        } catch (e) {
-            console.error(e);
+            return content;
         }
     }
 
     async fetchArchiveFile(params) {
-        params.data_path = helperApp.dataPath();
+        const response = await this._read(`/storage/fetch_archive_file`, params);
 
-        try {
-            const response = await helperApp.postJSON(`/storage/fetch_archive_file`, params);
-
-            if (response.ok) {
-                let content = await response.arrayBuffer();
-                const decoder = new TextDecoder();
-                return decoder.decode(content);
-            }
-        } catch (e) {
-            console.error(e);
+        if (response) {
+            let content = await response.arrayBuffer();
+            const decoder = new TextDecoder();
+            return decoder.decode(content);
         }
     }
 
@@ -192,19 +204,10 @@ export class StorageAdapterDisk {
     // returns undefined only if there are no notes, throws if the notes could not be fetched,
     // so an unavailable backend is not mistaken for empty notes that could be overwritten
     async fetchNotes(params) {
-        params.data_path = helperApp.dataPath();
+        const response = await this._read("/storage/fetch_notes", params);
 
-        if (!params.data_path)
-            return;
-
-        const response = await this._request(() => helperApp.postJSON("/storage/fetch_notes", params));
-
-        if (response.ok)
+        if (response)
             return response.json();
-        else if (response.status === 404)
-            return;
-        else
-            throw new Error(`Backend error ${response.status} (${response.statusText})`);
     }
 
     async persistCommentsIndex(params) {

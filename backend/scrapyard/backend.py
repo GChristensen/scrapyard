@@ -18,22 +18,21 @@ def main():
 
 
 def process_message(msg, channel=native_channel):
-    message_queue = channel.message_queue
+    msg_type = msg["type"]
+    # older add-ons do not pass stream ids
+    stream_id = msg.get("stream", None)
+    stream_id = None if stream_id is None else str(stream_id)
 
-    if msg["type"] == "INITIALIZE":
+    if msg_type == "INITIALIZE":
         start_server(msg)
-    elif msg["type"] == "BACKUP_PUSH_TEXT":
-        message_queue.put(msg["text"])
-    elif msg["type"] == "EXPORT_PUSH_TEXT":
-        message_queue.put(msg["text"])
-    elif msg["type"] == "BACKUP_FINISH":
-        message_queue.put(None)
-    elif msg["type"] == "EXPORT_FINISH":
-        message_queue.put(None)
-    elif msg["type"] == "RDF_PATH":
-        message_queue.put(msg)
-    elif msg["type"] == "ARCHIVE_INFO":
-        message_queue.put(msg)
+    elif msg_type in ("BACKUP_PUSH_TEXT", "EXPORT_PUSH_TEXT"):
+        channel.push_stream_text(stream_id, msg["text"])
+    elif msg_type in ("BACKUP_FINISH", "EXPORT_FINISH"):
+        channel.finish_stream(stream_id)
+    elif msg_type in ("BACKUP_ABORT", "EXPORT_ABORT"):
+        channel.abort_stream(stream_id)
+    elif msg_type in ("RDF_PATH", "ARCHIVE_INFO"):
+        channel.put_response(msg)
 
 
 def start_server(msg):

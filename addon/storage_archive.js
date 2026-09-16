@@ -134,6 +134,16 @@ export class ArchiveIDB extends EntityIDB {
         return this._db.blobs.where("node_id").equals(node.id).first();
     }
 
+    // Outside of the internal storage mode the blobs table contains only the archives that could not be uploaded
+    // to the backend storage (see ArchiveProxy), they are uploaded when the backend is available again.
+    async getPendingUploads() {
+        return this._db.blobs.toArray();
+    }
+
+    async removePendingUpload(node) {
+        return this._db.blobs.where("node_id").equals(node.id).delete();
+    }
+
     // get size of an archive, not including size of metadata and indexes
     async getSize(node) {
         // NOP, implemented in proxy

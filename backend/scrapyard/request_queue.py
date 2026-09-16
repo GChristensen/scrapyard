@@ -1,7 +1,7 @@
 import logging
 import os
 import threading
-from concurrent.futures import Future
+from concurrent.futures import Future, TimeoutError as FutureTimeoutError
 from queue import Queue
 
 REQUEST_TIMEOUT = 300
@@ -19,6 +19,10 @@ class RequestQueue:
     def processor(self):
         while True:
             request, params, future = self.request_queue.get()
+
+            # the request has been cancelled after a timeout, see run()
+            if not future.set_running_or_notify_cancel():
+                continue
 
             try:
                 future.set_result(request(params))
@@ -50,5 +54,15 @@ class RequestQueue:
         self.submit(request, params)
 
     def run(self, request, params, timeout=REQUEST_TIMEOUT):
-        """Executes the request in the queue and waits for its completion, exceptions are propagated."""
-        return self.submit(request, params).result(timeout=timeout)
+        """Executes the request in the queue and waits for its completion, exceptions are propagated.
+        If the request has not started before the timeout, it is cancelled and the timeout is reported.
+        A request that is already running is awaited, so the client never receives an error for a modification
+        that is performed afterward."""
+        future = self.submit(request, params)
+
+        try:
+            return future.result(timeout=timeout)
+        except FutureTimeoutError:
+            if future.cancel():
+                raise
+            return future.result()

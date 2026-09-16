@@ -2,7 +2,7 @@ import json
 
 from flask import request
 
-from . import server
+from . import server, config
 
 from .storage_rdf import build_archive_index
 from .request_queue import RequestQueue
@@ -23,7 +23,14 @@ def check_directory():
 @app.route("/storage/open_batch_session", methods=['POST'])
 @requires_auth
 def open_batch_session():
-    server.storage_manager.open_batch_session(request.json)
+    owner = None
+
+    if config.SERVER_MODE:
+        from .server_auth import current_session
+        session = current_session()
+        owner = session.sid if session else None
+
+    server.storage_manager.open_batch_session(request.json, owner)
     return "", 204
 
 

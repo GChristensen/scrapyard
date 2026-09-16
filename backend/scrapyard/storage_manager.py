@@ -6,6 +6,7 @@ import logging
 import zipfile
 import tempfile
 import threading
+import time
 
 from pathlib import Path
 
@@ -29,6 +30,11 @@ NOTES_OBJECT_FILE = "notes.json"
 COMMENTS_INDEX_OBJECT_FILE = "comments_index.json"
 COMMENTS_OBJECT_FILE = "comments.json"
 
+# a batch session keeps the index in memory, and the index file is not updated until the session is closed;
+# a session abandoned by a client that has lost the connection is saved and closed after the idle timeout
+BATCH_SESSION_IDLE_TIMEOUT = 60
+BATCH_SESSION_WATCHDOG_INTERVAL = 10
+
 
 class StorageManager:
     ARCHIVE_TYPE_BYTES = "bytes"
@@ -40,6 +46,10 @@ class StorageManager:
         # in the server mode the data path is configured on the server and the path passed by clients is ignored
         self.data_path = data_path
         self.bach_node_db = None
+        self.batch_node_db_path = None
+        # the id of the client session that has opened the batch session (server mode only)
+        self.batch_owner = None
+        self.batch_activity = 0
         self.batch_mutex = threading.RLock()
 
     def get_data_directory(self, params):
@@ -103,24 +113,69 @@ class StorageManager:
         root_directory = Path(path)
         return sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file())
 
-    def open_batch_session(self, params):
+    def open_batch_session(self, params, owner=None):
         node_db_path = self.get_node_db_path(params)
-        with self.batch_mutex:
-            self.bach_node_db = NodeDB.from_file(node_db_path)
 
-    def close_batch_session(self, params):
+        with self.batch_mutex:
+            # a session that is still open (e.g., its client has lost the connection) is saved
+            self._save_batch_session()
+
+            self.bach_node_db = NodeDB.from_file(node_db_path)
+            self.batch_node_db_path = node_db_path
+            self.batch_owner = owner
+            self.batch_activity = time.monotonic()
+
+            watchdog = threading.Thread(target=self._batch_session_watchdog, args=(self.bach_node_db,), daemon=True)
+            watchdog.start()
+
+    def close_batch_session(self, params=None):
+        with self.batch_mutex:
+            self._save_batch_session()
+
+    def close_batch_session_of(self, owner):
+        """Closes the batch session opened by the given client session, e.g., after its WebSocket is disconnected."""
+        with self.batch_mutex:
+            if self.bach_node_db and owner is not None and self.batch_owner == owner:
+                logging.warning("Closing a batch session of a disconnected client")
+                self._save_batch_session()
+
+    def flush_batch_session(self):
+        """Writes the index of an open batch session, so the index file could be read by other clients."""
         with self.batch_mutex:
             if self.bach_node_db:
-                node_db_path = self.get_node_db_path(params)
-                self.bach_node_db.save(node_db_path)
-                self.bach_node_db = None
+                self.bach_node_db.save(self.batch_node_db_path)
 
     def is_batch_session_open(self):
         return {"result": not not self.bach_node_db}
 
+    def _save_batch_session(self):
+        # the session remains open if the index could not be written, so its changes are not lost
+        if self.bach_node_db:
+            self.bach_node_db.save(self.batch_node_db_path)
+            self.bach_node_db = None
+            self.batch_node_db_path = None
+            self.batch_owner = None
+
+    def _batch_session_watchdog(self, node_db):
+        while True:
+            time.sleep(BATCH_SESSION_WATCHDOG_INTERVAL)
+
+            with self.batch_mutex:
+                if self.bach_node_db is not node_db:
+                    return
+
+                if time.monotonic() - self.batch_activity > BATCH_SESSION_IDLE_TIMEOUT:
+                    try:
+                        logging.warning("Closing an abandoned batch session")
+                        self._save_batch_session()
+                        return
+                    except Exception as e:
+                        logging.exception(e)
+
     def with_node_db(self, params, f):
         with self.batch_mutex:
             if self.bach_node_db:
+                self.batch_activity = time.monotonic()
                 f(self.bach_node_db)
                 return
 
@@ -355,6 +410,7 @@ class StorageManager:
         result = {"error": "error"}
 
         try:
+            self.flush_batch_session()
             node_db_path = self.get_node_db_path(params)
             if os.path.exists(node_db_path):
                 header = NodeDB.read_header(node_db_path)
@@ -381,6 +437,8 @@ class StorageManager:
         storage_sync.close_session()
 
     def sync_compute(self, params):
+        # the changes of a batch session performed by other clients should be visible to the synchronization
+        self.flush_batch_session()
         return storage_sync.compute_sync(self, params)
 
     def sync_pull_objects(self, params):

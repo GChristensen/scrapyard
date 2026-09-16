@@ -2,6 +2,8 @@ import {MarshallerJSONScrapbook, UnmarshallerJSONScrapbook} from "./marshaller_j
 import {Archive} from "./storage_entities.js";
 import {StorageProxy} from "./storage_proxy.js";
 import {settings} from "./settings.js";
+import {showNotification} from "./utils_browser.js";
+import {isTransientError} from "./helper_app.js";
 
 export class ArchiveProxy extends StorageProxy {
     #marshaller = new MarshallerJSONScrapbook();
@@ -55,24 +57,57 @@ export class ArchiveProxy extends StorageProxy {
         const adapter = this.adapter(node);
 
         if (adapter) {
-            const content = await Archive.reify(archive);
-            archive = await this.#marshaller.convertArchive(archive);
-
-            delete archive.content;
-
-            const params = {
-                uuid: node.uuid,
-                archive_json: JSON.stringify(archive),
-                content: content,
-                contains: node.contains
-            };
-
-            await adapter.persistArchive(params);
+            try {
+                await this.#uploadArchive(adapter, node, archive);
+            }
+            catch (e) {
+                // the only copy of a captured page is kept locally until it is uploaded,
+                // unless the backend has rejected it, and a retry would not succeed
+                if (adapter === StorageProxy._adapterDisk && isTransientError(e) && await this.#retainArchive(node, archive))
+                    showNotification(`The archive "${node.name}" is saved in the browser and will be uploaded `
+                        + `when the ${helperStorageName()} is available.`);
+                else
+                    throw e;
+            }
         }
         else if (settings.storage_mode_internal())
             return Archive.idb.add(node, archive);
 
         return archive;
+    }
+
+    async #uploadArchive(adapter, node, archive) {
+        const content = await Archive.reify(archive);
+        archive = await this.#marshaller.convertArchive(archive);
+
+        delete archive.content;
+
+        const params = {
+            uuid: node.uuid,
+            archive_json: JSON.stringify(archive),
+            content: content,
+            contains: node.contains
+        };
+
+        await adapter.persistArchive(params);
+    }
+
+    async #retainArchive(node, archive) {
+        try {
+            await this.wrapped._add(node, {...archive});
+            return true;
+        }
+        catch (e) {
+            console.error(e);
+        }
+    }
+
+    // uploads an archive retained after a failed upload, throws on failure
+    async uploadPendingArchive(node, archive) {
+        const adapter = this.adapter(node);
+
+        if (adapter === StorageProxy._adapterDisk)
+            await this.#uploadArchive(adapter, node, archive);
     }
 
     async #saveArchiveFile(node, file, content) {
@@ -84,6 +119,13 @@ export class ArchiveProxy extends StorageProxy {
 
     async #fetchArchive(node) {
         const adapter = this.adapter(node);
+
+        if (adapter === StorageProxy._adapterDisk) {
+            const pending = await this.wrapped.get(node);
+
+            if (pending)
+                return pending;
+        }
 
         if (adapter) {
             const content = await adapter.fetchArchiveContent({
@@ -114,3 +156,7 @@ export class ArchiveProxy extends StorageProxy {
     }
 }
 
+
+function helperStorageName() {
+    return settings.storage_mode_server()? "server": "backend application";
+}

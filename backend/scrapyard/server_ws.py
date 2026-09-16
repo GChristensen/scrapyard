@@ -4,7 +4,7 @@ import logging
 from flask import request
 from flask_sock import Sock, ConnectionClosed
 
-from . import backend
+from . import backend, server
 from .browser import WebSocketChannel
 from .server import app
 from .server_auth import sessions
@@ -82,4 +82,6 @@ def websocket(ws):
         channel.close()
         if session.channel is channel:
             session.channel = None
+            # a batch session of a client that has lost the connection should not remain open
+            server.storage_manager.close_batch_session_of(session.sid)
         logging.info(f"WebSocket client disconnected: {address}")

@@ -64,6 +64,10 @@ receive.helperAppHasVersion = async message => {
     return helperApp.hasVersion(message.version, message.alert);
 };
 
+receive.helperAppGetServerError = message => {
+    return helperApp.getServerError();
+};
+
 receive.helperAppReset = message => {
     return helperApp.reset();
 };

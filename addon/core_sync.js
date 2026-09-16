@@ -8,7 +8,13 @@ import {chunk, ProgressCounter} from "./utils.js";
 import {MarshallerSync, UnmarshallerSync} from "./marshaller_sync.js";
 import {Database} from "./storage_database.js";
 import {undoManager} from "./bookmarks_undo.js";
-import {clearStorageDivergence, getStorageDivergence} from "./storage_divergence.js";
+import {
+    clearStorageDivergence,
+    getStorageDivergence,
+    scheduleStorageRecovery,
+    setStorageRecovery
+} from "./storage_divergence.js";
+import {uploadPendingArchives} from "./storage_uploads.js";
 
 const SYNC_NODE_CHUNK_SIZE = 10;
 
@@ -33,13 +39,23 @@ receive.checkSyncDirectory = async message => {
     }
 };
 
-// restore the internal storage from the backend storage after failed writes, when the backend is available again
-helperApp.addConnectionListener(async () => {
+// restores the internal storage from the backend storage after failed writes
+async function recoverStorage() {
     await settings.load();
 
     if (!settings.storage_mode_internal() && await getStorageDivergence())
-        return sendLocal.performSync();
-});
+        return sendLocal.performSync({verbose: false});
+}
+
+setStorageRecovery(recoverStorage);
+
+// the restore is performed when the backend is available again
+helperApp.addConnectionListener(recoverStorage);
+
+// pending restores are resumed after the browser is restarted
+getStorageDivergence()
+    .then(divergence => divergence && scheduleStorageRecovery())
+    .catch(e => console.error(e));
 
 receive.performSync = async message => {
     let synced;
@@ -47,7 +63,7 @@ receive.performSync = async message => {
     send.startProcessingIndication();
 
     try {
-        synced = await performSync();
+        synced = await performSync(message?.verbose !== false);
     }
     finally {
         send.stopProcessingIndication();
@@ -57,47 +73,74 @@ receive.performSync = async message => {
     }
 };
 
-async function performSync() {
+async function performSync(verbose) {
     let result;
 
     await settings.load();
 
     const syncDirectory = helperApp.dataPath();
 
-    if (syncing || !syncDirectory || !await helperApp.probe(true))
+    if (syncing || !syncDirectory || !await helperApp.probe(verbose))
         return;
 
     try {
         syncing = true;
 
+        // archives kept in the browser after failed uploads would be lost if the database is reset
+        if (!await uploadPendingArchives()) {
+            if (verbose)
+                showNotification("Synchronization is postponed until the archives saved in the browser are uploaded.");
+            return;
+        }
+
         // failed writes have left the internal storage diverged from the backend storage,
         // it is reset and populated from the backend storage
         const divergence = await getStorageDivergence();
 
-        let storageMetadata = await getStorageMetadata(syncDirectory);
+        let storageMetadata = await getStorageMetadata(syncDirectory, verbose);
 
         if (storageMetadata) {
             const dbMetadata = divergence? null: await settings.get(SCRAPYARD_SYNC_METADATA);
+            const reset = isDatabaseResetRequired(storageMetadata, dbMetadata);
 
-            if (await prepareDatabase(storageMetadata, dbMetadata)) {
+            // the operations are computed before the database is reset, so it is not left empty
+            // if the backend becomes unavailable
+            const syncOperations = await computeSync(syncDirectory, reset);
 
-                const syncOperations = await computeSync(syncDirectory);
+            if (syncOperations) {
+                if (reset)
+                    await resetDatabase();
 
-                if (syncOperations) {
-                    result = await syncWithStorage(syncOperations, syncDirectory);
+                const {changes, errors} = await syncWithStorage(syncOperations, syncDirectory);
+                result = changes;
+
+                try {
                     await helperApp.fetch("/storage/sync_close_session");
-                    await settings.set(SCRAPYARD_SYNC_METADATA, storageMetadata);
-
-                    if (divergence) {
-                        await clearStorageDivergence(divergence);
-                        showNotification("Unsaved changes have been discarded, "
-                            + "the local data is restored from the " + (helperApp.isServerMode()? "server.": "disk storage."));
-                        result = true;
-                    }
                 }
-                else
-                    showNotification("Synchronization could not be performed because of an error.");
+                catch (e) {
+                    console.error(e);
+                }
+
+                await settings.set(SCRAPYARD_SYNC_METADATA, storageMetadata);
+
+                if (divergence) {
+                    const storage = helperApp.isServerMode()? "server": "disk storage";
+
+                    if (errors) {
+                        showNotification(`The local data could not be completely restored from the ${storage}, `
+                            + "restoring will be retried.");
+                        scheduleStorageRecovery();
+                    }
+                    else {
+                        await clearStorageDivergence(divergence);
+                        showNotification(`Unsaved changes have been discarded, the local data is restored from the ${storage}.`);
+                    }
+
+                    result = true;
+                }
             }
+            else if (verbose)
+                showNotification("Synchronization could not be performed because of an error.");
         }
     }
     finally {
@@ -107,7 +150,7 @@ async function performSync() {
     return result;
 }
 
-async function getStorageMetadata(syncDirectory) {
+async function getStorageMetadata(syncDirectory, verbose = true) {
     let storageMetadata
     try {
         storageMetadata = await helperApp.fetchJSON_postJSON("/storage/get_metadata", {
@@ -118,33 +161,34 @@ async function getStorageMetadata(syncDirectory) {
     }
 
     if (!storageMetadata || storageMetadata.error === "error") {
-        showNotification("Synchronization error.");
+        verbose && showNotification("Synchronization error.");
         return;
     }
     else if (storageMetadata.error === "empty" || !storageMetadata.entities) {
-        showNotification("The disk storage is missing or empty.\n"
+        verbose && showNotification("The disk storage is missing or empty.\n"
                             + "If you are just starting to work with Scrapyard, please create a bookmark to mute this message.");
         return;
     }
     else if (storageMetadata.type !== "index") {
-        showNotification("Unknown storage format type.");
+        verbose && showNotification("Unknown storage format type.");
         return;
     }
     else if (typeof storageMetadata.version === "number" && storageMetadata.version > JSON_SCRAPBOOK_VERSION) {
-        showNotification("Unknown storage format version.");
+        verbose && showNotification("Unknown storage format version.");
         return;
     }
 
     return storageMetadata;
 }
 
-async function computeSync(syncDirectory) {
-    const syncNodes = await getNodesForSync();
+// if the database is going to be reset, the operations are computed as for an empty database
+async function computeSync(syncDirectory, reset) {
+    const syncNodes = reset? []: await getNodesForSync();
 
     const syncParams = {
         data_path: syncDirectory,
         nodes: JSON.stringify(syncNodes),
-        last_sync_date: settings.last_sync_date() || -1
+        last_sync_date: (!reset && settings.last_sync_date()) || -1
     };
 
     let syncOperations;
@@ -172,26 +216,21 @@ async function getNodesForSync() {
     return syncNodes;
 }
 
-async function prepareDatabase(storageMetadata, dbMetadata) {
-    if (storageMetadata.type !== "index") {
-        showNotification("Storage format type is not supported.");
-        return false;
-    }
-
-    const resetDatabase = storageMetadata.uuid !== dbMetadata?.uuid
+function isDatabaseResetRequired(storageMetadata, dbMetadata) {
+    return storageMetadata.uuid !== dbMetadata?.uuid
         || storageMetadata.timestamp < dbMetadata?.timestamp
         || storageMetadata.version !== dbMetadata?.version;
+}
 
-    if (resetDatabase) {
-        await undoManager.commit();
-        await Database.wipeImportable();
-        await settings.last_sync_date(null);
-    }
-
-    return true;
+async function resetDatabase() {
+    await undoManager.commit();
+    await Database.wipeImportable();
+    await settings.last_sync_date(null);
 }
 
 async function syncWithStorage(syncOperations, syncDirectory) {
+    const result = {changes: false, errors: false};
+
     if (areChangesPresent(syncOperations)) {
         const action = _MANIFEST_V3? browser.action: browser.browserAction;
 
@@ -201,7 +240,7 @@ async function syncWithStorage(syncOperations, syncDirectory) {
             action.setIcon({path: "/icons/action-sync.png"});
 
         try {
-            await performOperations(syncOperations, syncDirectory);
+            result.errors = await performOperations(syncOperations, syncDirectory);
         } finally {
             if (settings.platform.firefox)
                 action.setIcon({path: "/icons/scrapyard.svg"});
@@ -209,8 +248,10 @@ async function syncWithStorage(syncOperations, syncDirectory) {
                 action.setIcon({path: ACTION_ICONS});
         }
 
-        return true;
+        result.changes = true;
     }
+
+    return result;
 }
 
 function areChangesPresent(syncOperations) {
@@ -275,6 +316,8 @@ async function performOperations(syncOperations, syncDirectory) {
 
     if (errors)
         showNotification("Synchronization finished with errors.");
+
+    return errors;
 }
 
 async function deleteStorageNodes(syncNodes) {

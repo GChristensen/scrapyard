@@ -1,3 +1,4 @@
+import logging
 import zipfile
 import os
 import re
@@ -5,7 +6,7 @@ from pathlib import Path
 
 from flask import request, abort
 
-from .browser import current_channel, current_context
+from .browser import current_channel, current_context, StreamAborted
 from .server import app, requires_auth
 from .server_paths import resolve_backup_directory, validate_file_name
 
@@ -80,46 +81,51 @@ def backup_initialize():
         Path(directory).mkdir(parents=True, exist_ok=True)
 
     compress = request.form["compress"] == "true"
+    stream_id = request.form.get("stream", None)
     channel = current_channel()
-    message_mutex = channel.message_mutex
-    message_queue = channel.message_queue
-
-    def do_backup(backup, encode=False):
-        message_mutex.acquire()
-        try:
-            while True:
-                text = message_queue.get()
-                if text is not None:
-                    if encode:
-                        backup.write(text.encode("utf-8"))
-                    else:
-                        backup.write(text)
-                else:
-                    break
-        finally:
-            message_mutex.release()
 
     if compress:
-        compressed = re.sub(f"{BACKUP_JSON_EXT}$", BACKUP_COMPRESSED_EXT, backup_file_path)
-        method = {
-            "DEFLATE": zipfile.ZIP_DEFLATED,
-            "LZMA": zipfile.ZIP_LZMA,
-            "BZIP2": zipfile.ZIP_BZIP2
-        }.get(request.form["method"], zipfile.ZIP_DEFLATED)
-        level = int(request.form["level"])
-
-        try:
-            zout = zipfile.ZipFile(compressed, "w", method, compresslevel=level)
-            backup = zout.open(request.form["file"], "w")
-            do_backup(backup, True)
-        finally:
-            backup.close()
-            zout.close()
-        return "OK"
+        target_path = re.sub(f"{BACKUP_JSON_EXT}$", BACKUP_COMPRESSED_EXT, backup_file_path)
     else:
-        with open(backup_file_path, "w", encoding="utf-8") as backup:
-            do_backup(backup)
-        return "OK"
+        target_path = backup_file_path
+
+    # the backup is written to a temporary file, which is not listed as a backup,
+    # and renamed only if the whole content is received, so an interrupted backup never looks like a complete one
+    part_path = target_path + ".part"
+
+    try:
+        if compress:
+            method = {
+                "DEFLATE": zipfile.ZIP_DEFLATED,
+                "LZMA": zipfile.ZIP_LZMA,
+                "BZIP2": zipfile.ZIP_BZIP2
+            }.get(request.form["method"], zipfile.ZIP_DEFLATED)
+            level = int(request.form["level"])
+
+            with zipfile.ZipFile(part_path, "w", method, compresslevel=level) as zout:
+                with zout.open(request.form["file"], "w") as backup:
+                    for text in channel.read_stream(stream_id):
+                        backup.write(text.encode("utf-8"))
+        else:
+            with open(part_path, "w", encoding="utf-8") as backup:
+                for text in channel.read_stream(stream_id):
+                    backup.write(text)
+
+        os.replace(part_path, target_path)
+    except BaseException as e:
+        try:
+            if os.path.exists(part_path):
+                os.remove(part_path)
+        except OSError as oe:
+            logging.exception(oe)
+
+        if isinstance(e, StreamAborted):
+            logging.error(f"Backup is aborted: {e}")
+            return f"Backup is aborted: {e}", 409
+
+        raise
+
+    return "OK"
 
 
 # the state of a restore operation is kept per client
@@ -130,7 +136,11 @@ def restore_initialize():
     directory = resolve_backup_directory(request.form["directory"])
     backup_file_path = os.path.join(directory, validate_file_name(request.form["file"]))
 
+    if not os.path.exists(backup_file_path):
+        return abort(404)
+
     restore = current_context()
+    close_restore_files(restore)  # a previous restore may have been interrupted
     restore["backup_compressed"] = backup_file_path.endswith(BACKUP_COMPRESSED_EXT)
 
     if restore["backup_compressed"]:
@@ -164,7 +174,11 @@ def restore_get_line():
 @app.route("/restore/finalize", methods=['GET'])
 @requires_auth
 def restore_finalize():
-    restore = current_context()
+    close_restore_files(current_context())
+    return "OK"
+
+
+def close_restore_files(restore):
     json_file = restore.pop("json_file", None)
     backup_file = restore.pop("backup_file", None)
     restore.pop("backup_compressed", None)
@@ -173,7 +187,6 @@ def restore_finalize():
         json_file.close()
     if backup_file:
         backup_file.close()
-    return "OK"
 
 
 @app.route("/backup/delete", methods=['POST'])

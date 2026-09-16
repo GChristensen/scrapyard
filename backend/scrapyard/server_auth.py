@@ -272,11 +272,15 @@ def auth_guard():
     g.session = None
 
     address = request.remote_addr or "unknown"
-    retry_after = limiter.retry_after(address)
-    if retry_after:
-        return _too_many_requests(retry_after)
-
     signed = request.environ.get("SCRAPYARD_SIGNED_URL", None)
+
+    # Only the requests that could be used to guess a secret are limited. Requests with valid session tokens are
+    # not affected by a block, so a client with a stale key does not lock out other clients that share its address
+    # (e.g., behind a reverse proxy).
+    if signed is not None or request.path == "/auth/session":
+        retry_after = limiter.retry_after(address)
+        if retry_after:
+            return _too_many_requests(retry_after)
 
     if signed is not None:
         if signed["error"]:

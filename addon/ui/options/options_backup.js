@@ -356,18 +356,31 @@ export class BackupManager {
             return;
 
         const selected = this.backupTree.get_selected(true);
+        let failed = false;
 
         for (let jnode of selected) {
-            const success = await send.deleteBackup({
-                directory: this.backupDirectory(),
-                meta: jnode.data
-            });
+            let success;
+
+            try {
+                success = await send.deleteBackup({
+                    directory: this.backupDirectory(),
+                    meta: jnode.data
+                });
+            }
+            catch (e) {
+                console.error(e);
+            }
 
             if (success) {
                 this.overallBackupSize -= jnode.data.file_size;
                 this.backupTree.delete_node(jnode);
             }
+            else
+                failed = true;
         }
+
+        if (failed)
+            showNotification("Some backups could not be deleted.");
 
         this.updateOverallSize();
     }

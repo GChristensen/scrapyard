@@ -114,18 +114,25 @@ export class CloudShelfPlugin {
         let cloudNodes = nodes.filter(n => n.external === CLOUD_EXTERNAL_TYPE);
         let otherNodes = nodes.filter(n => n.external !== CLOUD_EXTERNAL_TYPE);
 
+        // the source content is deleted only after it has been copied, so a failed read does not lose it
         if (dest.external === CLOUD_EXTERNAL_TYPE) {
-            for (const n of otherNodes) {
-                if (isContainerNode(n)) {
-                    return Bookmark.traverse(n, async (parent, node) => {
-                        await this._moveNodeToCloud(dest, node);
-                        await this._createBookmarkInternal(node);
-                    });
+            try {
+                for (const n of otherNodes) {
+                    if (isContainerNode(n)) {
+                        return await Bookmark.traverse(n, async (parent, node) => {
+                            await this._moveNodeToCloud(dest, node);
+                            await this._createBookmarkInternal(node);
+                        });
+                    }
+                    else {
+                        await this._moveNodeToCloud(dest, n);
+                        await this._createBookmarkInternal(n);
+                    }
                 }
-                else {
-                    await this._moveNodeToCloud(dest, n);
-                    await this._createBookmarkInternal(n);
-                }
+            }
+            catch (e) {
+                showNotification(`Can not move items to the cloud: ${e.message}`);
+                throw e;
             }
         } else {
             for (const n of otherNodes) {
@@ -141,6 +148,7 @@ export class CloudShelfPlugin {
                 }
                 catch (e) {
                     console.error(e);
+                    showNotification(`Can not move items from the cloud: ${e.message}`);
                 }
             }
         }

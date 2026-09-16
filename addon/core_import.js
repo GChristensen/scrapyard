@@ -4,7 +4,8 @@ import {ishellConnector} from "./plugin_ishell.js";
 import {settings} from "./settings.js";
 import {receive} from "./proxy.js";
 import {Import, Export} from "./import.js";
-import {helperApp} from "./helper_app.js";
+import {completeStreamRequest, helperApp, streamContent} from "./helper_app.js";
+import {showNotification} from "./utils_browser.js";
 import {sleep} from "./utils.js";
 import UUID from "./uuid.js";
 import {ExportArea} from "./storage_export.js";
@@ -93,18 +94,22 @@ receive.exportFile = async message => {
 };
 
 async function exportWithHelperApp(exportBuilder, fileName, format) {
-    try {
-        helperApp.fetch("/export/initialize");
-    } catch (e) {
-        console.error(e);
-    }
-
     const port = await helperApp.getPort();
+
+    if (!port)
+        throw new Error(helperApp.isServerMode()
+            ? helperApp.serverConnectionErrorMessage()
+            : "Can not connect to the backend application.");
+
+    // the exported file is identified by the stream id, see core_backup.js
+    const stream = String(UUID.numeric());
+    const initialization = helperApp.fetch(`/export/initialize?stream=${stream}`);
 
     const file = {
         append: async function (text) {
             port.postMessage({
                 type: "EXPORT_PUSH_TEXT",
+                stream,
                 text: text
             })
         }
@@ -112,22 +117,27 @@ async function exportWithHelperApp(exportBuilder, fileName, format) {
 
     await sleep(50);
 
-    exportBuilder.setStream(file);
-    const exporter = exportBuilder.build();
-    await exporter.export();
-
-    port.postMessage({
-        type: "EXPORT_FINISH"
+    const exportError = await streamContent(port, stream, "EXPORT", async () => {
+        exportBuilder.setStream(file);
+        const exporter = exportBuilder.build();
+        await exporter.export();
     });
 
-    let url = await helperApp.signedURL("/export/download");
+    await completeStreamRequest(initialization, exportError);
+
+    const finalize = () => helperApp.fetch(`/export/finalize?stream=${stream}`).catch(e => console.error(e));
     let download;
 
     try {
+        const url = await helperApp.signedURL(`/export/download?stream=${stream}`);
         download = await browser.downloads.download({url: url, filename: fileName, saveAs: true});
     } catch (e) {
         console.error(e);
-        helperApp.fetch("/export/finalize");
+        finalize();
+
+        // the download is cancelled by the user
+        if (!/cancel/i.test(e.message))
+            throw e;
     }
 
     if (download) {
@@ -135,7 +145,10 @@ async function exportWithHelperApp(exportBuilder, fileName, format) {
             if (delta.id === download) {
                 if (delta.state && delta.state.current === "complete" || delta.error) {
                     browser.downloads.onChanged.removeListener(download_listener);
-                    helperApp.fetch("/export/finalize");
+                    finalize();
+
+                    if (delta.error && delta.error.current !== "USER_CANCELED")
+                        showNotification(`Export download has failed: ${delta.error.current}`);
                 }
             }
         };

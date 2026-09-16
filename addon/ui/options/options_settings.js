@@ -6,6 +6,7 @@ import {send} from "../../proxy.js";
 import {confirm} from "../dialog.js";
 import {helperApp, HELPER_APP_v2_1_IS_REQUIRED} from "../../helper_app.js";
 import {filesShelf} from "../../plugin_files_shelf.js";
+import {escapeHtml} from "../../utils_html.js";
 
 function configureScrapyardSettingsPage() {
     simpleSelectric("#option-sidebar-theme");
@@ -282,9 +283,11 @@ async function testServerConnection() {
 
         if (await send.helperAppProbe())
             setServerStatus(`Connected, server version: ${await send.helperAppGetVersion()}`);
-        else
-            setServerStatus("Authenticated, but the WebSocket connection has failed. "
-                + "Make sure that the reverse proxy (if any) supports WebSockets.", true);
+        else {
+            const error = await send.helperAppGetServerError()
+                || "Make sure that the reverse proxy (if any) supports WebSockets.";
+            setServerStatus("Authenticated, but the WebSocket connection has failed. " + escapeHtml(error), true);
+        }
     }
 }
 

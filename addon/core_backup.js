@@ -1,5 +1,5 @@
 import {send} from "./proxy.js";
-import {helperApp} from "./helper_app.js";
+import {completeStreamRequest, helperApp, streamContent} from "./helper_app.js";
 import {isVirtualShelf} from "./storage.js";
 import {receive} from "./proxy.js"
 import UUID from "./uuid.js";
@@ -30,20 +30,31 @@ receive.backupShelf = async message => {
 
     let backupFile = `${UUID.date()}_${shelfUUID}.jsonl`
 
+    const port = await helperApp.getPort();
+
+    if (!port)
+        throw new Error(helperApp.isServerMode()
+            ? helperApp.serverConnectionErrorMessage()
+            : "Can not connect to the backend application.");
+
+    // the content is streamed over the port and received by the HTTP request, which completes after the stream
+    // is finished; the stream id prevents content of a failed backup from being received by a subsequent one
+    const stream = String(UUID.numeric());
+
     const process = helperApp.post("/backup/initialize", {
         directory: message.directory,
         file: backupFile,
         compress: message.compress,
         method: message.method,
-        level: message.level
+        level: message.level,
+        stream
     });
-
-    const port = await helperApp.getPort();
 
     const file = {
         append: async function (text) {
             port.postMessage({
                 type: "BACKUP_PUSH_TEXT",
+                stream,
                 text: text
             })
         }
@@ -51,7 +62,7 @@ receive.backupShelf = async message => {
 
     await sleep(50);
 
-    try {
+    const exportError = await streamContent(port, stream, "BACKUP", async () => {
         const exporter = Export.create("json")
             .setName(shelfName)
             .setUUID(shelfUUID)
@@ -63,14 +74,9 @@ receive.backupShelf = async message => {
             .build();
 
         await exporter.export();
-    }
-    finally {
-        port.postMessage({
-            type: "BACKUP_FINISH"
-        });
-    }
+    });
 
-    await process;
+    await completeStreamRequest(process, exportError);
 };
 
 receive.restoreShelf = async message => {
@@ -80,10 +86,13 @@ receive.restoreShelf = async message => {
     let shelf;
 
     try {
-        await helperApp.post("/restore/initialize", {
+        const response = await helperApp.post("/restore/initialize", {
             directory: message.directory,
             file: message.meta.file
         });
+
+        if (!response.ok)
+            throw await helperApp.errorFromResponse(response);
 
         const Reader = class {
             async* lines() {
@@ -97,7 +106,7 @@ receive.restoreShelf = async message => {
                             break;
                     }
                     else
-                        throw new Error("unknown error");
+                        throw await helperApp.errorFromResponse(response);
                 }
             }
         };
@@ -116,7 +125,14 @@ receive.restoreShelf = async message => {
         error = e;
     }
     finally {
-        await helperApp.fetch("/restore/finalize");
+        try {
+            await helperApp.fetch("/restore/finalize");
+        }
+        catch (e) {
+            // the backend closes the backup file on the next restore
+            console.error(e);
+        }
+
         send.stopProcessingIndication();
         send.nodesImported({shelf});
     }
@@ -129,15 +145,20 @@ receive.deleteBackup = async message => {
     send.startProcessingIndication({noWait: true});
 
     try {
-        await helperApp.post("/backup/delete", {
+        const response = await helperApp.post("/backup/delete", {
             directory: message.directory,
             file: message.meta.file
         });
+
+        if (!response.ok)
+            throw await helperApp.errorFromResponse(response);
     } catch (e) {
         console.error(e);
         return false;
     }
+    finally {
+        send.stopProcessingIndication();
+    }
 
-    send.stopProcessingIndication();
     return true;
 }
