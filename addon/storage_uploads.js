@@ -35,7 +35,7 @@ async function uploadArchives() {
 
         try {
             // the node itself might have not been stored
-            await Node.update(node, false);
+            await Node.update(node, false, true);
             await Archive.uploadPendingArchive(node, archive);
 
             // The index is not stored locally if the capture has failed before indexing (ArchiveIDB.add stores it

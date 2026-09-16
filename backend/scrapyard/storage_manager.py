@@ -38,6 +38,9 @@ COMMENTS_OBJECT_FILE = "comments.json"
 BATCH_SESSION_IDLE_TIMEOUT = 60
 BATCH_SESSION_WATCHDOG_INTERVAL = 10
 
+# inter-process locking of data directories (scrapyard.lock) is temporarily disabled
+LOCK_DATA_DIRECTORIES = False
+
 
 class StorageManager:
     ARCHIVE_TYPE_BYTES = "bytes"
@@ -71,7 +74,7 @@ class StorageManager:
     def lock_data_directory(self, data_directory):
         """Fails if the storage is used by another backend process, the in-process locks do not protect it.
         A directory that does not exist yet is locked on the first access after it is created."""
-        if data_directory in self.locked_directories:
+        if not LOCK_DATA_DIRECTORIES or data_directory in self.locked_directories:
             return
 
         with self.directory_locks_mutex:

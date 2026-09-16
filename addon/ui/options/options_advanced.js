@@ -135,9 +135,9 @@ function configureMaintenancePanel() {
             const result = await send.compareDatabaseStorage();
 
             if (result)
-                await alert("DB Comparison", "IDB and storage are identical.");
+                await alert("DB Comparison", "Internal and external storages are identical.");
             else
-                await alert("DB Comparison", "IDB and storage are NOT identical.")
+                await alert("DB Comparison", "Internal and external storages are NOT identical.")
         }
         finally {
             await send.stopProcessingIndication();
@@ -215,7 +215,7 @@ function configureImpExpPanel() {
                 delete imported.addon;
                 delete imported.version;
 
-                const localStorageSettings = imported["localstorage-settings"];
+                const localStorageSettings = imported["localstorage-settings"] || {};
 
                 if (localStorageSettings["editor-font-size"])
                     localStorage.setItem("editor-font-size", localStorageSettings["editor-font-size"]);
@@ -228,9 +228,12 @@ function configureImpExpPanel() {
 
                 delete imported["localstorage-settings"];
 
+                // the settings objects are absent in a newly installed or reset addon
                 let scrapyardSettings = await browser.storage.local.get() || {};
-                Object.assign(scrapyardSettings["savepage-settings"], imported["savepage-settings"]);
-                Object.assign(scrapyardSettings["scrapyard-settings"], imported["scrapyard-settings"]);
+                scrapyardSettings["savepage-settings"] = Object.assign(scrapyardSettings["savepage-settings"] || {},
+                    imported["savepage-settings"]);
+                scrapyardSettings["scrapyard-settings"] = Object.assign(scrapyardSettings["scrapyard-settings"] || {},
+                    imported["scrapyard-settings"]);
 
                 await browser.storage.local.set(scrapyardSettings);
 

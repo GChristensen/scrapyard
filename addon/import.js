@@ -129,7 +129,8 @@ export class Import {
     static async transaction(importer) {
         try {
             await DiskStorage.openBatchSession();
-            return importer.import();
+            // awaited, so the session is not closed before the import is finished
+            return await importer.import();
         }
         finally {
             await DiskStorage.closeBatchSession();
