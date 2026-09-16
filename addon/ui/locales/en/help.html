@@ -381,6 +381,18 @@
         <img src="images/files-shelf.png">
     </p>
 
+    <p>When the content is stored on a server (the <b>Server</b> content location in the settings),
+        directory paths of the Files shelf refer to the filesystem of the server, and should be located
+        inside its data directory (<code>DATA_PATH</code> in the server configuration):</p>
+    <ul>
+        <li>An absolute path is used as is, for example, <code>/srv/scrapyard/notes</code>
+            if <code>DATA_PATH</code> is <code>/srv/scrapyard</code>.</li>
+        <li>A relative path, for example, <code>notes</code>, is resolved against <code>DATA_PATH</code>.</li>
+        <li>Paths outside of <code>DATA_PATH</code> are not allowed. To add a directory located elsewhere,
+            symlink or mount it into <code>DATA_PATH</code> on the server.</li>
+        <li>Opening files in an external editor or with the associated application is not available.</li>
+    </ul>
+
     <h3>Sharing Bookmarks</h3>
     <p>
         A bookmark or archive could be shared to a cloud service through the "Share" context menu.

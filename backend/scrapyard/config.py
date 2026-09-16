@@ -18,6 +18,7 @@ TRUST_PROXY = False
 LOG_FILE = None
 LOG_LEVEL = "INFO"
 SESSION_TTL = 24 * 60 * 60
+# lifetime of signed URLs opened in browser tabs in seconds, 0 - signed URLs do not expire
 SIGNED_URL_TTL = 12 * 60 * 60
 
 MIN_AUTH_KEY_LENGTH = 24
@@ -37,7 +38,7 @@ def _path(value):
 
 def load_env(env_path=None):
     global SERVER_MODE, SCHEME, HTTP_HOST, HTTP_PORT, DATA_PATH, BACKUP_PATH, AUTH_KEY, \
-        TLS_CERT, TLS_KEY, THREADS, TRUST_PROXY, LOG_FILE, LOG_LEVEL
+        TLS_CERT, TLS_KEY, THREADS, TRUST_PROXY, LOG_FILE, LOG_LEVEL, SIGNED_URL_TTL
 
     if env_path:
         from dotenv import load_dotenv
@@ -87,5 +88,14 @@ def load_env(env_path=None):
     TRUST_PROXY = _bool(env.get("TRUST_PROXY", "0"))
     LOG_FILE = _path(env["LOG_FILE"]) if env.get("LOG_FILE") else None
     LOG_LEVEL = env.get("LOG_LEVEL", LOG_LEVEL).upper()
+
+    if env.get("SIGNED_URL_TTL_HOURS"):
+        try:
+            SIGNED_URL_TTL = int(float(env["SIGNED_URL_TTL_HOURS"]) * 60 * 60)
+        except ValueError:
+            raise ConfigError("SIGNED_URL_TTL_HOURS should be a number.")
+
+        if SIGNED_URL_TTL < 0:
+            raise ConfigError("SIGNED_URL_TTL_HOURS should not be negative.")
 
     SERVER_MODE = True

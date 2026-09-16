@@ -118,6 +118,8 @@ AUTH_KEY={auth_key}
 #THREADS=32
 #LOG_FILE=
 #LOG_LEVEL=INFO
+# lifetime of archive links opened in browser tabs, 0 - links do not expire
+#SIGNED_URL_TTL_HOURS=12
 """
 
     Path(os.path.dirname(env_path)).mkdir(parents=True, exist_ok=True)

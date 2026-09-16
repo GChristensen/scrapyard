@@ -187,9 +187,11 @@ def _b64decode(text):
 
 
 def sign_path(path, sid, ttl=None):
-    """Returns a signed URL path for the given path (the query string is preserved but not signed)."""
+    """Returns a signed URL path for the given path (the query string is preserved but not signed).
+    The zero expiration time means that the URL does not expire."""
     path_part, sep, query = path.partition("?")
-    expires = int(time.time() + (ttl or config.SIGNED_URL_TTL))
+    ttl = config.SIGNED_URL_TTL if ttl is None else ttl
+    expires = int(time.time() + ttl) if ttl else 0
     payload = f"{expires}|{sid}|{path_part}".encode("utf-8")
     signature = hmac.new(_url_signing_key(), payload, hashlib.sha256).digest()
     token = f"{_b64encode(payload)}.{_b64encode(signature)}"
@@ -215,7 +217,7 @@ def verify_signed_token(token, path):
     except Exception:
         return None, "malformed"
 
-    if time.time() > expires:
+    if expires and time.time() > expires:
         return None, "expired"
 
     if not path.startswith(prefix):

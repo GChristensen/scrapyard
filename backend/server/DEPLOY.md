@@ -33,6 +33,7 @@ In the add-on settings, choose **Content location: Server**, enter the server UR
 | `THREADS`     | no       | Worker threads (default 32); each connected browser holds one             |
 | `LOG_FILE`    | no       | Log file in addition to stderr                                            |
 | `LOG_LEVEL`   | no       | `DEBUG`, `INFO` (default), `WARNING`, `ERROR`                             |
+| `SIGNED_URL_TTL_HOURS` | no | Lifetime of archive links opened in tabs, 12 by default; `0` means links never expire |
 
 Generate a key:
 
@@ -50,7 +51,10 @@ Variables that are already set in the environment take precedence over `.env`.
   after 24 hours of inactivity and do not survive server restarts; the add-on logs in again
   automatically.
 - Archives, downloads and other pages opened in browser tabs use signed URLs (`/s/<signature>/...`).
-  A signed URL is limited to a single resource path and expires after 12 hours.
+  A signed URL is limited to a single resource path and read-only access. By default, it expires after
+  12 hours (see `SIGNED_URL_TTL_HOURS`). Longer lifetimes mean fewer "LINK EXPIRED" pages when reloading
+  old tabs, but a leaked link stays usable longer. Changing `AUTH_KEY` invalidates all signed URLs,
+  including ones that never expire.
 - Brute-force protection: after 5 failed attempts within 15 minutes, an IP address is blocked for
   1 minute. The block doubles with every subsequent strike, up to 24 hours. More than 30 failures
   per minute from all addresses combined temporarily blocks new logins for everyone; existing
