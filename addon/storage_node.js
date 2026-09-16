@@ -157,11 +157,13 @@ export class NodeIDB extends EntityIDB {
             await this._db.nodes.toCollection().modify(withPostprocessing);
     }
 
-    async updateContentModified(node) {
+    // upsert: the node may not be persisted yet (e.g., a new archive is added only to IDB before its capture),
+    // the storage receives the complete node, so it is added if it does not exist
+    async updateContentModified(node, upsert = false) {
         node.date_modified = new Date();
         node.content_modified = node.date_modified;
 
-        return this.update(node, false);
+        return this.update(node, false, upsert);
     }
 
     iterate(iterator, filter) {

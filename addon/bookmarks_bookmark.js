@@ -572,7 +572,7 @@ export class BookmarkManager extends EntityManager {
         if (node.contains === ARCHIVE_TYPE_FILES) {
             await Archive.storeIndex(node, index.words);
             await Archive.saveFile(node, "index.html", data);
-            await Archive.updateContentModified(node, archive);
+            await Archive.updateContentModified(node, archive, true);
         }
         else
             await Archive.add(node, archive, index);

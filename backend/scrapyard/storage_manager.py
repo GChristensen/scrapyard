@@ -261,7 +261,9 @@ class StorageManager:
 
     def update_node(self, params):
         def update(node_db):
-            self.check_nodes_exist(node_db, [params["node"]])
+            # an upsert contains the complete node, e.g., a new archive that is added to the storage after its capture
+            if not params.get("upsert", False):
+                self.check_nodes_exist(node_db, [params["node"]])
             params["node"] = node_db.update_node(params["node"], params["remove_fields"])
             self.persist_node_object(params)
 

@@ -93,7 +93,7 @@ export class ArchiveIDB extends EntityIDB {
             archive = Archive.entity(node, archive.object, archive.type, archive.byte_length);
 
         await this._add(node, archive);
-        await this.updateContentModified(node, archive);
+        await this.updateContentModified(node, archive, true);
 
         if (index?.words)
             await this.storeIndex(node, index.words);
@@ -101,7 +101,8 @@ export class ArchiveIDB extends EntityIDB {
             await this.storeIndex(node, indexHTML(archive.object));
     }
 
-    async updateContentModified(node, archive) {
+    // upsert: a new archive node is added to the storage here, see Node.updateContentModified
+    async updateContentModified(node, archive, upsert = false) {
         if (!this._importer) {
             node.contains = node.contains || (archive.byte_length? ARCHIVE_TYPE_BYTES: undefined)
             node.content_type = archive.type;
@@ -109,7 +110,7 @@ export class ArchiveIDB extends EntityIDB {
                 ? archive.object.size
                 : (await this.getSize(node))?.size;
 
-            await Node.updateContentModified(node);
+            await Node.updateContentModified(node, upsert);
         }
     }
 

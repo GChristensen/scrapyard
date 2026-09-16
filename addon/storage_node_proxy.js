@@ -21,13 +21,13 @@ export class NodeProxy extends StorageProxy {
         return result;
     }
 
-    async update(node, resetDateModified = true) {
+    async update(node, resetDateModified = true, upsert = false) {
         const result = await this.wrapped.update(node, resetDateModified);
 
         if (Array.isArray(node))
             await this.#updateNodes(node);
         else
-            await this.#updateNode(node);
+            await this.#updateNode(node, upsert);
 
         return result;
     }
@@ -76,13 +76,16 @@ export class NodeProxy extends StorageProxy {
         }
     }
 
-    async #updateNode(node) {
+    async #updateNode(node, upsert) {
         const adapter = this.adapter(node);
 
         if (adapter) {
             const params = {
                 remove_fields: Object.keys(node).filter(k => node.hasOwnProperty(k) && node[k] === undefined)
             };
+
+            if (upsert)
+                params.upsert = true;
 
             if (!node.uuid)
                 node.uuid = await Node.getUUIDFromId(node.id);
