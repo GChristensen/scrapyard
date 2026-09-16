@@ -191,7 +191,7 @@ class RDFImporter {
 
     async #importRDFArchive(path, node, scrapbookId) {
         const params = {
-            data_path: settings.data_folder_path(),
+            data_path: helperApp.dataPath(),
             rdf_archive_path: path,
             uuid: node.uuid,
             scrapbook_id: scrapbookId
@@ -229,7 +229,7 @@ class RDFImporter {
 
             if (bookmark.icon && bookmark.icon.startsWith("resource://scrapbook/")) {
                 bookmark.icon = bookmark.icon.replace("resource://scrapbook/", "");
-                bookmark.icon = helperApp.url(`/rdf/import/files/${bookmark.icon}`);
+                bookmark.icon = await helperApp.signedURL(`/rdf/import/files/${bookmark.icon}`);
                 await this.#Bookmark.storeIcon(bookmark);
             }
 

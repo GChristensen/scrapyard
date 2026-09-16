@@ -13,6 +13,14 @@ export class BackupManager {
 
         backupDirectoryPathInput.val(settings.backup_directory_path());
 
+        if (settings.storage_mode_server()) {
+            // in the server mode backups are stored in the BACKUP_PATH directory on the server
+            $("#backup-dir-title").text("Backup Subdirectory on the Server");
+            $("#backup-directory-path-container .tips").html("A subdirectory of the server backup directory "
+                + "(BACKUP_PATH).<br>Leave empty to use the backup directory itself.");
+            backupDirectoryPathInput.attr("placeholder", "optional");
+        }
+
         let pathTimeout;
         backupDirectoryPathInput.on("input", e => {
             clearTimeout(pathTimeout);
@@ -155,9 +163,13 @@ export class BackupManager {
             $("#backup-overall-file-size").html("&nbsp;");
     }
 
+    backupDirectory() {
+        return settings.backup_directory_path() || "";
+    }
+
     async listBackups() {
         if (!this.listingBackups) {
-            const directory = settings.backup_directory_path();
+            const directory = this.backupDirectory();
             let error = false;
 
             try {
@@ -215,7 +227,7 @@ export class BackupManager {
     async backupSelectedShelf() {
         await settings.load();
 
-        if (!settings.backup_directory_path()) {
+        if (!settings.storage_mode_server() && !settings.backup_directory_path()) {
             showNotification("Please, specify backup directory path.")
             return;
         }
@@ -250,7 +262,7 @@ export class BackupManager {
             $("#backup-button").prop("disabled", true);
 
             await send.backupShelf({
-                directory: settings.backup_directory_path(),
+                directory: this.backupDirectory(),
                 shelf: this.shelfList.selectedShelfName,
                 comment: $("#backup-comment").val(),
                 compress,
@@ -318,7 +330,7 @@ export class BackupManager {
             $("#backup-button").prop("disabled", true);
 
             await send.restoreShelf({
-                directory: settings.backup_directory_path(),
+                directory: this.backupDirectory(),
                 meta: jnode.data,
                 new_shelf: newShelf
             });
@@ -344,7 +356,7 @@ export class BackupManager {
 
         for (let jnode of selected) {
             const success = await send.deleteBackup({
-                directory: settings.backup_directory_path(),
+                directory: this.backupDirectory(),
                 meta: jnode.data
             });
 

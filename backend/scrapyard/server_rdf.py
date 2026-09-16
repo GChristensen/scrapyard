@@ -7,7 +7,8 @@ from pathlib import Path
 import flask
 from flask import request, render_template
 
-from .browser import send_with_response
+from .browser import current_channel
+from .server_paths import resolve_client_path
 from .browse import highlight_words_in_index
 from .cache_dict import CacheDict
 from .storage_rdf import import_rdf_archive, import_rdf_archive_index, fetch_archive_file, save_archive_file, \
@@ -25,12 +26,14 @@ rdf_import_directory = None
 def rdf_import(file):
     global rdf_import_directory
     form = request.form
-    rdf_import_directory = form["rdf_directory"]
+    rdf_import_directory = resolve_client_path(form["rdf_directory"])
     return flask.send_from_directory(rdf_import_directory, file)
 
 
 @app.route("/rdf/import/files/<path:file>", methods=['GET'])
 def rdf_import_files(file):
+    if not rdf_import_directory:
+        return "", 404
     return flask.send_from_directory(rdf_import_directory, file)
 
 
@@ -101,8 +104,12 @@ rdf_page_directories = CacheDict()
 
 @app.route("/rdf/browse/<uuid>/", methods=['GET'])
 def rdf_browse(uuid):
-    msg = send_with_response({"type": "REQUEST_RDF_PATH", "uuid": uuid})
-    rdf_archive_directory = msg["rdf_archive_path"]
+    msg = current_channel().send_with_response({"type": "REQUEST_RDF_PATH", "uuid": uuid})
+
+    if not msg.get("rdf_archive_path", None):
+        return render_template("404.html"), 404
+
+    rdf_archive_directory = resolve_client_path(msg["rdf_archive_path"])
     archive_index_path = os.path.join(rdf_archive_directory, "index.html")
 
     if os.path.exists(archive_index_path):
@@ -136,7 +143,7 @@ def rdf_browse_content(uuid, file):
 @app.route("/rdf/xml/<uuid>", methods=['POST'])
 @requires_auth
 def rdf_xml(uuid):
-    rdf_file = request.form["rdf_file"]
+    rdf_file = resolve_client_path(request.form["rdf_file"])
     return flask.send_file(rdf_file)
 
 
@@ -145,7 +152,7 @@ def rdf_xml(uuid):
 @app.route("/rdf/xml/save/<uuid>", methods=['POST'])
 @requires_auth
 def rdf_xml_save(uuid):
-    rdf_file = request.form["rdf_file"]
+    rdf_file = resolve_client_path(request.form["rdf_file"], for_write=True)
 
     with open(rdf_file, 'w', encoding='utf-8') as fp:
         fp.write(request.form["rdf_content"])
@@ -157,7 +164,7 @@ def rdf_xml_save(uuid):
 @app.route("/rdf/delete_item/<uuid>", methods=['POST'])
 @requires_auth
 def rdf_item_delete(uuid):
-    rdf_item_path = request.form["rdf_archive_directory"]
+    rdf_item_path = resolve_client_path(request.form["rdf_archive_directory"], for_write=True)
 
     try:
         shutil.rmtree(rdf_item_path)

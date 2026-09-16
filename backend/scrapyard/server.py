@@ -11,6 +11,7 @@ import flask
 from flask import request, abort, render_template, send_file
 from werkzeug.serving import make_server
 
+from . import config
 from .storage_manager import StorageManager
 from .utils import module_property
 
@@ -79,6 +80,40 @@ def start(options):
     return True
 
 
+def init_server_mode():
+    """Initializes the application to run under a production WSGI server (see server_main.py)."""
+    global port
+    global host
+    global storage_manager
+    global backend_log_file
+
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    from . import server_auth
+
+    host = config.HTTP_HOST
+    port = config.HTTP_PORT
+
+    storage_manager = StorageManager(port, data_path=config.DATA_PATH)
+    storage_manager.clean_temp_directory()
+
+    app.logger.disabled = False
+    backend_log_file = config.LOG_FILE
+
+    app.before_request(server_auth.auth_guard)
+    server_auth.register_routes(app)
+
+    from . import server_ws
+
+    app.wsgi_app = server_auth.SignedURLMiddleware(app.wsgi_app)
+
+    if config.TRUST_PROXY:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
+    logging.info(f"Server initialized, data path: {config.DATA_PATH}")
+
+    return app
+
+
 def stop():
     global httpd
     httpd.shutdown()
@@ -109,7 +144,12 @@ def port_available(port):
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not request.authorization or request.authorization["password"] != auth_token:
+        if config.SERVER_MODE:
+            # authentication is performed by server_auth.auth_guard
+            from .server_auth import is_authenticated
+            if not is_authenticated():
+                return abort(401)
+        elif not request.authorization or request.authorization["password"] != auth_token:
             return abort(401)
         return f(*args, **kwargs)
     return decorated
@@ -144,6 +184,9 @@ from . import server_storage
 
 @app.errorhandler(500)
 def handle_500(e=None):
+    if config.SERVER_MODE:
+        logging.error(traceback.format_exc())
+        return "Internal server error", 500
     return f"<pre>{traceback.format_exc()}</pre>", 500
 
 
@@ -169,12 +212,14 @@ def page_not_found(e):
 @app.route("/exit")
 @requires_auth
 def exit_app():
+    if config.SERVER_MODE:
+        return abort(403)
     os._exit(0)
 
 
 @app.route("/backend_log")
 def helper_log():
-    if app.logger.disabled:
+    if app.logger.disabled or not backend_log_file:
         return "", 404
     else:
         return send_file(backend_log_file, mimetype="text/plain")

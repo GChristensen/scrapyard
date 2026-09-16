@@ -8,6 +8,7 @@ export async function load() {
     $("#debug-browser-version").text(navigator.userAgent);
     $("#debug-addon-version").text(browser.runtime.getManifest().version);
     $("#debug-internal-storage-mode").text(settings.storage_mode_internal()? "Yes": "No");
+    $("#debug-server-storage-mode").text(settings.storage_mode_server()? "Yes": "No");
     $("#debug-unpacked-archives").text(settings.save_unpacked_archives()? "Yes": "No");
 
     const addonID = browser.runtime.getManifest().applications?.gecko?.id;
@@ -17,6 +18,8 @@ export async function load() {
     setSaveCheckHandler("option-enable-helper-app-logging", "enable_helper_app_logging");
     $("#option-enable-helper-app-logging").prop("checked", settings.enable_helper_app_logging());
 
-    $("#helper-app-log-link").prop("href", helperApp.url("/backend_log"));
+    helperApp.signedURL("/backend_log")
+        .then(url => $("#helper-app-log-link").prop("href", url))
+        .catch(e => console.error(e));
 }
 

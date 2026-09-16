@@ -64,7 +64,11 @@ receive.helperAppHasVersion = async message => {
     return helperApp.hasVersion(message.version, message.alert);
 };
 
+receive.helperAppReset = message => {
+    return helperApp.reset();
+};
+
 receive.helperAppGetBackgroundAuth = message => {
-    return helperApp.auth;
+    return helperApp.getBackgroundAuth(message?.staleToken);
 };
 

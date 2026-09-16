@@ -11,6 +11,7 @@ from flask import request, abort
 
 from .cache_dict import CacheDict
 from .server import app, requires_auth
+from .server_paths import resolve_client_path, forbid_in_server_mode
 
 
 # Upload a local file using file open dialog
@@ -39,6 +40,8 @@ def open_file_dialog(queue):
 @app.route("/upload/open_file_dialog", methods=['GET'])
 @requires_auth
 def upload_show_dialog():
+    forbid_in_server_mode()
+
     try:
         queue = multiprocessing.Queue()
         p = multiprocessing.Process(target=open_file_dialog, args=(queue,))
@@ -79,7 +82,7 @@ def serve_set_path(uuid):
     path = request.form["path"]
 
     if path:
-        path = os.path.expanduser(path)
+        path = resolve_client_path(path)
 
         if path and os.path.exists(path):
             try:

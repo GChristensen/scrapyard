@@ -1,0 +1,4 @@
+*
+!pyproject.toml
+!scrapyard
+**/__pycache__

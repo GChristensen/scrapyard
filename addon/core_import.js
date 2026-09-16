@@ -120,7 +120,7 @@ async function exportWithHelperApp(exportBuilder, fileName, format) {
         type: "EXPORT_FINISH"
     });
 
-    let url = helperApp.url("/export/download");
+    let url = await helperApp.signedURL("/export/download");
     let download;
 
     try {

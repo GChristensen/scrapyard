@@ -56,7 +56,8 @@ async function performStartupInitialization() {
 
     await undoManager.commit();
 
-    if (!settings.storage_mode_internal() && settings.synchronize_storage_at_startup())
+    if (settings.storage_mode_server()
+            || !settings.storage_mode_internal() && settings.synchronize_storage_at_startup())
         await sendLocal.performSync();
 
     console.log("==> core.js initialized");

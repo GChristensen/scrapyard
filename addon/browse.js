@@ -57,7 +57,7 @@ async function configureArchivePage(tab, node) {
         await injectScriptFile(tab.id, {file: "lib/browser-polyfill.js", frameId: 0});
     await injectScriptFile(tab.id, {file: "ui/edit_toolbar.js", frameId: 0});
 
-    if ((tab.url?.startsWith("blob:") || tab.url?.startsWith(helperApp.url("/browse")))
+    if ((tab.url?.startsWith("blob:") || helperApp.isArchiveURL(tab.url))
             && settings.open_bookmark_in_active_tab()) {
         const uuid = tab.url.split("/").at(-2);
         node = await Node.getByUUID(uuid);
@@ -167,7 +167,7 @@ async function browseRDFArchive(node, options) {
     const helper = await helperApp.hasVersion("2.0", HELPER_APP_v2_IS_REQUIRED);
 
     if (helper) {
-        const url = helperApp.url(`/rdf/browse/${node.uuid}/`);
+        const url = await helperApp.signedURL(`/rdf/browse/${node.uuid}/`);
         return openURL(url, options);
     }
 }
@@ -193,7 +193,7 @@ async function browseArchiveHelper(node, options) {
         if (node.external === RDF_EXTERNAL_TYPE)
             urlPrefix = "/rdf";
 
-        const archiveURL = helperApp.url(`${urlPrefix}/browse/${node.uuid}/`);
+        const archiveURL = await helperApp.signedURL(`${urlPrefix}/browse/${node.uuid}/`);
         const archiveTab = await openURL(archiveURL, options);
         return configureArchiveTab(node, archiveTab);
     }
@@ -208,7 +208,7 @@ export async function onRequestArchiveMessage(msg) {
         const node = await Node.getByUUID(msg.uuid);
 
         if (node) {
-            result.data_path = settings.data_folder_path() || null;
+            result.data_path = helperApp.dataPath() || null;
 
             if (node.external === CLOUD_EXTERNAL_TYPE) {
                 try {

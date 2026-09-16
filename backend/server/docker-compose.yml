@@ -1,0 +1,21 @@
+services:
+  scrapyard:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    image: scrapyard-server
+    restart: unless-stopped
+    # AUTH_KEY, SCHEME and other settings, see .env.example
+    env_file: .env
+    environment:
+      # these values are fixed inside the container, publish the port below instead
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: 20202
+      DATA_PATH: /data
+    ports:
+      # bound to localhost: expose it through `tailscale serve` or a reverse proxy,
+      # or replace with "20202:20202" to make the server accessible in LAN
+      - "127.0.0.1:20202:20202"
+    volumes:
+      # the directory should be writable by UID 1000
+      - ./data:/data

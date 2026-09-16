@@ -49,7 +49,7 @@ receive.renameFolder = message => Folder.rename(message.id, message.name);
 receive.addSeparator = message => Bookmark.addSeparator(message.parent_id, message.name);
 
 receive.createBookmark = async message => {
-    if (!settings.storage_mode_internal() && !settings.data_folder_path())
+    if (!settings.storage_mode_internal() && !helperApp.dataPath())
         return gettingStarted();
 
     if (!await canUseBookmarking())
@@ -86,7 +86,7 @@ receive.createBookmark = async message => {
 receive.updateBookmark = message => Bookmark.update(message.node);
 
 receive.createArchive = async message => {
-    if (!settings.storage_mode_internal() && !settings.data_folder_path())
+    if (!settings.storage_mode_internal() && !helperApp.dataPath())
         return gettingStarted();
 
     if (!await canUseBookmarking())
@@ -149,7 +149,7 @@ receive.archiveBookmarks = async message => {
 receive.updateArchive = message => Bookmark.updateArchive(message.uuid, message.data);
 
 receive.createNotes = async message => {
-    if (!settings.storage_mode_internal() && !settings.data_folder_path())
+    if (!settings.storage_mode_internal() && !helperApp.dataPath())
         return gettingStarted();
 
     if (!await canUseBookmarking())
@@ -355,7 +355,7 @@ receive.uploadFiles = async message => {
             const fileUUID = UUID.numeric();
             await helperApp.post(`/serve/set_path/${fileUUID}`, {path: message.file_name});
 
-            const url = helperApp.url(`/serve/file/${fileUUID}/`);
+            const url = await helperApp.signedURL(`/serve/file/${fileUUID}/`);
 
             let bookmark = {uri: "", parent_id: message.parent_id};
             bookmark.name = message.file_name.replaceAll("\\", "/").split("/");

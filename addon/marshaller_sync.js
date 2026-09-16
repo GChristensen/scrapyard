@@ -121,7 +121,7 @@ export class UnmarshallerSync extends UnmarshallerJSONScrapbook {
 
     async unmarshall(syncNodes) {
         const payload = await helperApp.fetchJSON_postJSON("/storage/sync_pull_objects", {
-            data_path: settings.data_folder_path(),
+            data_path: helperApp.dataPath(),
             sync_nodes: JSON.stringify(syncNodes)
         });
 

@@ -5,11 +5,14 @@ import shutil
 import logging
 import zipfile
 import tempfile
+import threading
 
 from pathlib import Path
 
 from . import storage_sync
+from .server_paths import validate_uuid, safe_join_path
 from .storage_node_db import NodeDB
+from .utils_fs import atomic_write
 
 SCRAPYARD_DIRECTORY = "scrapyard"
 CLOUD_DIRECTORY = "cloud"
@@ -32,24 +35,30 @@ class StorageManager:
     ARCHIVE_TYPE_TEXT = "text"
     ARCHIVE_TYPE_FILES = "files"
 
-    def __init__(self, port):
+    def __init__(self, port, data_path=None):
         self.port = port
+        # in the server mode the data path is configured on the server and the path passed by clients is ignored
+        self.data_path = data_path
         self.bach_node_db = None
+        self.batch_mutex = threading.RLock()
+
+    def get_data_directory(self, params):
+        if self.data_path:
+            return self.data_path
+        return os.path.expanduser(params["data_path"])
 
     def get_node_db_path(self, params):
-        data_directory = os.path.expanduser(params["data_path"])
-        return os.path.join(data_directory, NODE_DB_FILE)
+        return os.path.join(self.get_data_directory(params), NODE_DB_FILE)
 
     def get_object_root_directory(self, params):
-        data_directory = os.path.expanduser(params["data_path"])
-        return os.path.join(data_directory, OBJECT_DIRECTORY)
+        return os.path.join(self.get_data_directory(params), OBJECT_DIRECTORY)
 
     def get_object_directory(self, params, uuid=None):
         if not uuid:
             uuid = params["uuid"]
 
-        data_directory = os.path.expanduser(params["data_path"])
-        return os.path.join(data_directory, OBJECT_DIRECTORY, uuid)
+        validate_uuid(uuid)
+        return os.path.join(self.get_data_directory(params), OBJECT_DIRECTORY, uuid)
 
     def get_temp_directory(self):
         temp_directory_path = os.path.join(tempfile.gettempdir(), f"{SCRAPYARD_DIRECTORY}_{self.port}")
@@ -96,26 +105,30 @@ class StorageManager:
 
     def open_batch_session(self, params):
         node_db_path = self.get_node_db_path(params)
-        self.bach_node_db = NodeDB.from_file(node_db_path)
+        with self.batch_mutex:
+            self.bach_node_db = NodeDB.from_file(node_db_path)
 
     def close_batch_session(self, params):
-        if self.bach_node_db:
-            node_db_path = self.get_node_db_path(params)
-            self.bach_node_db.write(node_db_path)
-            self.bach_node_db = None
+        with self.batch_mutex:
+            if self.bach_node_db:
+                node_db_path = self.get_node_db_path(params)
+                self.bach_node_db.save(node_db_path)
+                self.bach_node_db = None
 
     def is_batch_session_open(self):
         return {"result": not not self.bach_node_db}
 
     def with_node_db(self, params, f):
-        if self.bach_node_db:
-            try:
-                f(self.bach_node_db)
-            except Exception as e:
-                logging.exception(e)
-        else:
-            node_db_path = self.get_node_db_path(params)
-            NodeDB.with_file(node_db_path, f)
+        with self.batch_mutex:
+            if self.bach_node_db:
+                try:
+                    f(self.bach_node_db)
+                except Exception as e:
+                    logging.exception(e)
+                return
+
+        node_db_path = self.get_node_db_path(params)
+        NodeDB.with_file(node_db_path, f)
 
     def check_directory(self, params):
         node_db_path = self.get_node_db_path(params)
@@ -179,12 +192,13 @@ class StorageManager:
                 pass
 
     def wipe_storage(self, params):
-        if self.bach_node_db:
-            self.bach_node_db.reset()
+        with self.batch_mutex:
+            if self.bach_node_db:
+                self.bach_node_db.reset()
 
         try:
             node_db_path = self.get_node_db_path(params)
-            os.remove(node_db_path)
+            NodeDB.delete_file(node_db_path)
         except Exception as e:
             logging.exception(e)
 
@@ -198,9 +212,7 @@ class StorageManager:
         object_directory_path = self.get_object_directory(params)
         object_file_path = os.path.join(object_directory_path, object_file_name)
 
-        Path(object_directory_path).mkdir(parents=True, exist_ok=True)
-        with open(object_file_path, "w", encoding="utf-8") as object_file:
-            object_file.write(params[param_name])
+        atomic_write(object_file_path, params[param_name])
 
     def persist_node_object(self, params):
         params["uuid"] = params["node"]["uuid"]
@@ -222,9 +234,9 @@ class StorageManager:
     def save_archive_file(self, params, files):
         object_directory_path = self.get_object_directory(params)
         archive_directory_path = self.get_archive_unpacked_path(object_directory_path)
-        archive_file_path = os.path.join(archive_directory_path, params["file"])
+        archive_file_path = safe_join_path(archive_directory_path, params["file"])
 
-        Path(archive_directory_path).mkdir(parents=True, exist_ok=True)
+        Path(os.path.dirname(archive_file_path)).mkdir(parents=True, exist_ok=True)
         files["content"].save(archive_file_path)
 
         return archive_directory_path
@@ -252,7 +264,7 @@ class StorageManager:
     def fetch_archive_file(self, params):
         object_directory_path = self.get_object_directory(params)
         archive_directory_path = self.get_archive_unpacked_path(object_directory_path)
-        archive_file_path = os.path.join(archive_directory_path, params["file"])
+        archive_file_path = safe_join_path(archive_directory_path, params["file"])
 
         file_content = None
         if os.path.exists(archive_file_path):
@@ -390,7 +402,7 @@ class StorageManager:
                     if uuid not in node_db.nodes:
                         orphaned_items.append(uuid)
 
-            NodeDB.with_file(node_db_path, test_orphaned)
+            test_orphaned(NodeDB.from_file(node_db_path))
             return orphaned_items
 
     def delete_orphaned_items(self, params):
@@ -399,22 +411,23 @@ class StorageManager:
     def rebuild_item_index(self, params):
         node_db_path = self.get_node_db_path(params)
         object_root_directory = self.get_object_root_directory(params)
-        node_db = NodeDB.from_file(node_db_path)
 
-        node_db.nodes.clear()
-        node_db.nodes[NodeDB.DEFAULT_SHELF_UUID] = node_db.create_default_shelf()
+        def rebuild(node_db):
+            node_db.nodes.clear()
+            node_db.nodes[NodeDB.DEFAULT_SHELF_UUID] = node_db.create_default_shelf()
 
-        for uuid in os.listdir(object_root_directory):
-            node_object_file_path = os.path.join(object_root_directory, uuid, NODE_OBJECT_FILE)
+            for uuid in os.listdir(object_root_directory):
+                node_object_file_path = os.path.join(object_root_directory, uuid, NODE_OBJECT_FILE)
 
-            if os.path.exists(node_object_file_path):
-                with open(node_object_file_path, "r", encoding="utf-8") as node_object_file:
-                    node_json = node_object_file.read()
-                    node = json.loads(node_json)
-                    node_db.nodes[node["uuid"]] = node
+                if os.path.exists(node_object_file_path):
+                    with open(node_object_file_path, "r", encoding="utf-8") as node_object_file:
+                        node_json = node_object_file.read()
+                        node = json.loads(node_json)
+                        node_db.nodes[node["uuid"]] = node
 
-        node_db.nodes = NodeDB.tree_sort_nodes(node_db.nodes)
-        node_db.write(node_db_path)
+            node_db.nodes = NodeDB.tree_sort_nodes(node_db.nodes)
+
+        NodeDB.with_file(node_db_path, rebuild)
 
     def debug_get_stored_node_instances(self, params):
         node_db_path = self.get_node_db_path(params)

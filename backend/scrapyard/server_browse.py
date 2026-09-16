@@ -1,18 +1,19 @@
 import io
 import os
+import json
 import logging
 import zipfile
 
 import flask
 from flask import send_file, send_from_directory, request, render_template
 
-from . import server
+from . import server, config
 
-from .browser import send_with_response
+from .browser import current_channel
 from .browse import highlight_words_in_index
 from .cache_dict import CacheDict
 from .server import app
-from .storage_manager import StorageManager
+from .storage_manager import StorageManager, NODE_OBJECT_FILE
 
 # Browse regular scrapyard archives
 
@@ -20,9 +21,29 @@ from .storage_manager import StorageManager
 unpacked_archives = CacheDict()
 
 
+def request_archive_info(uuid):
+    if config.SERVER_MODE:
+        # archives stored on the server are described by their node objects, only cloud archives require the browser
+        server.storage_manager.get_object_directory({}, uuid)  # validates uuid
+        node_json = server.storage_manager.fetch_object(NODE_OBJECT_FILE, {"uuid": uuid})
+
+        if node_json:
+            node = json.loads(node_json)
+            return {
+                "type": "ARCHIVE_INFO",
+                "kind": "metadata",
+                "data_path": config.DATA_PATH,
+                "name": node.get("name", None) or uuid,
+                "content_type": node.get("content_type", None) or "text/html",
+                "contains": node.get("contains", None)
+            }
+
+    return current_channel().send_with_response({"type": "REQUEST_ARCHIVE", "uuid": uuid})
+
+
 @app.route("/browse/<uuid>/")
 def browse(uuid):
-    msg = send_with_response({"type": "REQUEST_ARCHIVE", "uuid": uuid})
+    msg = request_archive_info(uuid)
     highlight = request.args.get("highlight", None)
 
     if highlight:

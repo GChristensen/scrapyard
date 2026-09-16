@@ -1,0 +1,15 @@
+# Caddy obtains a Let's Encrypt certificate automatically and proxies WebSocket connections.
+# Set TRUST_PROXY=1 and HTTP_HOST=127.0.0.1 in the Scrapyard .env file.
+
+scrapyard.example.com {
+    reverse_proxy 127.0.0.1:20202
+
+    # Optional: require TLS client certificates (mTLS) in addition to the server key.
+    # Client certificates should be imported into the browser.
+    # tls {
+    #     client_auth {
+    #         mode require_and_verify
+    #         trust_pool file /etc/caddy/scrapyard-client-ca.pem
+    #     }
+    # }
+}

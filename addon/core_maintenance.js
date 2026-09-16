@@ -88,7 +88,7 @@ receive.getOrphanedItems = async message => {
 
     if (helper) {
         await settings.load();
-        const params = {data_path: settings.data_folder_path()};
+        const params = {data_path: helperApp.dataPath()};
         return await helperApp.fetchJSON_postJSON("/storage/get_orphaned_items", params);
     }
 };
@@ -98,7 +98,7 @@ receive.rebuildItemIndex = async message => {
 
     if (helper) {
         await settings.load();
-        const params = {data_path: settings.data_folder_path()};
+        const params = {data_path: helperApp.dataPath()};
         return await helperApp.postJSON("/storage/rebuild_item_index", params);
     }
 };
@@ -108,7 +108,7 @@ receive.compareDatabaseStorage = async message => {
 
     if (helper) {
         await settings.load();
-        const params = {data_path: settings.data_folder_path()};
+        const params = {data_path: helperApp.dataPath()};
         const storedNodes = await helperApp.fetchJSON_postJSON("/storage/debug_get_stored_node_instances", params);
         const nodes = await Export.nodes("everything");
         const unmarshaller = new UnmarshallerJSONScrapbook();

@@ -49,7 +49,13 @@ async function loadHelperAppLinks() {
             .replace("%%%", "not installed"));
 }
 
-function configureBackendSettingsPage() {
+async function configureBackendSettingsPage() {
+    await settings.load();
+
+    // the port is configured on the server in the server mode
+    if (settings.storage_mode_server())
+        $("#helper-settings").hide();
+
     $("#option-helper-port").val(settings.helper_port_number());
 
     $("#option-helper-port").on("input", async e => {
@@ -59,6 +65,6 @@ function configureBackendSettingsPage() {
 }
 
 export async function load() {
-    configureBackendSettingsPage();
+    await configureBackendSettingsPage();
     await loadHelperAppLinks();
 }

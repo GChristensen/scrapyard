@@ -53,7 +53,7 @@ async function performSync() {
 
     await settings.load();
 
-    const syncDirectory = settings.data_folder_path();
+    const syncDirectory = helperApp.dataPath();
 
     if (syncing || !syncDirectory || !await helperApp.probe(true))
         return;

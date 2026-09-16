@@ -8,6 +8,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from . import server
+from .server_paths import resolve_client_path, safe_join_path
 from .utils import index_text
 
 archive_import_mutex = threading.Lock()
@@ -24,11 +25,11 @@ def with_mutex(f):
 def import_rdf_archive(params):
     uuid = params["uuid"]
     scrapbook_id = params["scrapbook_id"]
-    rdf_path = params["rdf_archive_path"]
+    rdf_path = resolve_client_path(params["rdf_archive_path"])
 
     object_directory = server.storage_manager.get_object_directory(params, uuid)
     unpacked_archive_directory = server.storage_manager.get_archive_unpacked_path(object_directory)
-    rdf_archive_directory = os.path.join(rdf_path, "data", scrapbook_id)
+    rdf_archive_directory = safe_join_path(os.path.join(rdf_path, "data"), scrapbook_id)
 
     result = dict()
 
@@ -48,8 +49,8 @@ def import_rdf_archive(params):
 
 def import_rdf_archive_index(params):
     scrapbook_id = params["scrapbook_id"]
-    rdf_path = params["rdf_archive_path"]
-    rdf_archive_directory = os.path.join(rdf_path, "data", scrapbook_id)
+    rdf_path = resolve_client_path(params["rdf_archive_path"])
+    rdf_archive_directory = safe_join_path(os.path.join(rdf_path, "data"), scrapbook_id)
 
     result = dict()
 
@@ -81,7 +82,7 @@ def build_archive_index(path):
 
 
 def create_rdf_metadata(params):
-    archive_directory_path = params["rdf_archive_path"]
+    archive_directory_path = resolve_client_path(params["rdf_archive_path"], for_write=True)
     metadata_file_path = os.path.join(archive_directory_path, "index.dat")
     metadata = f"""id\t{params["scrapbook_id"]}
 type
@@ -144,7 +145,7 @@ def import_archive_index(params, words):
 
 
 def persist_archive(params, files):
-    archive_directory_path = params["rdf_archive_path"]
+    archive_directory_path = resolve_client_path(params["rdf_archive_path"], for_write=True)
     if not os.path.exists(archive_directory_path):
         Path(archive_directory_path).mkdir(parents=True, exist_ok=True)
 
@@ -155,11 +156,11 @@ def persist_archive(params, files):
 
 
 def persist_archive_icon(params):
-    archive_directory_path = params["rdf_archive_path"]
+    archive_directory_path = resolve_client_path(params["rdf_archive_path"], for_write=True)
     icon_data = params.get("icon_data", None)
 
     if icon_data:
-        icon_file_path = os.path.join(archive_directory_path, f"favicon.{params['icon_ext']}")
+        icon_file_path = safe_join_path(archive_directory_path, f"favicon.{params['icon_ext']}")
         icon_bytes = base64.b64decode(icon_data)
 
         with open(icon_file_path, "wb") as icon_file:
@@ -167,7 +168,7 @@ def persist_archive_icon(params):
 
 
 def fetch_archive_file(params):
-    archive_file_path = os.path.join(params["rdf_archive_path"], params["file"])
+    archive_file_path = safe_join_path(resolve_client_path(params["rdf_archive_path"]), params["file"])
 
     file_content = None
     if os.path.exists(archive_file_path):
@@ -178,10 +179,10 @@ def fetch_archive_file(params):
 
 
 def save_archive_file(params, files):
-    archive_directory_path = params["rdf_archive_path"]
-    archive_file_path = os.path.join(archive_directory_path, params["file"])
+    archive_directory_path = resolve_client_path(params["rdf_archive_path"], for_write=True)
+    archive_file_path = safe_join_path(archive_directory_path, params["file"])
 
-    Path(archive_directory_path).mkdir(parents=True, exist_ok=True)
+    Path(os.path.dirname(archive_file_path)).mkdir(parents=True, exist_ok=True)
     files["content"].save(archive_file_path)
 
     index = build_archive_index(archive_directory_path)
@@ -189,7 +190,7 @@ def save_archive_file(params, files):
 
 
 def persist_comments(params):
-    archive_directory_path = params["rdf_archive_path"]
+    archive_directory_path = resolve_client_path(params["rdf_archive_path"], for_write=True)
     lines = read_rdf_metadata(archive_directory_path)
     comments = json.loads(params["comments_json"])
 

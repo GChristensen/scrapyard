@@ -11,6 +11,11 @@
     <p>It is necessary to restart the browser after the application has been installed.
     Please close your browser completely before updating to a new version.</p>
 
+    <p>The backend application could also be hosted on a server and shared by several browsers.
+    Install it with the <code>--server</code> option of the CLI-based installer or with Docker, and select
+    the <b>Server</b> content location in the <a href="#settings">settings</a>. It is recommended to access
+    the server only through LAN or <a href="https://tailscale.com" target="_blank">Tailscale</a>.</p>
+
     <p id="helper-app-version-installed"><b>Installed version:</b> checking...</p>
     <p id="helper-app-version"><b>Latest version:</b> checking...</p>
 
@@ -20,7 +25,7 @@
         <li><a id="helper-manual-inst" href="#backend">CLI-based installer (MacOS, Linux, Windows)</a></li>
     </ul>
 
-    <table width="600px" cellspacing="" cellpadding="" border="0" class="form-table">
+    <table id="helper-settings" width="600px" cellspacing="" cellpadding="" border="0" class="form-table">
     <tr>
         <td style="text-align: left;">
             <div class="panel double-container" id="helper">

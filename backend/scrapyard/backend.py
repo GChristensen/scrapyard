@@ -3,9 +3,9 @@ import logging
 import os
 
 from . import server, browser
-from .browser import message_queue
+from .browser import native_channel
 
-VERSION = "2.1.2"
+VERSION = "2.2.0"
 
 
 def main():
@@ -17,7 +17,9 @@ def main():
     # start_server(msg)
 
 
-def process_message(msg):
+def process_message(msg, channel=native_channel):
+    message_queue = channel.message_queue
+
     if msg["type"] == "INITIALIZE":
         start_server(msg)
     elif msg["type"] == "BACKUP_PUSH_TEXT":

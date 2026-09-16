@@ -105,6 +105,36 @@ input[type='text'] {
     appearance: none !important;
 }
 
+.server-setting-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.server-setting-row label {
+    flex: none;
+    width: 90px;
+}
+
+/* the same box for text and password types (the key input switches between them),
+   overrides "fieldset input[type=text]" */
+.server-setting-row input.server-setting-input {
+    flex: 1;
+    box-sizing: border-box;
+    height: 22px;
+    margin: 0;
+    padding: 1px 2px;
+    font: inherit;
+    border: 1px solid #777;
+    border-radius: 3px !important;
+    appearance: none !important;
+}
+
+.server-setting-row input.server-setting-input:focus {
+    outline: none;
+    border: 1px solid #007799;
+}
+
 #settings-container {
     display: none;
     background: white;

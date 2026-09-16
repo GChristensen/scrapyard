@@ -4,7 +4,9 @@ import logging
 import uuid
 
 from datetime import datetime
-from pathlib import Path
+
+from .rwlock import path_lock
+from .utils_fs import atomic_write
 
 
 class NodeDB:
@@ -16,25 +18,43 @@ class NodeDB:
         self.header = self.create_format_header()
         self.nodes = dict()
 
+    # Access to the index file is guarded by a reader-writer lock associated with its path:
+    # from_file, iterate and read_header are readers, save and with_file are writers.
+    # The lock is not reentrant, so the functions passed to iterate and with_file should not call them.
+
     @classmethod
     def from_file(cls, path):
         db = cls()
-        db.read(path)
+        with path_lock(path).read_locked():
+            db._read(path)
         return db
 
     @classmethod
     def with_file(cls, path, f):
-        node_db = cls.from_file(path)
+        """Performs a read-modify-write transaction on the index file."""
+        with path_lock(path).write_locked():
+            node_db = cls()
+            node_db._read(path)
 
-        try:
-            f(node_db)
-        except Exception as e:
-            logging.exception(e)
+            try:
+                f(node_db)
+            except Exception as e:
+                logging.exception(e)
 
-        node_db.write(path)
+            node_db._write(path)
+
+    @classmethod
+    def delete_file(cls, path):
+        with path_lock(path).write_locked():
+            os.remove(path)
 
     @classmethod
     def iterate(cls, path, f):
+        with path_lock(path).read_locked():
+            cls._iterate(path, f)
+
+    @classmethod
+    def _iterate(cls, path, f):
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as node_db_file:
                 node_db_file.readline()  # header
@@ -130,11 +150,12 @@ class NodeDB:
 
     @classmethod
     def read_header(cls, path):
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as node_db_file:
-                return node_db_file.readline()
+        with path_lock(path).read_locked():
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as node_db_file:
+                    return node_db_file.readline()
 
-    def read(self, path):
+    def _read(self, path):
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as node_db_file:
                 header_json = node_db_file.readline()
@@ -156,7 +177,11 @@ class NodeDB:
         if len(self.nodes) == 0:
             self.nodes[NodeDB.DEFAULT_SHELF_UUID] = self.create_default_shelf()
 
-    def write(self, path):
+    def save(self, path):
+        with path_lock(path).write_locked():
+            self._write(path)
+
+    def _write(self, path):
         self.populate_format_header()
 
         entries = [self.header]
@@ -165,12 +190,8 @@ class NodeDB:
 
         content = "\n".join(json_entries)
 
-        if not os.path.exists(path):
-            directory = os.path.dirname(path)
-            Path(directory).mkdir(parents=True, exist_ok=True)
-
-        with open(path, "w", encoding="utf-8") as node_db_file:
-            node_db_file.write(content)
+        # readers never observe a partially written index
+        atomic_write(path, content)
 
     def reset(self):
         self.nodes.clear()

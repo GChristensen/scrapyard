@@ -1,1 +1,1 @@
-python ./scrapyard_backend/installer.py
+python ./scrapyard_backend/installer.py %*

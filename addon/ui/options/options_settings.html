@@ -5,12 +5,30 @@
             <div class="panel" id="display" >
                 <form>
                     <fieldset style="border: none;">
-                        <div style="margin-bottom: 5px; margin-left: 0; display: flex;">
+                        <div id="data-folder-container" style="margin-bottom: 5px; margin-left: 0; display: flex;">
                             <label for="option-data-folder-path">Content folder:</label>
                             <input id="option-data-folder-path" type="text" style="flex: 1; margin-left: 18px;"/>
                             <div id="transfer-content-container" style="display: none; margin-left: 10px">
                                 <a href="#" id="transfer-content" title="Transfer content to disk">Transfer content</a>
                             </div>
+                        </div>
+                        <div id="server-settings-container" style="display: none;">
+                            <div class="server-setting-row">
+                                <label for="option-backend-server-url">Server URL:</label>
+                                <input id="option-backend-server-url" class="server-setting-input" type="text"
+                                       placeholder="https://scrapyard.example.ts.net"/>
+                            </div>
+                            <div class="server-setting-row">
+                                <label for="option-backend-server-key">Server key:</label>
+                                <input id="option-backend-server-key" class="server-setting-input" type="password"
+                                       autocomplete="off"/>
+                                <a href="#" id="toggle-backend-server-key" style="margin-left: 10px">Show</a>
+                                <a href="#" id="test-backend-server" style="margin-left: 10px">Test connection</a>
+                                <i class="help-mark" style="margin-left: 5px;"></i>
+                                <span class="tips hide">The value of AUTH_KEY from the server .env file.<br>
+                                    It is recommended to access the server only through LAN or Tailscale.</span>
+                            </div>
+                            <div id="backend-server-status" style="margin-bottom: 5px; min-height: 1em;"></div>
                         </div>
                         <div class="double-container">
                             <div class="double-first" style="width: 320px">
@@ -19,19 +37,24 @@
                                     <select id="option-storage-mode">
                                         <option value="filesystem">Filesystem</option>
                                         <option value="internal">Browser internal storage</option>
+                                        <option value="server">Server</option>
                                     </select>
                                     <i class="help-mark" style="margin-top: 2px;"></i>
                                     <span class="tips hide">It is possible to use a limited set of Scrapyard functionality
-                                    without the<br> backend application when storing content in the browser internal storage.</span>
+                                    without the<br> backend application when storing content in the browser internal storage.<br><br>
+                                    With the <b>Server</b> option, content is stored by the backend application<br>
+                                    hosted on a server, which could be shared by several browsers.<br>
+                                    It is recommended to access the server only through LAN or Tailscale.</span>
                                 </div>
                             </div>
                             <div class="double-last">
                                 <div id="synchronize-at-startup-wrapper">
                                     <input id="option-synchronize-at-startup" type="checkbox"
-                                    /><label for="option-synchronize-at-startup">Synchronize with the filesystem at startup</label>
+                                    /><label for="option-synchronize-at-startup">Synchronize data at startup</label>
                                     <i class="help-mark"></i>
                                     <span class="tips hide">Enable this option if Scrapyard files are updated<br> externally,
-                                        for example, through cloud.</span>
+                                        for example, through cloud.<br>
+                                        Data is always synchronized at startup when using a server.</span>
                                 </div>
                             </div>
                         </div>

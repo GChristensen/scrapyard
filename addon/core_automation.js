@@ -244,7 +244,7 @@ async function setUpLocalFileCapture(message) {
 
         message.__local_uuid = UUID.numeric();
         await helperApp.post(`/serve/set_path/${message.__local_uuid}`, {path: message.uri});
-        local_uri = helperApp.url(`/serve/file/${message.__local_uuid}/`);
+        local_uri = await helperApp.signedURL(`/serve/file/${message.__local_uuid}/`);
         message.uri = "";
         return local_uri;
     }

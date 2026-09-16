@@ -21,3 +21,12 @@ The application will be permanently installed in the directory where the
 install.sh script resides. Only Firefox and Chrome (Chromium) browsers are
 supported out of the box. You may need to place the native messaging manifest
 to the correct location if you are using another browser.
+
+Server mode
+-----------
+To host the backend on a server (Linux/MacOS) shared by several browsers,
+execute: ./install.sh --server
+The installer creates a .env configuration file with a random server key
+and a systemd user unit (Linux) or a launchd agent (MacOS). See
+scrapyard_backend/server/DEPLOY.md for the configuration and the recommended
+deployment options (Tailscale, LAN, Docker).

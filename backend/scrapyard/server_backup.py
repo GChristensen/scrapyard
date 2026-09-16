@@ -5,8 +5,9 @@ from pathlib import Path
 
 from flask import request, abort
 
-from .browser import message_mutex, message_queue
+from .browser import current_channel, current_context
 from .server import app, requires_auth
+from .server_paths import resolve_backup_directory, validate_file_name
 
 # Backup routines
 
@@ -46,8 +47,7 @@ def backup_peek_meta(path):
 @app.route("/backup/list", methods=['POST'])
 @requires_auth
 def backup_list():
-    directory = request.form["directory"]
-    directory = os.path.expanduser(directory)
+    directory = resolve_backup_directory(request.form["directory"])
 
     if os.path.exists(directory):
         result = "{"
@@ -73,14 +73,16 @@ def backup_list():
 @app.route("/backup/initialize", methods=['POST'])
 @requires_auth
 def backup_initialize():
-    directory = request.form["directory"]
-    directory = os.path.expanduser(directory)
-    backup_file_path = os.path.join(directory, request.form["file"])
+    directory = resolve_backup_directory(request.form["directory"])
+    backup_file_path = os.path.join(directory, validate_file_name(request.form["file"]))
 
     if not os.path.exists(directory):
         Path(directory).mkdir(parents=True, exist_ok=True)
 
     compress = request.form["compress"] == "true"
+    channel = current_channel()
+    message_mutex = channel.message_mutex
+    message_queue = channel.message_queue
 
     def do_backup(backup, encode=False):
         message_mutex.acquire()
@@ -120,28 +122,23 @@ def backup_initialize():
         return "OK"
 
 
-backup_compressed = False
-backup_file = None
-json_file = None
-
+# the state of a restore operation is kept per client
 
 @app.route("/restore/initialize", methods=['POST'])
 @requires_auth
 def restore_initialize():
-    directory = request.form["directory"]
-    directory = os.path.expanduser(directory)
-    backup_file_path = os.path.join(directory, request.form["file"])
+    directory = resolve_backup_directory(request.form["directory"])
+    backup_file_path = os.path.join(directory, validate_file_name(request.form["file"]))
 
-    global backup_compressed, backup_file, json_file
+    restore = current_context()
+    restore["backup_compressed"] = backup_file_path.endswith(BACKUP_COMPRESSED_EXT)
 
-    backup_compressed = backup_file_path.endswith(BACKUP_COMPRESSED_EXT)
-
-    if backup_compressed:
-        backup_file = zipfile.ZipFile(backup_file_path, 'r')
-        compressed = backup_file.namelist()[0]
-        json_file = backup_file.open(compressed)
+    if restore["backup_compressed"]:
+        restore["backup_file"] = zipfile.ZipFile(backup_file_path, 'r')
+        compressed = restore["backup_file"].namelist()[0]
+        restore["json_file"] = restore["backup_file"].open(compressed)
     else:
-        json_file = open(backup_file_path, "r", encoding="utf-8")
+        restore["json_file"] = open(backup_file_path, "r", encoding="utf-8")
 
     return "OK"
 
@@ -149,6 +146,11 @@ def restore_initialize():
 @app.route("/restore/get_line", methods=['GET'])
 @requires_auth
 def restore_get_line():
+    json_file = current_context().get("json_file", None)
+
+    if not json_file:
+        return abort(404)
+
     line = json_file.readline()
     if line:
         # if backup_compressed:
@@ -162,22 +164,23 @@ def restore_get_line():
 @app.route("/restore/finalize", methods=['GET'])
 @requires_auth
 def restore_finalize():
-    global backup_compressed, backup_file, json_file
-    json_file.close()
-    if backup_compressed:
+    restore = current_context()
+    json_file = restore.pop("json_file", None)
+    backup_file = restore.pop("backup_file", None)
+    restore.pop("backup_compressed", None)
+
+    if json_file:
+        json_file.close()
+    if backup_file:
         backup_file.close()
-    backup_compressed = False
-    backup_file = None
-    json_file = None
     return "OK"
 
 
 @app.route("/backup/delete", methods=['POST'])
 @requires_auth
 def backup_delete():
-    directory = request.form["directory"]
-    directory = os.path.expanduser(directory)
-    backup_file_path = os.path.join(directory, request.form["file"])
+    directory = resolve_backup_directory(request.form["directory"])
+    backup_file_path = os.path.join(directory, validate_file_name(request.form["file"]))
 
     os.remove(backup_file_path)
     return "OK"

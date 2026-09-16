@@ -8,6 +8,7 @@ from fnmatch import fnmatch
 
 from bs4 import UnicodeDammit
 
+from .server_paths import resolve_client_path, forbid_in_server_mode, to_client_path
 from .utils import index_text
 
 
@@ -16,7 +17,7 @@ FILE_ITEM_TYPE = "file"
 
 
 def files_list_directory(params):
-    path = os.path.expanduser(params["path"])
+    path = resolve_client_path(params["path"])
     file_mask = params.get("file_mask", None)
 
     if file_mask:
@@ -38,6 +39,9 @@ def files_list_directory(params):
                 create_file_item(file, file_mask, path, root, items)
 
         items = filter_directories(items)
+
+        for item in items:
+            item["full_path"] = to_client_path(item["full_path"])
 
         return dict(status="success", content=items)
     else:
@@ -83,6 +87,7 @@ def filter_directories(items):
 
 
 def files_open_with_editor(params):
+    forbid_in_server_mode()
     editor = shutil.which(params.get("editor", None))
 
     if editor:
@@ -90,6 +95,7 @@ def files_open_with_editor(params):
 
 
 def files_shell_open_asset(params):
+    forbid_in_server_mode()
     if platform.system() == 'Darwin':
         subprocess.call(('open', params["path"]))
     elif platform.system() == 'Windows':
@@ -101,6 +107,7 @@ def files_shell_open_asset(params):
 
 def files_fetch_file_bytes(params):
     path = params.get("path", None)
+    path = resolve_client_path(path) if path else None
 
     if path and os.path.exists(path):
         with open(path, "rb") as file:
@@ -109,6 +116,7 @@ def files_fetch_file_bytes(params):
 
 def files_fetch_file_text(params):
     path = params.get("path", None)
+    path = resolve_client_path(path) if path else None
 
     if path and os.path.exists(path):
         try:
@@ -129,6 +137,7 @@ def files_fetch_file_text(params):
 
 def files_save_file_text(params):
     path = params.get("path", None)
+    path = resolve_client_path(path, for_write=True) if path else None
 
     if path and os.path.exists(path):
         with open(path, "w", encoding="utf-8") as file:

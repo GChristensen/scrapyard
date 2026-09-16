@@ -1,6 +1,6 @@
 [project]
 name = "scrapyard_backend"
-version = "2.1.2"
+version = "2.2.0"
 description = ""
 authors = [
     { name = "gchristnsn", email = "gchristnsn@gmail.com" }
@@ -13,8 +13,17 @@ dependencies = [
     "regex==2024.9.11"
 ]
 
+[project.optional-dependencies]
+server = [
+    "gunicorn>=22.0.0; sys_platform != 'win32'",
+    "flask-sock>=0.7.0",
+    "python-dotenv>=1.0.0",
+    "cryptography>=42.0.0"
+]
+
 [project.scripts]
 scrapyard_backend = "scrapyard.backend:main"
+scrapyard_server = "scrapyard.server_main:main"
 
 [tool.setuptools.package-data]
 "scrapyard_backend" = ["resources/*", "resources/*/*"]

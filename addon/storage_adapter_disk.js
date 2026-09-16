@@ -5,7 +5,7 @@ import {ARCHIVE_TYPE_TEXT} from "./storage.js";
 export class StorageAdapterDisk {
     async _postJSON(path, fields) {
         try {
-            fields.data_path = settings.data_folder_path();
+            fields.data_path = helperApp.dataPath();
 
             if (fields.data_path)
                 return helperApp.postJSON(path, fields);
@@ -17,7 +17,7 @@ export class StorageAdapterDisk {
 
     async _fetchJSON(path, fields) {
         try {
-            fields.data_path = settings.data_folder_path();
+            fields.data_path = helperApp.dataPath();
 
             if (fields.data_path) {
                 const response = await helperApp.postJSON(path, fields);
@@ -78,7 +78,7 @@ export class StorageAdapterDisk {
         //await this._postJSON("/storage/persist_archive_object", params);
 
         const fields = {
-            data_path: settings.data_folder_path(),
+            data_path: helperApp.dataPath(),
             content: new Blob([content]),
             contains: params.contains,
             uuid: params.uuid
@@ -103,7 +103,7 @@ export class StorageAdapterDisk {
         delete params.node;
         //archive = archive || await this._fetchJSON("/storage/fetch_archive_object", params);
 
-        params.data_path = settings.data_folder_path();
+        params.data_path = helperApp.dataPath();
 
         try {
             const response = await helperApp.postJSON(`/storage/fetch_archive_content`, params);
@@ -125,7 +125,7 @@ export class StorageAdapterDisk {
     }
 
     async fetchArchiveFile(params) {
-        params.data_path = settings.data_folder_path();
+        params.data_path = helperApp.dataPath();
 
         try {
             const response = await helperApp.postJSON(`/storage/fetch_archive_file`, params);
@@ -141,7 +141,7 @@ export class StorageAdapterDisk {
     }
 
     async saveArchiveFile(params) {
-        params.data_path = settings.data_folder_path();
+        params.data_path = helperApp.dataPath();
         params.content = new Blob([params.content]);
         params.compute_index = true;
 

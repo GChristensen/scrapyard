@@ -1,18 +1,26 @@
-import UUID from "./uuid.js"
-import {settings} from "./settings.js"
+import UUID from "./uuid.js";
+import {settings} from "./settings.js";
 import {CONTEXT_BACKGROUND, getContextType, hasCSRPermission, showNotification} from "./utils_browser.js";
 import {send} from "./proxy.js"
+import {WebSocketPort} from "./helper_app_ws.js";
 
 export const HELPER_APP_v2_IS_REQUIRED = "Scrapyard backend application v2.0+ is required.";
 export const HELPER_APP_v2_1_IS_REQUIRED = "Scrapyard backend application v2.1+ is required.";
 
+// the value passed as data_path in the server mode, the server uses its own data path
+export const SERVER_DATA_PATH = "@server";
+
 class HelperApp {
     #auth;
     #externalEventHandlers = {};
+    #loginPromise;
 
     constructor() {
         this.auth = UUID.numeric();
         this.version = undefined;
+        // server mode session token
+        this.sessionToken = undefined;
+        this.serverError = undefined;
     }
 
     get auth() {
@@ -24,15 +32,50 @@ class HelperApp {
         this.authHeader = "Basic " + btoa("default:" + uuid);
     }
 
+    isServerMode() {
+        return !!settings.storage_mode_server();
+    }
+
+    serverURL() {
+        return (settings.backend_server_url() || "").trim().replace(/\/+$/, "");
+    }
+
+    dataPath() {
+        if (this.isServerMode())
+            return SERVER_DATA_PATH;
+        else
+            return settings.data_folder_path();
+    }
+
     async getPort() {
         if (this.port) {
             return this.port;
         }
         else {
             this.port = new Promise(async (resolve, reject) => {
-                let port = browser.runtime.connectNative("scrapyard_helper");
+                await settings.load();
+
+                let port;
+
+                if (this.isServerMode()) {
+                    port = await this._openServerPort();
+
+                    if (!port) {
+                        resolve(null);
+                        this.port = null;
+                        return;
+                    }
+                }
+                else
+                    port = browser.runtime.connectNative("scrapyard_helper");
+
+                let initialized = false;
 
                 port.onDisconnect.addListener(error => {
+                    // a server may reject a stale session token, a new one is obtained on the next attempt
+                    if (!initialized && this.isServerMode())
+                        this.sessionToken = undefined;
+
                     resolve(null);
                     this.port = null;
                 })
@@ -40,6 +83,7 @@ class HelperApp {
                 let initListener = async response => {
                     response = JSON.parse(response);
                     if (response.type === "INITIALIZED") {
+                        initialized = true;
                         port.onMessage.removeListener(initListener);
 
                         await this._onInitialized(response, port);
@@ -50,15 +94,8 @@ class HelperApp {
 
                 port.onMessage.addListener(initListener);
 
-                await settings.load();
-
                 try {
-                    port.postMessage({
-                        type: "INITIALIZE",
-                        port: settings.helper_port_number(),
-                        auth: this.auth,
-                        logging: !!settings.enable_helper_app_logging()
-                    });
+                    port.postMessage(this._initializationMessage());
                 }
                 catch (e) {
                     //console.error(e, e.name)
@@ -69,6 +106,129 @@ class HelperApp {
 
             return this.port;
         }
+    }
+
+    _initializationMessage() {
+        if (this.isServerMode())
+            return {
+                type: "INITIALIZE",
+                token: this.sessionToken
+            };
+        else
+            return {
+                type: "INITIALIZE",
+                port: settings.helper_port_number(),
+                auth: this.auth,
+                logging: !!settings.enable_helper_app_logging()
+            };
+    }
+
+    async _openServerPort() {
+        if (!this.serverURL()) {
+            this.serverError = "The server URL is not specified.";
+            return null;
+        }
+
+        if (!this.sessionToken && !await this._login())
+            return null;
+
+        const url = this.serverURL().replace(/^http/i, "ws") + "/ws";
+
+        try {
+            return new WebSocketPort(url);
+        }
+        catch (e) {
+            console.error(e);
+            this.serverError = "Can not connect to the server.";
+        }
+    }
+
+    // exchanges the server key for a session token
+    async _login() {
+        if (this.#loginPromise)
+            return this.#loginPromise;
+
+        this.#loginPromise = (async () => {
+            this.sessionToken = undefined;
+
+            try {
+                const response = await globalThis.fetch(this.serverURL() + "/auth/session", {
+                    method: "POST",
+                    headers: {"Authorization": "Bearer " + (settings.backend_server_key() || "")}
+                });
+
+                if (response.ok) {
+                    const session = await response.json();
+                    this.sessionToken = session.token;
+                    this.serverError = undefined;
+                    return true;
+                }
+                else if (response.status === 401)
+                    this.serverError = "The server key is invalid.";
+                else if (response.status === 429)
+                    this.serverError = "Too many failed authentication attempts, please try again later.";
+                else
+                    this.serverError = `Server error ${response.status} (${response.statusText}).`;
+            }
+            catch (e) {
+                console.error(e);
+                this.serverError = "Can not connect to the server. If it uses a self-signed TLS certificate, "
+                    + "open the server URL in a browser tab and accept the certificate.";
+            }
+
+            return false;
+        })();
+
+        try {
+            return await this.#loginPromise;
+        }
+        finally {
+            this.#loginPromise = undefined;
+        }
+    }
+
+    async _refreshSession() {
+        if (getContextType() === CONTEXT_BACKGROUND)
+            return this._login();
+        else {
+            const auth = await send.helperAppGetBackgroundAuth({staleToken: this.sessionToken || null});
+            this._setBackgroundAuth(auth);
+            return !!this.sessionToken;
+        }
+    }
+
+    // staleToken: a token rejected by the server in a foreground context
+    async getBackgroundAuth(staleToken) {
+        await settings.load();
+
+        if (this.isServerMode()) {
+            if (!this.sessionToken || (staleToken !== undefined && staleToken === this.sessionToken))
+                await this._login();
+
+            return {token: this.sessionToken};
+        }
+
+        return this.auth;
+    }
+
+    _setBackgroundAuth(auth) {
+        if (auth && typeof auth === "object")
+            this.sessionToken = auth.token;
+        else if (auth)
+            this.auth = auth;
+    }
+
+    // drops the server connection and session after the connection settings are changed
+    async reset() {
+        await settings.load();
+
+        const port = await this.port;
+        this.port = null;
+        this.sessionToken = undefined;
+        this.version = undefined;
+
+        if (port instanceof WebSocketPort)
+            port.disconnect();
     }
 
     async _onInitialized(msg, port) {
@@ -93,8 +253,13 @@ class HelperApp {
 
         const port = await this.getPort();
 
-        if (!port && verbose)
-            showNotification({message: "Can not connect to the backend application."})
+        if (!port && verbose) {
+            if (this.isServerMode())
+                showNotification({message: "Can not connect to the Scrapyard server. "
+                        + (this.serverError || "")});
+            else
+                showNotification({message: "Can not connect to the backend application."})
+        }
 
         return !!port;
     }
@@ -164,13 +329,43 @@ class HelperApp {
     }
 
     url(path) {
-        return `http://localhost:${settings.helper_port_number()}${path}`;
+        if (this.isServerMode())
+            return `${this.serverURL()}${path}`;
+        else
+            return `http://localhost:${settings.helper_port_number()}${path}`;
+    }
+
+    // true if the URL points to an archive served by the backend
+    isArchiveURL(url) {
+        if (!url?.startsWith(this.url("/")))
+            return false;
+
+        const path = url.substring(this.url("").length).replace(/^\/s\/[^/]+/, "");
+        return path.startsWith("/browse/") || path.startsWith("/rdf/browse/");
+    }
+
+    // returns an URL that could be opened in a browser tab, in the server mode such URLs are signed
+    async signedURL(path) {
+        if (!this.isServerMode())
+            return this.url(path);
+
+        const response = await this.fetchJSON_postJSON("/auth/sign_url", {path});
+
+        if (response?.url)
+            return this.url(response.url);
+        else
+            throw new Error("Can not sign the server URL.");
     }
 
     _injectAuth(init) {
         init = init || {};
         init.headers = init.headers || {};
-        init.headers["Authorization"] = this.authHeader;
+
+        if (this.isServerMode())
+            init.headers["Authorization"] = "Bearer " + this.sessionToken;
+        else
+            init.headers["Authorization"] = this.authHeader;
+
         return init;
     }
 
@@ -184,9 +379,20 @@ class HelperApp {
         }
     }
 
-    fetch(path, init) {
+    async fetch(path, init) {
+        if (this.isServerMode() && !this.sessionToken)
+            await this._refreshSession();
+
         init = this._injectAuth(init);
-        return globalThis.fetch(this.url(path), init);
+        let response = await globalThis.fetch(this.url(path), init);
+
+        // the session may expire or the server may be restarted
+        if (response.status === 401 && this.isServerMode() && await this._refreshSession()) {
+            init = this._injectAuth(init);
+            response = await globalThis.fetch(this.url(path), init);
+        }
+
+        return response;
     }
 
     async post(path, fields) {
@@ -201,24 +407,23 @@ class HelperApp {
             }
         }
 
-        const init = this._injectAuth({method: "POST", body: form});
+        const init = {method: "POST", body: form};
 
         return this.fetch(path, init);
     }
 
     async postJSON(path, fields) {
-        const init = this._injectAuth({
+        const init = {
             method: "POST",
             body: JSON.stringify(fields),
             headers: {"content-type": "application/json"}
-        });
+        };
 
         return this.fetch(path, init);
     }
 
     async fetchText(path, init) {
-        init = this._injectAuth(init);
-        let response = await globalThis.fetch(this.url(path), init);
+        let response = await this.fetch(path, init);
 
         if (response.ok)
             return response.text();
@@ -227,8 +432,7 @@ class HelperApp {
     }
 
     async fetchJSON(path, init) {
-        init = this._injectAuth(init);
-        let response = await globalThis.fetch(this.url(path), init);
+        let response = await this.fetch(path, init);
 
         if (response.ok)
             return response.json();
@@ -250,5 +454,5 @@ class HelperApp {
 export const helperApp = new HelperApp();
 
 if (getContextType() !== CONTEXT_BACKGROUND) {
-    send.helperAppGetBackgroundAuth().then(auth => helperApp.auth = auth);
+    send.helperAppGetBackgroundAuth().then(auth => helperApp._setBackgroundAuth(auth));
 }

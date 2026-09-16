@@ -73,10 +73,21 @@ export class FilesShelfPlugin {
 
     async #addDirectory(options) {
         options.path = options.path.replace("\\", "/");
-        const response = await helperApp.fetchJSON_postJSON("/files/list_directory", {
-            path: options.path,
-            file_mask: options.file_mask
-        });
+
+        let response;
+        try {
+            response = await helperApp.fetchJSON_postJSON("/files/list_directory", {
+                path: options.path,
+                file_mask: options.file_mask
+            });
+        }
+        catch (e) {
+            if (e?.httpError?.status === 403 && helperApp.isServerMode()) {
+                showNotification("The directory should be located inside the data directory on the server.");
+                return;
+            }
+            throw e;
+        }
 
         if (response?.status === "success") {
             await this.#populateFilesRoot(options, response.content);
@@ -183,7 +194,17 @@ export class FilesShelfPlugin {
         return !!/(.org|.md|.txt)$/i.exec(fileName);
     }
 
+    #notAvailableOnServer() {
+        if (helperApp.isServerMode()) {
+            showNotification("This operation is not available when the content is stored on a server.");
+            return true;
+        }
+    }
+
     async openWithEditor(node) {
+        if (this.#notAvailableOnServer())
+            return;
+
         if (settings.files_editor_executable()) {
             return helperApp.postJSON("/files/open_with_editor", {
                 path: node.external_id,
@@ -225,6 +246,9 @@ export class FilesShelfPlugin {
             const assetPath = link.replace(/^wiki-asset-sys:/i, "").replace(";", "/");
             const fullPath = filesRoot.uri + "/" + assetPath;
 
+            if (this.#notAvailableOnServer())
+                return;
+
             return helperApp.postJSON("/files/shell_open_asset", {
                 path: fullPath
             });
@@ -236,6 +260,9 @@ export class FilesShelfPlugin {
         const filesRoot = await Node.get(ascendants.at(-2));
         const assetPath = link.replace(/^file:\/\/\/?/i, "");
         const fullPath = filesRoot.uri + "/" + assetPath;
+
+        if (this.#notAvailableOnServer())
+            return;
 
         return helperApp.postJSON("/files/shell_open_asset", {
             path: fullPath

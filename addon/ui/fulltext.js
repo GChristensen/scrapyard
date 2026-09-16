@@ -99,7 +99,7 @@ async function previewUnpackedResult(query, node) {
 
     url += `?highlight=${encodeURIComponent(query)}`;
 
-    const previewURL = helperApp.url(url);
+    const previewURL = await helperApp.signedURL(url);
     displayURL(previewURL, node);
 }
 

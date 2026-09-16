@@ -29,16 +29,29 @@ function configureScrapyardSettingsPage() {
     });
 
     storageModeSelect.on("change", async e => {
+        showServerSettings(e.target.value === "server");
+
+        if (e.target.value === storageModeName())
+            return;
+
         if (e.target.value === "filesystem")
             setStorageModeToFilesystem();
-        else
+        else if (e.target.value === "internal")
             setStorageModeToInternal();
+        else
+            setServerStatus("Specify the server URL and key, then click <b>Connect</b>.");
     });
 
     if (settings.storage_mode_internal()) {
         $("#option-data-folder-path").prop("disabled", true);
         $("#option-synchronize-at-startup").prop("disabled", true);
     }
+    else if (settings.storage_mode_server()) {
+        // other browsers may change the server data, so it is always synchronized at startup
+        $("#option-synchronize-at-startup").prop("disabled", true);
+    }
+
+    configureServerSettings();
 
     $("#option-sidebar-theme").on("change", e => {
         localStorage.setItem("scrapyard-sidebar-theme", e.target.value);
@@ -119,8 +132,12 @@ function configureScrapyardSettingsPage() {
 
 function loadScrapyardSettings() {
     $("#option-data-folder-path").val(settings.data_folder_path() || "");
-    $("#option-storage-mode").val(settings.storage_mode_internal()? "internal": "filesystem");
-    $("#option-synchronize-at-startup").prop("checked", settings.synchronize_storage_at_startup());
+    $("#option-storage-mode").val(storageModeName());
+    $("#option-backend-server-url").val(settings.backend_server_url() || "");
+    $("#option-backend-server-key").val(settings.backend_server_key() || "");
+    showServerSettings(settings.storage_mode_server());
+    $("#option-synchronize-at-startup")
+        .prop("checked", settings.storage_mode_server() || settings.synchronize_storage_at_startup());
     $("#option-sidebar-theme").val(localStorage.getItem("scrapyard-sidebar-theme") || "light");
     $("#option-shelf-list-max-height").val(settings.shelf_list_height());
     $("#option-show-firefox-bookmarks").prop("checked", settings.show_firefox_bookmarks());
@@ -154,21 +171,167 @@ export function load() {
     loadScrapyardSettings();
 }
 
+function storageModeName() {
+    if (settings.storage_mode_server())
+        return "server";
+    else if (settings.storage_mode_internal())
+        return "internal";
+    else
+        return "filesystem";
+}
+
+function restoreStorageModeSelect() {
+    const storageModeSelect = $("#option-storage-mode").val(storageModeName());
+    selectricRefresh(storageModeSelect);
+    showServerSettings(settings.storage_mode_server());
+}
+
+function showServerSettings(show) {
+    $("#server-settings-container").toggle(!!show);
+    $("#data-folder-container").toggle(!show);
+    $("#test-backend-server").text(settings.storage_mode_server()? "Test connection": "Connect");
+    setServerStatus("");
+}
+
+function setServerStatus(html, error) {
+    $("#backend-server-status")
+        .html(html)
+        .css("color", error? "red": "");
+}
+
+function configureServerSettings() {
+    const saveServerSetting = (input, setting) => {
+        let timeout;
+        $(input).on("input", e => {
+            clearTimeout(timeout);
+            timeout = setTimeout(async () => {
+                // settings are applied by the Connect button when the server mode is not active
+                if (settings.storage_mode_server()) {
+                    await settings.load();
+                    await settings[setting](e.target.value.trim());
+                    await send.helperAppReset();
+                }
+            }, 1000);
+        });
+    };
+
+    saveServerSetting("#option-backend-server-url", "backend_server_url");
+    saveServerSetting("#option-backend-server-key", "backend_server_key");
+
+    $("#toggle-backend-server-key").on("click", e => {
+        e.preventDefault();
+        const input = $("#option-backend-server-key");
+        const show = input.attr("type") === "password";
+        input.attr("type", show? "text": "password");
+        $(e.target).text(show? "Hide": "Show");
+    });
+
+    $("#test-backend-server").on("click", async e => {
+        e.preventDefault();
+
+        if (settings.storage_mode_server())
+            testServerConnection();
+        else
+            setStorageModeToServer();
+    });
+}
+
+function serverSettingsInput() {
+    const url = $("#option-backend-server-url").val().trim().replace(/\/+$/, "");
+    const key = $("#option-backend-server-key").val().trim();
+    return {url, key};
+}
+
+async function checkServerCredentials(url, key) {
+    if (!/^https?:\/\/.+/i.test(url)) {
+        setServerStatus("The server URL should start with http:// or https://", true);
+        return false;
+    }
+
+    try {
+        setServerStatus("Connecting...");
+
+        const response = await fetch(url + "/auth/session", {
+            method: "POST",
+            headers: {"Authorization": "Bearer " + key}
+        });
+
+        if (response.ok)
+            return true;
+        else if (response.status === 401)
+            setServerStatus("The server key is invalid.", true);
+        else if (response.status === 429)
+            setServerStatus("Too many failed authentication attempts, please try again later.", true);
+        else
+            setServerStatus(`Server error: ${response.status} ${response.statusText}`, true);
+    }
+    catch (e) {
+        console.error(e);
+        setServerStatus(`Can not connect to the server. If it uses a self-signed TLS certificate, open
+                         <a href="${url}" target="_blank">${url}</a> in a new tab and accept the certificate.`, true);
+    }
+
+    return false;
+}
+
+async function testServerConnection() {
+    const {url, key} = serverSettingsInput();
+
+    if (await checkServerCredentials(url, key)) {
+        await send.helperAppReset();
+
+        if (await send.helperAppProbe())
+            setServerStatus(`Connected, server version: ${await send.helperAppGetVersion()}`);
+        else
+            setServerStatus("Authenticated, but the WebSocket connection has failed. "
+                + "Make sure that the reverse proxy (if any) supports WebSockets.", true);
+    }
+}
+
+async function setStorageModeToServer() {
+    const {url, key} = serverSettingsInput();
+
+    if (!await checkServerCredentials(url, key))
+        return;
+
+    setServerStatus("");
+
+    if (await confirm("Warning", "This will reset the Scrapyard browser internal storage "
+            + "and synchronize it with the server. Make sure that you have exported important content. Continue?")) {
+        $("#option-data-folder-path").prop("disabled", true);
+        $("#option-synchronize-at-startup")
+            .prop("checked", true)
+            .prop("disabled", true);
+
+        settings.synchronize_storage_at_startup(true, false);
+        settings.backend_server_url(url, false);
+        settings.backend_server_key(key, false);
+        settings.storage_mode_internal(false, false);
+        await settings.storage_mode_server(true);
+
+        await send.helperAppReset();
+        await send.resetScrapyard();
+        browser.runtime.reload();
+    }
+    else
+        restoreStorageModeSelect();
+}
+
 async function setStorageModeToFilesystem() {
     if (await confirm("Warning", "This will reset the Scrapyard browser internal storage. "
             + "Make sure that you have exported important content. Continue?")) {
         $("#option-data-folder-path").prop("disabled", false);
         $("#option-synchronize-at-startup").prop("disabled", false);
 
+        settings.storage_mode_server(false, false);
         await settings.storage_mode_internal(false);
 
+        await send.helperAppReset();
         await send.resetScrapyard();
         browser.runtime.reload();
     }
-    else {
-        const storageModeSelect = $("#option-storage-mode").val("internal");
-        selectricRefresh(storageModeSelect);
-    }
+    else
+        restoreStorageModeSelect();
 }
 
 async function setStorageModeToInternal() {
@@ -183,16 +346,16 @@ async function setStorageModeToInternal() {
         settings.save_unpacked_archives(false, false);
         settings.data_folder_path("", false);
         settings.synchronize_storage_at_startup(false, false);
+        settings.storage_mode_server(false, false);
         await settings.storage_mode_internal(true);
 
+        await send.helperAppReset();
         await send.storageModeInternal();
         await send.resetScrapyard();
         browser.runtime.reload();
     }
-    else {
-        const storageModeSelect = $("#option-storage-mode").val("filesystem");
-        selectricRefresh(storageModeSelect);
-    }
+    else
+        restoreStorageModeSelect();
 }
 
 async function enableFilesShelf(e) {
