@@ -247,5 +247,64 @@ function confirm(title, message) {
     return showDlg("confirm", {title, message});
 }
 
+function showUploadDlg() {
+    if ($(".dlg-dim:visible").length)
+        return;
 
-export {showDlg, alert, confirm}
+    let $dlg = $(".dlg-dim.dlg-upload").clone().prependTo(document.body);
+    $dlg.show();
+
+    const fileRow = $dlg.find("#upload-file-row");
+    const pathRow = $dlg.find("#upload-path-row");
+    const fileInput = $dlg.find("#upload-file-input")[0];
+    const pathInput = $dlg.find("#upload-path-input")[0];
+
+    const close = () => $dlg.remove();
+
+    return new Promise(resolve => {
+        $dlg.find("input.button-cancel").bind("click.dlg", () => {
+            close();
+            resolve(null);
+        });
+
+        $dlg.find("input.dialog-input").bind("keydown.dlg", ev => {
+            if (ev.key === "Enter")
+                $dlg.find("input.button-ok").trigger("click");
+        });
+
+        $dlg.find("input.button-ok").bind("click.dlg", async () => {
+            if (pathRow.is(":visible")) {
+                if (pathInput.value) {
+                    close();
+                    resolve({path: pathInput.value});
+                }
+                return;
+            }
+
+            const file = fileInput.files && fileInput.files[0];
+            if (!file)
+                return;
+
+            if (/\.html?$/i.test(file.name)) {
+                $dlg.hide();
+                const proceed = await confirm("Upload",
+                    "Capture this page with its linked resources <br>(images, stylesheets, etc.)?<br>"
+                    + "This requires the full path of the file.");
+
+                if (proceed) {
+                    fileRow.hide();
+                    pathRow.show();
+                    pathInput.value = "";
+                    $dlg.show();
+                    pathInput.focus();
+                    return;
+                }
+            }
+
+            close();
+            resolve({file});
+        });
+    });
+}
+
+export {showDlg, alert, confirm, showUploadDlg}

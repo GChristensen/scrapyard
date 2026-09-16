@@ -321,56 +321,60 @@ receive.uploadFiles = async message => {
     send.startProcessingIndication();
 
     try {
+        // content was already read in the foreground from a file picker; no backend round-trip needed
+        if (message.content !== undefined) {
+            const isOrg = /\.org$/i.test(message.file_name);
+            const isMarkdown = /\.md$/i.test(message.file_name);
+
+            let bookmark = {uri: "", parent_id: message.parent_id, name: message.file_name};
+
+            try {
+                if (isOrg || isMarkdown) {
+                    bookmark = await Bookmark.addNotes(message.parent_id, bookmark.name);
+                    await Bookmark.storeNotes({node_id: bookmark.id, format: isOrg ? "org" : "markdown",
+                                                content: message.content});
+                }
+                else {
+                    const contentType = message.content_type || getMimetypeByExt(message.file_name);
+                    bookmark = await Bookmark.add(bookmark, NODE_TYPE_ARCHIVE);
+                    await Bookmark.storeArchive(bookmark, message.content, contentType);
+                }
+                send.nodesUpdated();
+            } catch (e) {
+                console.error(e);
+                showNotification(`Can not upload ${bookmark.name}`);
+            }
+
+            return;
+        }
+
+        // only a path was provided (full page capture with linked resources), fetch it via the backend
         const helper = await helperApp.hasVersion("0.4", `Scrapyard backend application v0.4+ is required for this feature.`);
 
         if (helper) {
             const fileUUID = UUID.numeric();
             await helperApp.post(`/serve/set_path/${fileUUID}`, {path: message.file_name});
 
-            //const uuids = await helperApp.fetchJSON("/upload/open_file_dialog");
-            const uuids = {[fileUUID]: message.file_name};
+            const url = helperApp.url(`/serve/file/${fileUUID}/`);
 
-            for (const [uuid, file] of Object.entries(uuids)) {
-                const url = helperApp.url(`/serve/file/${uuid}/`);
-                const isHtml = /\.html?$/i.test(file);
+            let bookmark = {uri: "", parent_id: message.parent_id};
+            bookmark.name = message.file_name.replaceAll("\\", "/").split("/");
+            bookmark.name = bookmark.name[bookmark.name.length - 1];
 
-                let bookmark = {uri: "", parent_id: message.parent_id};
+            try {
+                const page = await packUrlExt(url);
+                bookmark.name = page.title || bookmark.name;
+                bookmark.icon = page.icon;
 
-                bookmark.name = file.replaceAll("\\", "/").split("/");
-                bookmark.name = bookmark.name[bookmark.name.length - 1];
-
-                let content;
-                let contentType = getMimetypeByExt(file);
-
-                try {
-                    if (isHtml) {
-                        const page = await packUrlExt(url);
-                        bookmark.name = page.title || bookmark.name;
-                        bookmark.icon = page.icon;
-                        content = page.html;
-                    }
-                    else {
-                        const response = await fetch(url);
-                        if (response.ok) {
-                            contentType = response.headers.get("content-type") || contentType;
-                            content = await response.arrayBuffer();
-                        }
-                    }
-
-                    bookmark = await Bookmark.add(bookmark, NODE_TYPE_ARCHIVE);
-                    if (content)
-                        await Bookmark.storeArchive(bookmark, content, contentType);
-                    else
-                        throw new Error();
-                } catch (e) {
-                    console.error(e);
-                    showNotification(`Can not upload ${bookmark.name}`);
-                }
-
-                await helperApp.fetch(`/serve/release_path/${uuid}`);
-            }
-            if (Object.entries(uuids).length)
+                bookmark = await Bookmark.add(bookmark, NODE_TYPE_ARCHIVE);
+                await Bookmark.storeArchive(bookmark, page.html, "text/html");
                 send.nodesUpdated();
+            } catch (e) {
+                console.error(e);
+                showNotification(`Can not upload ${bookmark.name}`);
+            }
+
+            await helperApp.fetch(`/serve/release_path/${fileUUID}`);
         }
     }
     finally {

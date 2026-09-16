@@ -1,6 +1,6 @@
 import {send} from "../proxy.js";
 import {cloudShelf} from "../plugin_cloud_shelf.js"
-import {showDlg, confirm} from "./dialog.js"
+import {showDlg, confirm, showUploadDlg} from "./dialog.js"
 import {settings} from "../settings.js";
 import {
     isContainerNode,
@@ -554,10 +554,22 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
         uploadItem: {
             label: "Upload...",
             action: async () => {
-                const options = await showDlg("prompt", {caption: "Upload File", label: "File path:"});
+                const picked = await showUploadDlg();
 
-                if (options?.title)
-                    send.uploadFiles({parent_id: ctxNode.id, file_name: options.title});
+                if (!picked)
+                    return;
+
+                if (picked.path) {
+                    send.uploadFiles({parent_id: ctxNode.id, file_name: picked.path});
+                    return;
+                }
+
+                const file = picked.file;
+                const isOrg = /\.org$/i.test(file.name);
+                const isMarkdown = /\.md$/i.test(file.name);
+                const content = isOrg || isMarkdown ? await file.text() : await file.arrayBuffer();
+
+                send.uploadFiles({parent_id: ctxNode.id, file_name: file.name, content, content_type: file.type});
             }
         },
         exportItem: {
