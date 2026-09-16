@@ -69,13 +69,7 @@ class HelperApp {
                 else
                     port = browser.runtime.connectNative("scrapyard_helper");
 
-                let initialized = false;
-
                 port.onDisconnect.addListener(error => {
-                    // a server may reject a stale session token, a new one is obtained on the next attempt
-                    if (!initialized && this.isServerMode())
-                        this.sessionToken = undefined;
-
                     resolve(null);
                     this.port = null;
                 })
@@ -83,7 +77,6 @@ class HelperApp {
                 let initListener = async response => {
                     response = JSON.parse(response);
                     if (response.type === "INITIALIZED") {
-                        initialized = true;
                         port.onMessage.removeListener(initListener);
 
                         await this._onInitialized(response, port);
@@ -129,7 +122,9 @@ class HelperApp {
             return null;
         }
 
-        if (!this.sessionToken && !await this._login())
+        // the WebSocket is (re)connected after browser startup or a disconnect, which is usually caused by
+        // a server restart that invalidates sessions, so a new session is always obtained
+        if (!await this._login())
             return null;
 
         const url = this.serverURL().replace(/^http/i, "ws") + "/ws";

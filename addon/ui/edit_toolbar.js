@@ -147,7 +147,16 @@ class EditToolbar {
         const uuid = location.href.split("/").at(-2);
         const html = getDocType(document) + doc.outerHTML;
 
-        await browser.runtime.sendMessage({type: "updateArchive", uuid, data: html});
+        try {
+            await browser.runtime.sendMessage({type: "updateArchive", uuid, data: html});
+        }
+        catch (e) {
+            console.error(e);
+            this._unsavedChanges = true;
+            alert("Error saving the archive: " + e.message);
+            return;
+        }
+
         const node = await browser.runtime.sendMessage({type: "getBookmarkInfo", uuid});
         $("#scrapyard-page-info", this.editBar).html(this.formatPageInfo(node))
     }
@@ -537,6 +546,11 @@ async function configureNotFoundTransition() {
     const SCRAPYARD_SETTINGS_KEY = "scrapyard-settings";
     const settings = (await browser.storage.local.get(SCRAPYARD_SETTINGS_KEY))?.[SCRAPYARD_SETTINGS_KEY];
 
+    if (document.querySelector("meta[name='scrapyard-link-expired']")) {
+        configureLinkExpired();
+        return;
+    }
+
     if (settings?.transition_to_disk) {
         const notFoundWrapperDiv = document.getElementById("not-found-wrapper");
         const notFoundTextDiv = document.getElementById("not-found-text");
@@ -562,6 +576,35 @@ async function configureNotFoundTransition() {
         transitionLink.href = "#";
         notFoundWrapperDiv.appendChild(transitionLink);
     }
+}
+
+// a signed server URL of an archive has expired or is invalid, the archive could be reopened with a new URL
+function configureLinkExpired() {
+    const uuid = location.href.split("?")[0].split("/").at(-2);
+    const notFoundWrapperDiv = document.getElementById("not-found-wrapper");
+    const notFoundImg = document.getElementById("not-found-image");
+    notFoundImg?.parentElement.removeChild(notFoundImg);
+
+    const reopenLink = document.createElement("a");
+    reopenLink.setAttribute("style", "font-family: Arial, sans-serif;");
+    reopenLink.textContent = "Open the archive again";
+    reopenLink.href = "#";
+    reopenLink.addEventListener("click", async e => {
+        e.preventDefault();
+
+        try {
+            const node = await browser.runtime.sendMessage({type: "getBookmarkInfo", uuid});
+
+            if (node)
+                await browser.runtime.sendMessage({type: "browseNode", node, tab: {id: node.__tab_id}});
+        }
+        catch (e) {
+            console.error(e);
+            alert("Can not open the archive: " + e.message);
+        }
+    });
+
+    notFoundWrapperDiv.appendChild(reopenLink);
 }
 
 console.log("==> edit_toolbar.js loaded")

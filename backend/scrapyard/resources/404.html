@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="scrapyard-not-found">
-    <title>Scrapyard: Not Found</title>
+    {% if link_expired %}<meta name="scrapyard-link-expired">{% endif %}
+    <title>Scrapyard: {{ title or "Not Found" }}</title>
     <link rel="icon" href="{{ url_for('static', filename='scrapyard.svg') }}"/>
     <style>
         html, body {
@@ -36,7 +37,7 @@
 </head>
 <body>
 <div id="not-found-wrapper">
-    <div id="not-found-text">NOT FOUND</div>
+    <div id="not-found-text">{{ message or "NOT FOUND" }}</div>
     <img id="not-found-image" src="{{ url_for('static', filename='ufo.svg') }}"/>
 </div>
 </body>

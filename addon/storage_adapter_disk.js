@@ -84,11 +84,12 @@ export class StorageAdapterDisk {
             uuid: params.uuid
         };
 
-        try {
-            return helperApp.post(`/storage/persist_archive_content`, fields);
-        } catch (e) {
-            console.error(e);
-        }
+        const response = await helperApp.post(`/storage/persist_archive_content`, fields);
+
+        if (!response.ok)
+            throw new Error(`Server error ${response.status} (${response.statusText})`);
+
+        return response;
     }
 
     async getArchiveSize(params) {
@@ -145,14 +146,12 @@ export class StorageAdapterDisk {
         params.content = new Blob([params.content]);
         params.compute_index = true;
 
-        try {
-            const response = await helperApp.post(`/storage/save_archive_file`, params);
+        const response = await helperApp.post(`/storage/save_archive_file`, params);
 
-            if (response.ok)
-                return response.json()
-        } catch (e) {
-            console.error(e);
-        }
+        if (response.ok)
+            return response.json();
+        else
+            throw new Error(`Server error ${response.status} (${response.statusText})`);
     }
 
     async persistNotesIndex(params) {

@@ -7,7 +7,7 @@ import secrets
 import threading
 import time
 
-from flask import request, abort, g, jsonify
+from flask import request, abort, g, jsonify, render_template
 
 from . import config
 
@@ -278,9 +278,16 @@ def auth_guard():
 
     if signed is not None:
         if signed["error"]:
-            if signed["error"] in ("forged", "malformed"):
+            forged = signed["error"] in ("forged", "malformed")
+
+            if forged:
                 limiter.failure(address, "signed_url_" + signed["error"])
-            abort(401)
+
+            # the page is recognized by the add-on, which does not inject the edit toolbar into it
+            # and offers to reopen the archive
+            return render_template("404.html", title="Link Expired" if not forged else "Invalid Link",
+                                   message="LINK EXPIRED" if not forged else "INVALID LINK",
+                                   link_expired=True), 401
 
         if request.method not in ("GET", "HEAD"):
             abort(405)
@@ -335,7 +342,11 @@ def register_routes(app):
         if not g.session:
             abort(403)
 
-        if not isinstance(path, str) or not path.startswith(SIGNABLE_PATH_PREFIXES) or ".." in path:
+        if not isinstance(path, str) or not path.startswith(SIGNABLE_PATH_PREFIXES):
+            abort(400)
+
+        # only dot segments of the path are rejected, the query (e.g., a search phrase) may contain anything
+        if ".." in path.partition("?")[0].split("/"):
             abort(400)
 
         return {"url": sign_path(path, g.session.sid)}
