@@ -1,4 +1,4 @@
-import {receive, send} from "./proxy.js";
+import {receive, send, sendLocal} from "./proxy.js";
 import {SCRAPYARD_SYNC_METADATA, settings} from "./settings.js";
 import {Node} from "./storage_entities.js";
 import {HELPER_APP_v2_IS_REQUIRED, helperApp} from "./helper_app.js";
@@ -8,6 +8,7 @@ import {chunk, ProgressCounter} from "./utils.js";
 import {MarshallerSync, UnmarshallerSync} from "./marshaller_sync.js";
 import {Database} from "./storage_database.js";
 import {undoManager} from "./bookmarks_undo.js";
+import {clearStorageDivergence, getStorageDivergence} from "./storage_divergence.js";
 
 const SYNC_NODE_CHUNK_SIZE = 10;
 
@@ -31,6 +32,14 @@ receive.checkSyncDirectory = async message => {
         send.stopProcessingIndication();
     }
 };
+
+// restore the internal storage from the backend storage after failed writes, when the backend is available again
+helperApp.addConnectionListener(async () => {
+    await settings.load();
+
+    if (!settings.storage_mode_internal() && await getStorageDivergence())
+        return sendLocal.performSync();
+});
 
 receive.performSync = async message => {
     let synced;
@@ -61,10 +70,14 @@ async function performSync() {
     try {
         syncing = true;
 
+        // failed writes have left the internal storage diverged from the backend storage,
+        // it is reset and populated from the backend storage
+        const divergence = await getStorageDivergence();
+
         let storageMetadata = await getStorageMetadata(syncDirectory);
 
         if (storageMetadata) {
-            const dbMetadata = await settings.get(SCRAPYARD_SYNC_METADATA);
+            const dbMetadata = divergence? null: await settings.get(SCRAPYARD_SYNC_METADATA);
 
             if (await prepareDatabase(storageMetadata, dbMetadata)) {
 
@@ -74,6 +87,13 @@ async function performSync() {
                     result = await syncWithStorage(syncOperations, syncDirectory);
                     await helperApp.fetch("/storage/sync_close_session");
                     await settings.set(SCRAPYARD_SYNC_METADATA, storageMetadata);
+
+                    if (divergence) {
+                        await clearStorageDivergence(divergence);
+                        showNotification("Unsaved changes have been discarded, "
+                            + "the local data is restored from the " + (helperApp.isServerMode()? "server.": "disk storage."));
+                        result = true;
+                    }
                 }
                 else
                     showNotification("Synchronization could not be performed because of an error.");

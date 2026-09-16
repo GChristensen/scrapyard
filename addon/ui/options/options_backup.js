@@ -85,7 +85,10 @@ export class BackupManager {
             $("#backup-button").attr("disabled", false);
         }
         else {
-            this.setStatus(`<div>Scrapyard <a href="#backend">backend application</a> v0.4+ is required</div>`);
+            if (settings.storage_mode_server())
+                this.setStatus(`<div>Can not connect to the Scrapyard <a href="#settings">server</a></div>`);
+            else
+                this.setStatus(`<div>Scrapyard <a href="#backend">backend application</a> is required</div>`);
             $("#backup-button").attr("disabled", true);
         }
     }

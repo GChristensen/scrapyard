@@ -259,18 +259,35 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
 
                         tree.edit(folderJNode, null, async (jnode, success, cancelled) => {
                             bookmarkTree.startProcessingIndication();
-                            folder = await folderPending;
-                            tree.set_id(folderJNode.id, folder.id);
 
-                            if (success && !cancelled && jnode.text)
-                                folder = await send.renameFolder({id: folder.id, name: jnode.text});
+                            try {
+                                try {
+                                    folder = await folderPending;
+                                }
+                                catch (e) {
+                                    console.error(e);
+                                    tree.delete_node(folderJNode);
+                                    return;
+                                }
 
-                            tree.rename_node(jnode, folder.name);
-                            Object.assign(o(jnode), folder);
-                            jnode.original = bookmarkTree.constructor.toJsTreeNode(folder);
-                            await bookmarkTree.reorderNodes(ctxJNode);
+                                tree.set_id(folderJNode.id, folder.id);
 
-                            bookmarkTree.stopProcessingIndication();
+                                if (success && !cancelled && jnode.text)
+                                    try {
+                                        folder = await send.renameFolder({id: folder.id, name: jnode.text});
+                                    }
+                                    catch (e) {
+                                        console.error(e);
+                                    }
+
+                                tree.rename_node(jnode, folder.name);
+                                Object.assign(o(jnode), folder);
+                                jnode.original = bookmarkTree.constructor.toJsTreeNode(folder);
+                                await bookmarkTree.reorderNodes(ctxJNode);
+                            }
+                            finally {
+                                bookmarkTree.stopProcessingIndication();
+                            }
                         });
                     }
                 },
@@ -293,18 +310,35 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
 
                         tree.edit(folderJNode, null, async (jnode, success, cancelled) => {
                             bookmarkTree.startProcessingIndication();
-                            folder = await folderPending;
-                            tree.set_id(folderJNode.id, folder.id);
 
-                            if (success && !cancelled && jnode.text)
-                                folder = await send.renameFolder({id: folder.id, name: jnode.text});
+                            try {
+                                try {
+                                    folder = await folderPending;
+                                }
+                                catch (e) {
+                                    console.error(e);
+                                    tree.delete_node(folderJNode);
+                                    return;
+                                }
 
-                            tree.rename_node(jnode, folder.name);
-                            Object.assign(o(jnode), folder);
-                            jnode.original = bookmarkTree.constructor.toJsTreeNode(folder);
-                            await bookmarkTree.reorderNodes(jparent);
+                                tree.set_id(folderJNode.id, folder.id);
 
-                            bookmarkTree.stopProcessingIndication();
+                                if (success && !cancelled && jnode.text)
+                                    try {
+                                        folder = await send.renameFolder({id: folder.id, name: jnode.text});
+                                    }
+                                    catch (e) {
+                                        console.error(e);
+                                    }
+
+                                tree.rename_node(jnode, folder.name);
+                                Object.assign(o(jnode), folder);
+                                jnode.original = bookmarkTree.constructor.toJsTreeNode(folder);
+                                await bookmarkTree.reorderNodes(jparent);
+                            }
+                            finally {
+                                bookmarkTree.stopProcessingIndication();
+                            }
                         });
                     }
                 },
@@ -338,19 +372,36 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
 
                         tree.edit(notesNode, null, async (jnode, success, cancelled) => {
                             bookmarkTree.startProcessingIndication();
-                            notes = await notesPending;
-                            tree.set_id(notesNode.id, notes.id);
 
-                            if (success && !cancelled && jnode.text) {
-                                notes.name = jnode.text;
-                                notes = await send.updateBookmark({node: notes});
+                            try {
+                                try {
+                                    notes = await notesPending;
+                                }
+                                catch (e) {
+                                    console.error(e);
+                                    tree.delete_node(notesNode);
+                                    return;
+                                }
+
+                                tree.set_id(notesNode.id, notes.id);
+
+                                if (success && !cancelled && jnode.text) {
+                                    try {
+                                        notes = await send.updateBookmark({node: {...notes, name: jnode.text}});
+                                    }
+                                    catch (e) {
+                                        console.error(e);
+                                    }
+                                }
+
+                                tree.rename_node(jnode, notes.name);
+                                Object.assign(o(jnode), notes);
+                                jnode.original = bookmarkTree.constructor.toJsTreeNode(notes);
+                                bookmarkTree.data.push(jnode.original);
                             }
-
-                            Object.assign(o(jnode), notes);
-                            jnode.original = bookmarkTree.constructor.toJsTreeNode(notes);
-                            bookmarkTree.data.push(jnode.original);
-
-                            bookmarkTree.stopProcessingIndication();
+                            finally {
+                                bookmarkTree.stopProcessingIndication();
+                            }
                         });
                     }
                 },
@@ -675,36 +726,44 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
 
                         bookmarkTree.startProcessingIndication();
 
-                        properties.has_comments = !!properties.comments;
+                        try {
+                            properties.has_comments = !!properties.comments;
 
-                        if (hasComments || properties.has_comments)
-                            await Bookmark.storeComments(properties.id, properties.comments);
+                            if (hasComments || properties.has_comments)
+                                await Bookmark.storeComments(properties.id, properties.comments);
 
-                        delete properties.comments;
+                            delete properties.comments;
 
-                        let newIcon;
-                        if (properties.user_icon === "") {
-                            properties.icon = undefined;
-                            properties.stored_icon = undefined;
-                            ctxJNode.icon = bookmarkTree.constructor.toJsTreeNode(ctxNode).icon;
+                            let newIcon;
+                            if (properties.user_icon === "") {
+                                properties.icon = undefined;
+                                properties.stored_icon = undefined;
+                                ctxJNode.icon = bookmarkTree.constructor.toJsTreeNode(ctxNode).icon;
+                            }
+                            else if (properties.user_icon && properties.user_icon !== properties.displayed_icon)
+                                newIcon = properties.user_icon;
+
+                            Bookmark.clean(properties);
+                            properties = await send.updateBookmark({node: properties});
+
+                            if (newIcon) {
+                                properties.icon = newIcon;
+                                await Bookmark.storeIcon(properties);
+
+                                if (ctxJNode.a_attr.class)
+                                    ctxJNode.a_attr.class = ctxJNode.a_attr.class.replace(DEFAULT_ICON_CLASS, "");
+
+                                tree.set_icon(ctxJNode, newIcon);
+                            }
                         }
-                        else if (properties.user_icon && properties.user_icon !== properties.displayed_icon)
-                            newIcon = properties.user_icon;
-
-                        Bookmark.clean(properties);
-                        properties = await send.updateBookmark({node: properties});
-
-                        if (newIcon) {
-                            properties.icon = newIcon;
-                            await Bookmark.storeIcon(properties);
-
-                            if (ctxJNode.a_attr.class)
-                                ctxJNode.a_attr.class = ctxJNode.a_attr.class.replace(DEFAULT_ICON_CLASS, "");
-
-                            tree.set_icon(ctxJNode, newIcon);
+                        catch (e) {
+                            // the tree keeps displaying the previous properties
+                            console.error(e);
+                            return;
                         }
-
-                        bookmarkTree.stopProcessingIndication();
+                        finally {
+                            bookmarkTree.stopProcessingIndication();
+                        }
 
                         let live_data = bookmarkTree.data.find(n => n.id == properties.id);
                         Object.assign(ctxNode, properties);
@@ -743,8 +802,19 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                                 }
 
                                 bookmarkTree.startProcessingIndication();
-                                await send.renameFolder({id: node.id, name: jnode.text})
-                                bookmarkTree.stopProcessingIndication();
+
+                                try {
+                                    await send.renameFolder({id: node.id, name: jnode.text});
+                                }
+                                catch (e) {
+                                    console.error(e);
+                                    tree.rename_node(jnode.id, node.name);
+                                    return;
+                                }
+                                finally {
+                                    bookmarkTree.stopProcessingIndication();
+                                }
+
                                 node.name = ctxJNode.original.text = jnode.text;
                                 tree.rename_node(jnode.id, jnode.text);
                                 bookmarkTree.onRenameShelf(node);
@@ -755,8 +825,20 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                         tree.edit(ctxJNode, null, async (jnode, success, cancelled) => {
                             if (success && !cancelled) {
                                 bookmarkTree.startProcessingIndication();
-                                const folder = await send.renameFolder({id: node.id, name: jnode.text});
-                                bookmarkTree.stopProcessingIndication();
+
+                                let folder;
+                                try {
+                                    folder = await send.renameFolder({id: node.id, name: jnode.text});
+                                }
+                                catch (e) {
+                                    console.error(e);
+                                    tree.rename_node(ctxJNode, node.name);
+                                    return;
+                                }
+                                finally {
+                                    bookmarkTree.stopProcessingIndication();
+                                }
+
                                 node.name = ctxJNode.original.text = folder.name;
                                 tree.rename_node(ctxJNode, folder.name);
                             }
@@ -772,8 +854,17 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                         const name = options.title || "-";
 
                         bookmarkTree.startProcessingIndication();
-                        await send.updateBookmark({node: {id: node.id, name}});
-                        bookmarkTree.stopProcessingIndication();
+
+                        try {
+                            await send.updateBookmark({node: {id: node.id, name}});
+                        }
+                        catch (e) {
+                            console.error(e);
+                            return;
+                        }
+                        finally {
+                            bookmarkTree.stopProcessingIndication();
+                        }
 
                         node.name = name;
                         const text = bookmarkTree.constructor.toJsTreeNode(node).text;

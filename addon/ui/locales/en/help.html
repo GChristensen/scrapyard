@@ -156,6 +156,22 @@
 
     <h3 id="start">Getting Started</h3>
 
+    <p>Scrapyard can store its content in one of three locations, chosen by the "Content location"
+        option in the <a href="options.html#settings">Settings</a> tab:</p>
+
+    <ul>
+        <li><b>Filesystem</b> - content is stored in a directory on this computer by the backend
+            application, which is started by the browser.</li>
+        <li><b>Server</b> - content is stored by the backend application hosted on a server,
+            which could be shared by several browsers and computers. This mode is experimental. Please, backup often.</li>
+        <li><b>Browser internal storage</b> - this option provides a limited set of features available
+            without the backend application or server. Convenient when you only need to store bookmarks or notes
+            and sometimes archive simple pages. If you switch to another storage type, content stored in the
+            browser internal storage will be lost, although you may export and reimport it later.</li>
+    </ul>
+
+    <h4>Storing Content in the Filesystem</h4>
+
     <h4>1. Installing the Backend Application</h4>
     <p>
         Scrapyard requires the installation of the backend application to access the filesystem.
@@ -163,16 +179,56 @@
         the <a href="options.html#backend">Backend</a> options tab.
     </p>
 
-    <p>A limited set of functionality is available without the backend application if the "Content location" option
-        in the main settings page is set to "Browser internal storage".</p>
-
     <h4>2. Specifying the Content Directory Path</h4>
     <p>
         Specify the content directory path at the <a href="options.html#settings">Settings</a> tab.
-        Use the path <b>&lt;your cloud folder&gt;/Apps/Scrapyard/Sync</b> to make Scrapyard content available on mobile devices.
-        It is necessary to specify the absolute full path to your cloud folder. Please consult settings or manual
-        of your cloud client to find the exact path.
     </p>
+
+    <h4 id="server-start">Storing Content on a Server</h4>
+
+    <h4>1. Installing the Server</h4>
+    <p>
+        Download the CLI-based installer from the <a href="options.html#backend">Backend</a> options tab
+        to the server (Linux or macOS), unpack it, and run <code>./install.sh --server</code>.
+        The installer creates a configuration file named <code>.env</code> with a randomly generated
+        server key, and a service that automatically runs the server on startup.
+        Alternatively, the server could be run in Docker.
+        See the <code>scrapyard_backend/server/DEPLOY.md</code> file included in the installer
+        for the details.
+    </p>
+
+    <p>The most important configuration values in the <code>.env</code> file are:</p>
+    <ul>
+        <li><code>DATA_PATH</code> - the server directory where the content is stored.</li>
+        <li><code>AUTH_KEY</code> - the server key that should be entered in the add-on settings.</li>
+        <li><code>SCHEME</code>, <code>HTTP_HOST</code>, <code>HTTP_PORT</code> - the protocol
+            (<code>http</code> or <code>https</code>), the network interface, and the port on which
+            the server accepts connections.</li>
+    </ul>
+
+    <p>It is strongly recommended to access the server only through a local network or
+        <a href="https://tailscale.com" target="_blank">Tailscale</a>, which also provides valid HTTPS
+        certificates. If the server uses a self-signed certificate, open the server URL in a browser tab
+        once and accept the certificate before connecting.</p>
+
+    <h4>2. Connecting to the Server</h4>
+    <p>
+        At the <a href="options.html#settings">Settings</a> tab, choose "Server" as the "Content location",
+        enter the server URL (for example, <code>https://my-server.my-tailnet.ts.net</code>) and the server key,
+        and click "Connect".
+    </p>
+
+    <p>Scrapyard keeps a copy of the bookmark tree in the browser and synchronizes it with the server
+        at startup, so the changes made in other browsers appear after the browser is restarted or the
+        sidebar is reloaded. When the connection to the server is lost, a red server icon
+        <img src="../../../icons/server_warning.svg" style="width: 16px; margin-bottom: -3px"/>
+        is displayed at the sidebar toolbar. Scrapyard reconnects automatically, the icon could also be
+        clicked to reconnect immediately. If some changes could not be saved to the server, they are
+        discarded, and the local data is restored from the server after the connection is restored.</p>
+
+    <p>Links to archives opened from the sidebar are valid for a limited time configurable at the server settings.
+        If an old archive tab displays the "LINK EXPIRED" message, click the link on the page
+        to open the archive again.</p>
 
     <h2>Main Features</h2>
 
@@ -316,7 +372,8 @@
 
     <p>If you mistakenly deleted a bookmark or even an entire shelf, it is possible to revert the
     deletion using the "Undo" item of the shelf menu <img height="15px" width="15px" src="../../../icons/menu.svg">.
-        The undo operation is available until the browser is restarted or some other operation is performed.</p>
+        The undo operation is available until the browser is restarted or some other operation is performed.
+    The "Sort by name" operation is also undoable.</p>
 
     <h3>TODO</h3>
     <p>It may be convenient to prioritize your bookmarks for processing with TODO states. Each bookmark may have one of the following
@@ -354,12 +411,16 @@
         and to browse contents of this shelf. See the corresponding section below for more details.
     </p-->
 
-    <p>It is not necessary to install native cloud clients on any OS to use the cloud shelf.
-        Just a Dropbox or a personal Microsoft account is required.</p>
-
     <p style="text-align: center">
         <img src="images/cloud.png">
     </p>
+
+    <p>It is not necessary to install native cloud clients on any OS to use the cloud shelf.
+        Just a Dropbox or a personal Microsoft account is required.</p>
+
+    <p>When using the server storage mode
+    all your data is automatically available across all connected browsers,
+        and the cloud fonder is usually unnecessary.</p>
 
     <h3 id="files-shelf">Browsing Local Files</h3>
     <p>

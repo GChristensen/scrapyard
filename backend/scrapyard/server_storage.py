@@ -43,35 +43,35 @@ def is_batch_session_open():
 @app.route("/storage/persist_node", methods=['POST'])
 @requires_auth
 def add_node():
-    request_queue.add(server.storage_manager.persist_node, request.json)
+    request_queue.run(server.storage_manager.persist_node, request.json)
     return "", 204
 
 
 @app.route("/storage/update_node", methods=['POST'])
 @requires_auth
 def update_node():
-    request_queue.add(server.storage_manager.update_node, request.json)
+    request_queue.run(server.storage_manager.update_node, request.json)
     return "", 204
 
 
 @app.route("/storage/update_nodes", methods=['POST'])
 @requires_auth
 def update_nodes():
-    request_queue.add(server.storage_manager.update_nodes, request.json)
+    request_queue.run(server.storage_manager.update_nodes, request.json)
     return "", 204
 
 
 @app.route("/storage/delete_nodes", methods=['POST'])
 @requires_auth
 def delete_nodes():
-    request_queue.add(server.storage_manager.delete_nodes, request.json)
+    request_queue.run(server.storage_manager.delete_nodes, request.json)
     return "", 204
 
 
 @app.route("/storage/delete_nodes_shallow", methods=['POST'])
 @requires_auth
 def delete_nodes_shallow():
-    request_queue.add(server.storage_manager.delete_nodes_shallow, request.json)
+    request_queue.run(server.storage_manager.delete_nodes_shallow, request.json)
     return "", 204
 
 

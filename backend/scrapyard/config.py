@@ -19,7 +19,7 @@ LOG_FILE = None
 LOG_LEVEL = "INFO"
 SESSION_TTL = 24 * 60 * 60
 # lifetime of signed URLs opened in browser tabs in seconds, 0 - signed URLs do not expire
-SIGNED_URL_TTL = 12 * 60 * 60
+SIGNED_URL_TTL = 24 * 60 * 60
 
 MIN_AUTH_KEY_LENGTH = 24
 

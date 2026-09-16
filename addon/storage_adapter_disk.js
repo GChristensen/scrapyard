@@ -1,6 +1,7 @@
 import {helperApp} from "./helper_app.js";
 import {settings} from "./settings.js";
 import {ARCHIVE_TYPE_TEXT} from "./storage.js";
+import {markStorageDiverged} from "./storage_divergence.js";
 
 export class StorageAdapterDisk {
     async _postJSON(path, fields) {
@@ -31,17 +32,28 @@ export class StorageAdapterDisk {
         }
     }
 
-    // unlike _postJSON, throws if the request has failed
-    async _postJSONChecked(path, fields) {
+    // Performs a modification of the storage. Unlike _postJSON, throws if the request has failed,
+    // and marks the internal storage as diverged from the backend storage, which is already modified.
+    async _write(path, fields, form = false) {
         fields.data_path = helperApp.dataPath();
 
         if (!fields.data_path)
-            throw new Error("The content folder path is not specified.");
+            return;
 
-        const response = await this._request(() => helperApp.postJSON(path, fields));
+        let response;
 
-        if (!response.ok)
-            throw new Error(`Backend error ${response.status} (${response.statusText})`);
+        try {
+            response = await this._request(() => form
+                ? helperApp.post(path, fields)
+                : helperApp.postJSON(path, fields));
+
+            if (!response.ok)
+                throw new Error(`Backend error ${response.status} (${response.statusText})`);
+        }
+        catch (e) {
+            await markStorageDiverged(e);
+            throw e;
+        }
 
         return response;
     }
@@ -64,35 +76,35 @@ export class StorageAdapterDisk {
     }
 
     async persistNode(params) {
-        return this._postJSON("/storage/persist_node", params);
+        return this._write("/storage/persist_node", params);
     }
 
     async updateNode(params) {
-        return this._postJSON("/storage/update_node", params);
+        return this._write("/storage/update_node", params);
     }
 
     async updateNodes(params) {
-        return this._postJSON("/storage/update_nodes", params);
+        return this._write("/storage/update_nodes", params);
     }
 
     async deleteNodes(params) {
-        return this._postJSON("/storage/delete_nodes", params);
+        return this._write("/storage/delete_nodes", params);
     }
 
     async deleteNodesShallow(params) {
-        return this._postJSON("/storage/delete_nodes_shallow", params);
+        return this._write("/storage/delete_nodes_shallow", params);
     }
 
     async deleteNodeContent(params) {
-        return this._postJSON("/storage/delete_node_content", params);
+        return this._write("/storage/delete_node_content", params);
     }
 
     async persistIcon(params) {
-        return this._postJSON("/storage/persist_icon", params);
+        return this._write("/storage/persist_icon", params);
     }
 
     async persistArchiveIndex(params) {
-        return this._postJSON("/storage/persist_archive_index", params);
+        return this._write("/storage/persist_archive_index", params);
     }
 
     async persistArchive(params) {
@@ -102,18 +114,12 @@ export class StorageAdapterDisk {
         //await this._postJSON("/storage/persist_archive_object", params);
 
         const fields = {
-            data_path: helperApp.dataPath(),
             content: new Blob([content]),
             contains: params.contains,
             uuid: params.uuid
         };
 
-        const response = await helperApp.post(`/storage/persist_archive_content`, fields);
-
-        if (!response.ok)
-            throw new Error(`Backend error ${response.status} (${response.statusText})`);
-
-        return response;
+        return this._write(`/storage/persist_archive_content`, fields, true);
     }
 
     async getArchiveSize(params) {
@@ -166,24 +172,21 @@ export class StorageAdapterDisk {
     }
 
     async saveArchiveFile(params) {
-        params.data_path = helperApp.dataPath();
         params.content = new Blob([params.content]);
         params.compute_index = true;
 
-        const response = await helperApp.post(`/storage/save_archive_file`, params);
+        const response = await this._write(`/storage/save_archive_file`, params, true);
 
-        if (response.ok)
+        if (response)
             return response.json();
-        else
-            throw new Error(`Backend error ${response.status} (${response.statusText})`);
     }
 
     async persistNotesIndex(params) {
-        return this._postJSONChecked("/storage/persist_notes_index", params);
+        return this._write("/storage/persist_notes_index", params);
     }
 
     async persistNotes(params) {
-        return this._postJSONChecked("/storage/persist_notes", params);
+        return this._write("/storage/persist_notes", params);
     }
 
     // returns undefined only if there are no notes, throws if the notes could not be fetched,
@@ -205,11 +208,11 @@ export class StorageAdapterDisk {
     }
 
     async persistCommentsIndex(params) {
-        return this._postJSON("/storage/persist_comments_index", params);
+        return this._write("/storage/persist_comments_index", params);
     }
 
     async persistComments(params) {
-        return this._postJSON("/storage/persist_comments", params);
+        return this._write("/storage/persist_comments", params);
     }
 
     async fetchComments(params) {

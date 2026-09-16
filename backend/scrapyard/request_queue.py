@@ -1,10 +1,15 @@
 import logging
 import os
 import threading
+from concurrent.futures import Future
 from queue import Queue
+
+REQUEST_TIMEOUT = 300
 
 
 class RequestQueue:
+    """Serializes storage modifications in a single thread."""
+
     def __init__(self):
         self.request_queue = Queue()
         self.processor_thread = None
@@ -13,11 +18,13 @@ class RequestQueue:
 
     def processor(self):
         while True:
+            request, params, future = self.request_queue.get()
+
             try:
-                request, params = self.request_queue.get()
-                request(params)
+                future.set_result(request(params))
             except Exception as e:
                 logging.exception(e)
+                future.set_exception(e)
 
     def _ensure_processor(self):
         # the processor thread is started lazily in the process that uses the queue:
@@ -33,6 +40,15 @@ class RequestQueue:
                     self.processor_thread.start()
                     self.processor_pid = pid
 
-    def add(self, request, params):
+    def submit(self, request, params):
         self._ensure_processor()
-        self.request_queue.put((request, params,))
+        future = Future()
+        self.request_queue.put((request, params, future,))
+        return future
+
+    def add(self, request, params):
+        self.submit(request, params)
+
+    def run(self, request, params, timeout=REQUEST_TIMEOUT):
+        """Executes the request in the queue and waits for its completion, exceptions are propagated."""
+        return self.submit(request, params).result(timeout=timeout)

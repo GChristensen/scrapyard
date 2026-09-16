@@ -31,17 +31,17 @@ class NodeDB:
 
     @classmethod
     def with_file(cls, path, f):
-        """Performs a read-modify-write transaction on the index file."""
+        """Performs a read-modify-write transaction on the index file.
+        If the modification fails, the changes made so far are written (they may correspond to the already written
+        item files), and the exception is propagated to report the error to the client."""
         with path_lock(path).write_locked():
             node_db = cls()
             node_db._read(path)
 
             try:
                 f(node_db)
-            except Exception as e:
-                logging.exception(e)
-
-            node_db._write(path)
+            finally:
+                node_db._write(path)
 
     @classmethod
     def delete_file(cls, path):

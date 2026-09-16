@@ -103,6 +103,7 @@ async function init() {
     $("#btnSettings").on("click", () => openPage("/ui/options.html"));
     $("#btnHelp").on("click", () => openPage("/ui/options.html#help"));
     $("#btnHelperWarning").on("click", () => openPage("/ui/options.html#backend"));
+    $("#btnServerWarning").on("click", () => send.helperAppProbe({verbose: true}));
     $("#btnBatchWarning").on("click", () => cancelBatchMode());
 
     $("#shelf-menu-button").click(async () => {
@@ -339,8 +340,12 @@ async function loadSidebar() {
     else {
         const helper = await helperApp.probe();
 
-        if (!helper)
-            $("#btnHelperWarning").css("display", "inline-block");
+        if (!helper) {
+            if (settings.storage_mode_server())
+                $("#btnServerWarning").css("display", "inline-block");
+            else
+                $("#btnHelperWarning").css("display", "inline-block");
+        }
     }
 
     if (settings.display_random_bookmark())
@@ -547,7 +552,15 @@ async function renameShelf() {
         const options = await showDlg("prompt", {caption: "Rename", label: "Name", title: name});
         let newName = options?.title;
         if (newName && !isBuiltInShelf(newName)) {
-            await send.renameFolder({id, name: newName});
+            try {
+                await send.renameFolder({id, name: newName});
+            }
+            catch (e) {
+                // the error is reported by the storage layer
+                console.error(e);
+                return;
+            }
+
             tree.renameRoot(newName);
             shelfList.renameShelf(id, newName);
         }
@@ -981,6 +994,14 @@ receive.browseNodeSidebar = message => {
 
 receive.storageModeInternal = message => {
     $("#btnHelperWarning").hide();
+    $("#btnServerWarning").hide();
+};
+
+receive.serverConnectionChanged = message => {
+    if (message.connected)
+        $("#btnServerWarning").hide();
+    else if (settings.storage_mode_server())
+        $("#btnServerWarning").css("display", "inline-block");
 };
 
 receiveExternal.scrapyardSwitchShelfIshell = async (message, sender) => {

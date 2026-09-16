@@ -121,10 +121,7 @@ class StorageManager:
     def with_node_db(self, params, f):
         with self.batch_mutex:
             if self.bach_node_db:
-                try:
-                    f(self.bach_node_db)
-                except Exception as e:
-                    logging.exception(e)
+                f(self.bach_node_db)
                 return
 
         node_db_path = self.get_node_db_path(params)

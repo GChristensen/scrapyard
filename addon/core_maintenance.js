@@ -16,6 +16,7 @@ import {Export} from "./import.js";
 import {FORMAT_DEFAULT_SHELF_UUID, UnmarshallerJSONScrapbook} from "./marshaller_json_scrapbook.js";
 import {isDeepEqual} from "./utils.js";
 import {browserShelf} from "./plugin_browser_shelf.js";
+import {clearStorageDivergence} from "./storage_divergence.js";
 
 receive.resetCloud = async message => {
     if (!cloudShelf.isAuthenticated())
@@ -35,6 +36,7 @@ receive.resetScrapyard = async message => {
 
     await Database.wipeEverything();
     await settings.last_sync_date(null);
+    await clearStorageDivergence();
 
     if (settings.enable_files_shelf())
         await filesShelf.createIfMissing();

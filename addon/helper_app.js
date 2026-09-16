@@ -10,9 +10,17 @@ export const HELPER_APP_v2_1_IS_REQUIRED = "Scrapyard backend application v2.1+ 
 // the value passed as data_path in the server mode, the server uses its own data path
 export const SERVER_DATA_PATH = "@server";
 
+// delays of attempts to reconnect to a server after the connection is lost
+const SERVER_RECONNECT_MIN_DELAY = 5000;
+const SERVER_RECONNECT_MAX_DELAY = 60000;
+
 class HelperApp {
     #auth;
     #externalEventHandlers = {};
+    #connectionListeners = [];
+    #serverConnected;
+    #reconnectTimeout;
+    #reconnectDelay = SERVER_RECONNECT_MIN_DELAY;
     #loginPromise;
 
     constructor() {
@@ -52,8 +60,20 @@ class HelperApp {
             return this.port;
         }
         else {
-            this.port = new Promise(async (resolve, reject) => {
+            const attempt = this.port = new Promise(async (resolve, reject) => {
                 await settings.load();
+
+                // a disconnect of a previous port (e.g., after reset) should not affect the current one
+                const isCurrent = port => this.port === attempt || this.port === port;
+
+                const fail = port => {
+                    resolve(null);
+
+                    if (isCurrent(port)) {
+                        this.port = null;
+                        this._setServerConnected(false);
+                    }
+                };
 
                 let port;
 
@@ -61,18 +81,14 @@ class HelperApp {
                     port = await this._openServerPort();
 
                     if (!port) {
-                        resolve(null);
-                        this.port = null;
+                        fail();
                         return;
                     }
                 }
                 else
                     port = browser.runtime.connectNative("scrapyard_helper");
 
-                port.onDisconnect.addListener(error => {
-                    resolve(null);
-                    this.port = null;
-                })
+                port.onDisconnect.addListener(error => fail(port));
 
                 let initListener = async response => {
                     response = JSON.parse(response);
@@ -80,6 +96,7 @@ class HelperApp {
                         port.onMessage.removeListener(initListener);
 
                         await this._onInitialized(response, port);
+                        this._setServerConnected(true);
 
                         resolve(port);
                     }
@@ -92,13 +109,44 @@ class HelperApp {
                 }
                 catch (e) {
                     //console.error(e, e.name)
-                    resolve(null);
-                    this.port = null;
+                    fail(port);
                 }
             });
 
             return this.port;
         }
+    }
+
+    // tracks the state of the connection to a server, notifies the UI, and reconnects after the connection is lost,
+    // so the UI indication is cleared and pending restores of the internal storage are performed
+    _setServerConnected(connected) {
+        if (!this.isServerMode())
+            return;
+
+        clearTimeout(this.#reconnectTimeout);
+
+        if (connected)
+            this.#reconnectDelay = SERVER_RECONNECT_MIN_DELAY;
+        else {
+            this.#reconnectTimeout = setTimeout(() => this._reconnect(), this.#reconnectDelay);
+            this.#reconnectDelay = Math.min(this.#reconnectDelay * 2, SERVER_RECONNECT_MAX_DELAY);
+        }
+
+        if (this.#serverConnected !== connected) {
+            this.#serverConnected = connected;
+            send.serverConnectionChanged({connected}).catch(() => {}); // no open pages are listening
+        }
+    }
+
+    async _reconnect() {
+        await settings.load();
+
+        if (this.isServerMode() && !this.port)
+            await this.probe();
+    }
+
+    serverConnectionErrorMessage() {
+        return ("Can not connect to the Scrapyard server. " + (this.serverError || "")).trim();
     }
 
     _initializationMessage() {
@@ -167,7 +215,7 @@ class HelperApp {
             }
             catch (e) {
                 console.error(e);
-                this.serverError = "Can not connect to the server. If it uses a self-signed TLS certificate, "
+                this.serverError = "Make sure that the server is running and reachable. If it uses a self-signed TLS certificate, "
                     + "open the server URL in a browser tab and accept the certificate.";
             }
 
@@ -233,6 +281,16 @@ class HelperApp {
 
         if (msg.error === "address_in_use")
             showNotification(`The backend application HTTP port ${settings.helper_port_number()} is not available.`);
+        else
+            for (const listener of this.#connectionListeners)
+                Promise.resolve()
+                    .then(() => listener())
+                    .catch(e => console.error(e));
+    }
+
+    // the listener is called in the background context when the connection to the backend is (re)established
+    addConnectionListener(listener) {
+        this.#connectionListeners.push(listener);
     }
 
     async probe(verbose) {
@@ -250,8 +308,7 @@ class HelperApp {
 
         if (!port && verbose) {
             if (this.isServerMode())
-                showNotification({message: "Can not connect to the Scrapyard server. "
-                        + (this.serverError || "")});
+                showNotification({message: this.serverConnectionErrorMessage()});
             else
                 showNotification({message: "Can not connect to the backend application."})
         }
@@ -280,9 +337,13 @@ class HelperApp {
     async _hasVersion(version, msg) {
         if (!(await this.probe())) {
             if (msg)
-                showNotification(msg);
+                showNotification(this.isServerMode()? this.serverConnectionErrorMessage(): msg);
             return false;
         }
+
+        // messages refer to the backend application, which is a server in the server mode
+        if (msg && this.isServerMode())
+            msg = msg.replace(/backend application/g, "server");
 
         let installed = this.getVersion();
 
@@ -297,6 +358,8 @@ class HelperApp {
             for (let i = 0; i < version.length; ++i) {
                 if (installed[i] > version[i])
                     return true;
+                else if (installed[i] < version[i])
+                    break;
             }
 
             if (msg)
