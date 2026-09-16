@@ -1,5 +1,9 @@
 import {snakeCaseToCamelCase} from "./utils.js";
 
+// a rejected handler in a non-persistent background (Chrome MV3) should not leave the sender waiting forever,
+// the error is passed back as a marked response and rethrown by the sender
+const PROXY_ERROR = "__scrapyard_proxy_error";
+
 export function nullDelegatingProxy(wrapped) {
     return new Proxy(wrapped, {
         get(target, key, receiver) {
@@ -103,7 +107,8 @@ class ReceiveHandler {
                 const result = method.apply(null, arguments);
 
                 if (result instanceof Promise) {
-                    result.then(sendResponse);
+                    result.then(sendResponse,
+                        error => sendResponse({[PROXY_ERROR]: error?.message || String(error)}));
                     return true;
                 }
                 else
@@ -129,7 +134,11 @@ export let send = new Proxy({}, {
             //console.trace()
             payload.type = type;
 
-            return browser.runtime.sendMessage(payload);
+            return browser.runtime.sendMessage(payload).then(response => {
+                if (response && typeof response === "object" && PROXY_ERROR in response)
+                    throw new Error(response[PROXY_ERROR]);
+                return response;
+            });
         };
     }
 });

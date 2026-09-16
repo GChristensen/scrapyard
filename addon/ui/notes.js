@@ -8,6 +8,7 @@ import {Node, Notes} from "../storage_entities.js";
 import {PlainTextEditor, WYSIWYGEditor} from "./notes_editor.js";
 
 const INPUT_TIMEOUT = 3000;
+const SAVE_RETRY_TIMEOUT = 10000;
 const DEFAULT_WIDTH = "790px";
 const DEFAULT_FONT_SIZE = 115;
 
@@ -24,6 +25,9 @@ let width;
 let editor;
 let editorChanged;
 let editorTimeout;
+// notes could not be fetched, editing is disabled to not overwrite the stored notes
+let loadFailed = false;
+let saveSequence = 0;
 
 $(init);
 
@@ -70,7 +74,20 @@ async function init() {
                 send.browseNode({node: node});
             });
 
-        let notes = await Notes.get(node);
+        let notes;
+
+        try {
+            notes = await Notes.get(node);
+        }
+        catch (e) {
+            console.error(e);
+            loadFailed = true;
+            showNotesError(`Can not load notes: ${sentence(e.message)} Editing is disabled to protect the stored notes, `
+                + `reload the page to try again.`);
+            $("#edit-button").hide();
+            $("#bottomline").hide();
+        }
+
         if (notes) {
             format = notes.format || "org";
             $("#notes-format").val(format === "html"? "delta": format);
@@ -117,7 +134,7 @@ async function init() {
             else
                 $("#inserts").hide();
         }
-        else {
+        else if (!loadFailed) {
             editor = createEditor();
         }
     }
@@ -127,6 +144,9 @@ async function init() {
 
     $("#tabbar a").on("click", e => {
         e.preventDefault();
+
+        if (!editor)
+            return;
 
         $("#tabbar a").removeClass("focus");
         $(e.target).addClass("focus");
@@ -190,13 +210,13 @@ async function init() {
                 $("#editor-font-sizes").show();
         }
 
-        send.storeNotes({options: {node_id: NODE_ID, format}, property_change: true});
+        storeNotesProperties({format});
     });
 
     $("#notes-align").on("change", e => {
         align = $("#notes-align").val();
         alignNotes();
-        send.storeNotes({options: {node_id: NODE_ID, align}, property_change: true});
+        storeNotesProperties({align});
     });
 
     $("#notes-width").on("change", e => {
@@ -225,7 +245,7 @@ async function init() {
                 width = selectedWidth;
         }
 
-        send.storeNotes({options: {node_id: NODE_ID, width}, property_change: true});
+        storeNotesProperties({width});
     });
 
     $("#decrease-width").on("click", e => changeWidth("dec"));
@@ -315,7 +335,11 @@ async function initExamples() {
     }
 }
 
-function saveNotes() {
+async function saveNotes() {
+    if (loadFailed || !editor)
+        return;
+
+    const sequence = ++saveSequence;
     let options = {node_id: NODE_ID, format, align, width};
 
     options.content = editor.getContent();
@@ -325,9 +349,60 @@ function saveNotes() {
 
     options.html = notes2html(options);
 
-    send.storeNotes({options});
-    send.notesChanged({node_id: NODE_ID, removed: !options.content});
+    // changes made while saving set the flag again
     editorChanged = false;
+
+    try {
+        await send.storeNotes({options});
+
+        if (sequence === saveSequence)
+            hideNotesError();
+
+        send.notesChanged({node_id: NODE_ID, removed: !options.content});
+    }
+    catch (e) {
+        console.error(e);
+
+        // only the outcome of the latest save matters, it contains all changes
+        if (sequence === saveSequence) {
+            editorChanged = true;
+            showNotesError(`Notes are not saved: ${sentence(e.message)} Saving will be retried.`);
+            retrySaveNotes();
+        }
+    }
+}
+
+function retrySaveNotes() {
+    clearTimeout(editorTimeout);
+
+    editorTimeout = setTimeout(() => {
+        if (editorChanged)
+            saveNotes();
+    }, SAVE_RETRY_TIMEOUT);
+}
+
+function storeNotesProperties(properties) {
+    if (loadFailed)
+        return;
+
+    send.storeNotes({options: {node_id: NODE_ID, ...properties}, property_change: true})
+        .catch(e => {
+            console.error(e);
+            showNotesError(`Notes settings are not saved: ${e.message}`);
+        });
+}
+
+function sentence(message) {
+    message = String(message || "unknown error").trim();
+    return /[.!?]$/.test(message)? message: message + ".";
+}
+
+function showNotesError(message) {
+    $("#notes-error").text(message).show();
+}
+
+function hideNotesError() {
+    $("#notes-error").hide().text("");
 }
 
 function editorSaveOnChange(e) {
@@ -399,7 +474,7 @@ function changeWidth(op) {
         actualWidthElt.show();
         $("#notes-width").val("actual");
         $("#notes").css("width", newWidth);
-        send.storeNotes({options: {node_id: NODE_ID, width: newWidth}, property_change: true});
+        storeNotesProperties({width: newWidth});
     }
 }
 

@@ -31,6 +31,30 @@ export class StorageAdapterDisk {
         }
     }
 
+    // unlike _postJSON, throws if the request has failed
+    async _postJSONChecked(path, fields) {
+        fields.data_path = helperApp.dataPath();
+
+        if (!fields.data_path)
+            throw new Error("The content folder path is not specified.");
+
+        const response = await this._request(() => helperApp.postJSON(path, fields));
+
+        if (!response.ok)
+            throw new Error(`Backend error ${response.status} (${response.statusText})`);
+
+        return response;
+    }
+
+    async _request(f) {
+        try {
+            return await f();
+        }
+        catch (e) {
+            throw new Error("Can not connect to the backend application: " + e.message);
+        }
+    }
+
     accepts(node) {
         return node && !node.external;
     }
@@ -87,7 +111,7 @@ export class StorageAdapterDisk {
         const response = await helperApp.post(`/storage/persist_archive_content`, fields);
 
         if (!response.ok)
-            throw new Error(`Server error ${response.status} (${response.statusText})`);
+            throw new Error(`Backend error ${response.status} (${response.statusText})`);
 
         return response;
     }
@@ -151,19 +175,33 @@ export class StorageAdapterDisk {
         if (response.ok)
             return response.json();
         else
-            throw new Error(`Server error ${response.status} (${response.statusText})`);
+            throw new Error(`Backend error ${response.status} (${response.statusText})`);
     }
 
     async persistNotesIndex(params) {
-        return this._postJSON("/storage/persist_notes_index", params);
+        return this._postJSONChecked("/storage/persist_notes_index", params);
     }
 
     async persistNotes(params) {
-        return this._postJSON("/storage/persist_notes", params);
+        return this._postJSONChecked("/storage/persist_notes", params);
     }
 
+    // returns undefined only if there are no notes, throws if the notes could not be fetched,
+    // so an unavailable backend is not mistaken for empty notes that could be overwritten
     async fetchNotes(params) {
-        return this._fetchJSON("/storage/fetch_notes", params);
+        params.data_path = helperApp.dataPath();
+
+        if (!params.data_path)
+            return;
+
+        const response = await this._request(() => helperApp.postJSON("/storage/fetch_notes", params));
+
+        if (response.ok)
+            return response.json();
+        else if (response.status === 404)
+            return;
+        else
+            throw new Error(`Backend error ${response.status} (${response.statusText})`);
     }
 
     async persistCommentsIndex(params) {

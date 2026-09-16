@@ -27,6 +27,15 @@ textarea:focus {
     display: none;
 }
 
+#notes-error {
+    flex: 0 0 auto;
+    padding: 4px 20px;
+    background: #fde2e2;
+    color: #a00;
+    border-bottom: 1px solid #d99;
+    font-size: 11pt;
+}
+
 #tabbar {
     height: 38px;
     flex: 0 1 auto;
