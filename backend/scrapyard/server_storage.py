@@ -20,16 +20,18 @@ def check_directory():
     return result, 200
 
 
-@app.route("/storage/open_batch_session", methods=['POST'])
-@requires_auth
-def open_batch_session():
-    owner = None
-
+def batch_session_owner():
+    """The id of the client session in the server mode, None otherwise."""
     if config.SERVER_MODE:
         from .server_auth import current_session
         session = current_session()
-        owner = session.sid if session else None
+        return session.sid if session else None
 
+
+@app.route("/storage/open_batch_session", methods=['POST'])
+@requires_auth
+def open_batch_session():
+    owner = batch_session_owner()
     request_queue.run(lambda params: server.storage_manager.open_batch_session(params, owner), request.json)
     return "", 204
 
@@ -37,7 +39,9 @@ def open_batch_session():
 @app.route("/storage/close_batch_session", methods=['POST'])
 @requires_auth
 def close_batch_session():
-    request_queue.run(server.storage_manager.close_batch_session, request.json)
+    owner = batch_session_owner()
+    force = bool(request.json.get("force", False))
+    request_queue.run(lambda params: server.storage_manager.close_batch_session(params, owner, force), request.json)
     return "", 204
 
 

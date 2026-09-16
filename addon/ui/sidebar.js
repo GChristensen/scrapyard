@@ -830,7 +830,7 @@ async function addFilesDirectory() {
 }
 
 async function cancelBatchMode() {
-    await ExternalStorage.closeBatchSession({external: CLOUD_EXTERNAL_TYPE});
+    await ExternalStorage.closeBatchSession({external: CLOUD_EXTERNAL_TYPE}, true);
     $("#btnBatchWarning").hide();
 }
 

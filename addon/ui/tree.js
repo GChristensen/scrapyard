@@ -736,43 +736,75 @@ class BookmarkTree {
         return true;
     }
 
-    async #moveNode(_, data) {
-        const tree = this._jstree;
-        const jnode = tree.get_node(data.node);
-        const jparent = tree.get_node(data.parent);
-        const destNode = o(jparent);
+    #pendingMoves;
+    #moveQueue = Promise.resolve();
 
-        if (data.parent != data.old_parent) {
-            this.startProcessingIndication();
+    // jstree fires move_node for each of the dragged nodes in the same task,
+    // the moves are collected and performed at once, in a single batch session
+    #moveNode(_, data) {
+        if (!this.#pendingMoves) {
+            this.#pendingMoves = [];
 
-            try {
+            setTimeout(() => {
+                const moves = this.#pendingMoves;
+                this.#pendingMoves = undefined;
 
-                await ExternalStorage.openBatchSession(destNode);
-                const newNodes = await send.moveNodes({node_ids: [o(jnode).id], dest_id: destNode.id});
-
-                // keep jstree nodes synchronized with the database
-                for (let node of newNodes) {
-                    jnode.original = BookmarkTree.toJsTreeNode(node);
-
-                    let oldOriginal = this.data.find(d => d.id == node.id);
-                    if (oldOriginal)
-                        this.data[this.data.indexOf(oldOriginal)] = jnode.original;
-                    else
-                        this.data.push(jnode.original);
-                }
-
-                await this.reorderNodes(jparent);
-            }
-            finally {
-                await ExternalStorage.closeBatchSession(destNode);
-                this.stopProcessingIndication();
-            }
+                this.#moveQueue = this.#moveQueue
+                    .then(() => this.#performMoves(moves))
+                    .catch(e => console.error(e));
+            });
         }
-        else {
-            if (jnode.li_attr?.class?.includes(EXTENDED_TODO_CLASS))
-                await this.reorderNodes(jparent, "todo_pos");
-            else
-                await this.reorderNodes(jparent);
+
+        this.#pendingMoves.push(data);
+    }
+
+    async #performMoves(moves) {
+        const tree = this._jstree;
+        const parentIds = [...new Set(moves.map(m => m.parent))];
+
+        for (const parentId of parentIds) {
+            const parentMoves = moves.filter(m => m.parent == parentId);
+            const jparent = tree.get_node(parentId);
+            const destNode = o(jparent);
+            const movedIds = parentMoves.filter(m => m.parent != m.old_parent).map(m => o(tree.get_node(m.node)).id);
+
+            if (movedIds.length) {
+                this.startProcessingIndication();
+
+                try {
+                    await ExternalStorage.openBatchSession(destNode);
+                    const newNodes = await send.moveNodes({node_ids: movedIds, dest_id: destNode.id});
+
+                    // keep jstree nodes synchronized with the database
+                    for (let node of newNodes) {
+                        const jnode = tree.get_node(node.id);
+
+                        if (jnode)
+                            jnode.original = BookmarkTree.toJsTreeNode(node);
+
+                        const original = jnode? jnode.original: BookmarkTree.toJsTreeNode(node);
+                        let oldOriginal = this.data.find(d => d.id == node.id);
+                        if (oldOriginal)
+                            this.data[this.data.indexOf(oldOriginal)] = original;
+                        else
+                            this.data.push(original);
+                    }
+
+                    await this.reorderNodes(jparent);
+                }
+                finally {
+                    await ExternalStorage.closeBatchSession(destNode);
+                    this.stopProcessingIndication();
+                }
+            }
+            else {
+                const jnode = tree.get_node(parentMoves[0].node);
+
+                if (jnode.li_attr?.class?.includes(EXTENDED_TODO_CLASS))
+                    await this.reorderNodes(jparent, "todo_pos");
+                else
+                    await this.reorderNodes(jparent);
+            }
         }
     }
 

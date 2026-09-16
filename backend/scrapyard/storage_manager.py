@@ -50,8 +50,8 @@ class StorageManager:
         self.data_path = data_path
         self.bach_node_db = None
         self.batch_node_db_path = None
-        # the id of the client session that has opened the batch session (server mode only)
-        self.batch_owner = None
+        # the number of openings of the batch session by each owner, see open_batch_session
+        self.batch_owners = dict()
         self.batch_activity = 0
         self.batch_mutex = threading.RLock()
         self.directory_locks = dict()
@@ -146,31 +146,54 @@ class StorageManager:
         root_directory = Path(path)
         return sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file())
 
+    # Batch sessions may overlap (e.g., simultaneous operations in different browsers), so the openings
+    # are counted per owner, and the session is saved when all its owners have closed it. A close by an owner
+    # that has not opened the session is ignored, so it could not end the session of others.
+    # The owner is the id of the client session in the server mode, and None otherwise.
+
     def open_batch_session(self, params, owner=None):
         node_db_path = self.get_node_db_path(params)
 
         with self.batch_mutex:
-            # a session that is still open (e.g., its client has lost the connection) is saved
-            self._save_batch_session()
+            if self.bach_node_db and self.batch_node_db_path != node_db_path:
+                # the session of another storage directory could not be shared
+                self._save_batch_session()
 
-            self.bach_node_db = NodeDB.from_file(node_db_path)
-            self.batch_node_db_path = node_db_path
-            self.batch_owner = owner
+            if not self.bach_node_db:
+                self.bach_node_db = NodeDB.from_file(node_db_path)
+                self.batch_node_db_path = node_db_path
+
+                watchdog = threading.Thread(target=self._batch_session_watchdog, args=(self.bach_node_db,),
+                                            daemon=True)
+                watchdog.start()
+
+            self.batch_owners[owner] = self.batch_owners.get(owner, 0) + 1
             self.batch_activity = time.monotonic()
 
-            watchdog = threading.Thread(target=self._batch_session_watchdog, args=(self.bach_node_db,), daemon=True)
-            watchdog.start()
-
-    def close_batch_session(self, params=None):
+    def close_batch_session(self, params=None, owner=None, force=False):
+        """Closes the session opened by the owner. Forced close saves the session regardless of its owners,
+        e.g., when the user cancels a batch session that has not been closed."""
         with self.batch_mutex:
-            self._save_batch_session()
+            if force:
+                self._save_batch_session()
+            elif owner in self.batch_owners:
+                self.batch_owners[owner] -= 1
+
+                if self.batch_owners[owner] <= 0:
+                    del self.batch_owners[owner]
+
+                if not self.batch_owners:
+                    self._save_batch_session()
 
     def close_batch_session_of(self, owner):
-        """Closes the batch session opened by the given client session, e.g., after its WebSocket is disconnected."""
+        """Closes all openings of the session by the given client session, e.g., after its WebSocket is disconnected."""
         with self.batch_mutex:
-            if self.bach_node_db and owner is not None and self.batch_owner == owner:
+            if self.bach_node_db and owner is not None and owner in self.batch_owners:
                 logging.warning("Closing a batch session of a disconnected client")
-                self._save_batch_session()
+                del self.batch_owners[owner]
+
+                if not self.batch_owners:
+                    self._save_batch_session()
 
     def flush_batch_session(self):
         """Writes the index of an open batch session, so the index file could be read by other clients."""
@@ -187,7 +210,7 @@ class StorageManager:
             self.bach_node_db.save(self.batch_node_db_path)
             self.bach_node_db = None
             self.batch_node_db_path = None
-            self.batch_owner = None
+            self.batch_owners.clear()
 
     def _batch_session_watchdog(self, node_db):
         while True:

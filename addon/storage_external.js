@@ -23,13 +23,14 @@ class StorageDisk extends StorageAdapterDisk {
 
     // Is called in finally blocks and does not throw, so the error of the batch operation is not masked.
     // A session that could not be closed is saved and closed by the backend after an idle timeout.
-    async closeBatchSession() {
+    // force: closes the session even if it has been opened by others (e.g., a stuck session cancelled by the user)
+    async closeBatchSession(force = false) {
         if (settings.storage_mode_internal())
             return;
 
         for (let attempt = 1; ; ++attempt) {
             try {
-                const response = await this._postJSON("/storage/close_batch_session", {});
+                const response = await this._postJSON("/storage/close_batch_session", force? {force}: {});
 
                 if (!response || response.ok)
                     return;
@@ -91,8 +92,8 @@ class StorageExternal {
             await CloudStorage.openBatchSession();
     }
 
-    async closeBatchSession(referenceNode) {
-        await DiskStorage.closeBatchSession();
+    async closeBatchSession(referenceNode, force = false) {
+        await DiskStorage.closeBatchSession(force);
 
         if (referenceNode.external === CLOUD_EXTERNAL_TYPE)
             await CloudStorage.closeBatchSession();
