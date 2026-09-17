@@ -16,12 +16,16 @@ export function PKCE(config) {
  */
 PKCE.prototype.getAuthorizationUrl = async function (additionalParams) {
     if (additionalParams === void 0) { additionalParams = {}; }
+    // a new state and code verifier are generated for each authorization attempt,
+    // reusing them across attempts leads to state mismatch errors
+    this.state = additionalParams.state || generateRandomString();
+    this.codeVerifier = generateRandomString();
     var codeChallenge = await this.pkceChallengeFromVerifier();
     var queryString = new URLSearchParams(Object.assign({
         response_type: 'code',
         response_mode: 'query',
         client_id: this.config.client_id,
-        state: this.getState(additionalParams.state || null),
+        state: this.state,
         scope: this.config.requested_scopes,
         redirect_uri: this.config.redirect_uri,
         code_challenge: codeChallenge,
@@ -76,28 +80,17 @@ PKCE.prototype.refreshAccessToken = function (refreshToken, additionalParams) {
 };
 
 /**
- * Get the current codeVerifier or generate a new one
+ * Get the code verifier of the current authorization attempt
  * @return {string}
  */
 PKCE.prototype.getCodeVerifier = function () {
-    if (this.codeVerifier === '') {
-        this.codeVerifier = this.randomStringFromStorage('pkce_code_verifier');
-    }
     return this.codeVerifier;
 };
 /**
- * Get the current state or generate a new one
+ * Get the state of the current authorization attempt
  * @return {string}
  */
-PKCE.prototype.getState = function (explicit) {
-    if (explicit === void 0) { explicit = null; }
-    var stateKey = 'pkce_state';
-    if (explicit !== null) {
-        sessionStorage.setItem(stateKey, explicit);
-    }
-    if (this.state === '') {
-        this.state = this.randomStringFromStorage(stateKey);
-    }
+PKCE.prototype.getState = function () {
     return this.state;
 };
 /**
@@ -123,18 +116,6 @@ PKCE.prototype.pkceChallengeFromVerifier = async function () {
     return base64urlencode(hashed);
 };
 /**
- * Get a random string from storage or store a new one and return it's value
- * @param  {string} key
- * @return {string}
- */
-PKCE.prototype.randomStringFromStorage = function (key) {
-    var fromStorage = sessionStorage.getItem(key);
-    if (fromStorage === null) {
-        sessionStorage.setItem(key, generateRandomString());
-    }
-    return sessionStorage.getItem(key) || '';
-};
-/**
  * Validates params from auth response
  * @param  {AuthResponse} queryParams
  * @return {Promise<IAuthResponse>}
@@ -145,7 +126,7 @@ PKCE.prototype.validateAuthResponse = function (queryParams) {
         if (queryParams.error) {
             return reject({ error: queryParams.error });
         }
-        if (queryParams.state !== _this.getState()) {
+        if (!_this.state || queryParams.state !== _this.getState()) {
             return reject({ error: 'Invalid State' });
         }
         return resolve(queryParams);
@@ -155,7 +136,7 @@ PKCE.prototype.validateAuthResponse = function (queryParams) {
 // Generate a secure random string using the browser crypto functions
 function generateRandomString() {
     var array = new Uint32Array(28);
-    window.crypto.getRandomValues(array);
+    crypto.getRandomValues(array);
     return Array.from(array, dec => ('0' + dec.toString(16)).substr(-2)).join('');
 }
 
@@ -164,7 +145,7 @@ function generateRandomString() {
 function sha256(plain) {
     const encoder = new TextEncoder();
     const data = encoder.encode(plain);
-    return window.crypto.subtle.digest('SHA-256', data);
+    return crypto.subtle.digest('SHA-256', data);
 }
 
 // Base64-urlencodes the input string

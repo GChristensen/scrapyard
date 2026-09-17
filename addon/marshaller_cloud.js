@@ -10,78 +10,88 @@ export class UnmarshallerCloud extends UnmarshallerJSONScrapbook {
     }
 
     async unmarshal(provider, cloudNode) {
-        cloudNode = this.unconvertNode(cloudNode);
-        await this.findParentInIDB(cloudNode);
+        return this.store(await this.prepare(provider, cloudNode));
+    }
 
-        const content = {node: cloudNode};
-        let node = await Node.getByUUID(cloudNode.uuid);
+    // downloads the content of a changed node, does not depend on the other nodes, so may be called concurrently;
+    // returns undefined if the node is not changed
+    async prepare(provider, cloudNode) {
+        cloudNode = this.unconvertNode(cloudNode);
+
+        const node = await Node.getByUUID(cloudNode.uuid);
+        let fetchContent = true;
 
         if (node) {
-            if (cloudNode.date_modified > node.date_modified) {
-                if (cloudNode.content_modified > node.date_modified)
-                    Object.assign(content, await this._unmarshalContent(provider, cloudNode));
+            if (!(cloudNode.date_modified > node.date_modified))
+                return;
 
-                node = await this.storeContent(content);
-                await this._storeIndexes(provider, node);
-            }
+            fetchContent = cloudNode.content_modified > node.date_modified;
         }
-        else {
-            Object.assign(content, await this._unmarshalContent(provider, cloudNode));
-            const node = await this.storeContent(content);
-            await this._storeIndexes(provider, node);
-        }
+
+        const [content, indexes] = await Promise.all([
+            fetchContent? this._unmarshalContent(provider, cloudNode): {},
+            this._fetchIndexes(provider, cloudNode)
+        ]);
+
+        return {cloudNode, content, indexes};
+    }
+
+    // stores a prepared node, the parent of the node should be already stored
+    async store(prepared) {
+        if (!prepared)
+            return;
+
+        const {cloudNode, content, indexes} = prepared;
+
+        await this.findParentInIDB(cloudNode);
+        const node = await this.storeContent({node: cloudNode, ...content});
+        await this._storeIndexes(node, indexes);
     }
 
     async _unmarshalContent(provider, node) {
         const content = {};
 
-        if (node.stored_icon) {
-            let icon = await provider.assets.fetchIcon(node.uuid);
-            if (icon) {
-                icon = JSON.parse(icon);
-                icon = this.unconvertIcon(icon);
-                node.icon = await Icon.computeHash(icon.data_url);
-                content.icon = icon;
-            }
+        const [icon, comments] = await Promise.all([
+            node.stored_icon? provider.assets.fetchIcon(node.uuid): undefined,
+            node.has_comments? provider.assets.fetchComments(node.uuid): undefined
+        ]);
+
+        if (icon) {
+            const unconvertedIcon = this.unconvertIcon(JSON.parse(icon));
+            node.icon = await Icon.computeHash(unconvertedIcon.data_url);
+            content.icon = unconvertedIcon;
         }
 
-        if (node.has_comments) {
-            let comments = await provider.assets.fetchComments(node.uuid);
-            if (comments) {
-                comments = JSON.parse(comments);
-                content.comments = this.unconvertComments(comments);
-            }
-        }
+        if (comments)
+            content.comments = this.unconvertComments(JSON.parse(comments));
 
         return content;
     }
 
-    async _storeIndexes(provider, node) {
-        if (node.type === NODE_TYPE_ARCHIVE) {
-            let archiveIndex = await provider.assets.fetchArchiveIndex(node.uuid);
-            if (archiveIndex) {
-                archiveIndex = JSON.parse(archiveIndex);
-                archiveIndex = this.unconvertIndex(archiveIndex);
-                Archive.idb.import.storeIndex(node, archiveIndex.words);
-            }
-        }
+    async _fetchIndexes(provider, node) {
+        const [archiveIndex, notesIndex, commentsIndex] = await Promise.all([
+            node.type === NODE_TYPE_ARCHIVE? provider.assets.fetchArchiveIndex(node.uuid): undefined,
+            node.has_notes? provider.assets.fetchNotesIndex(node.uuid): undefined,
+            node.has_comments? provider.assets.fetchCommentsIndex(node.uuid): undefined
+        ]);
 
-        if (node.has_notes) {
-            let notesIndex = await provider.assets.fetchNotesIndex(node.uuid);
-            if (notesIndex) {
-                notesIndex = JSON.parse(notesIndex);
-                notesIndex = this.unconvertIndex(notesIndex);
-                Notes.idb.import.storeIndex(node, notesIndex.words);
-            }
-        }
+        const unconvert = index => index? this.unconvertIndex(JSON.parse(index)): undefined;
 
-        if (node.has_comments) {
-            let commentsIndex = await provider.assets.fetchCommentsIndex(node.uuid);
-            if (commentsIndex) {
-                commentsIndex = JSON.parse(commentsIndex);
-                commentsIndex = this.unconvertIndex(commentsIndex);
-                Comments.idb.import.storeIndex(node, commentsIndex.words);
-            }
-        }
+        return {
+            archiveIndex: unconvert(archiveIndex),
+            notesIndex: unconvert(notesIndex),
+            commentsIndex: unconvert(commentsIndex)
+        };
+    }
+
+    async _storeIndexes(node, {archiveIndex, notesIndex, commentsIndex}) {
+        if (archiveIndex)
+            await Archive.idb.import.storeIndex(node, archiveIndex.words);
+
+        if (notesIndex)
+            await Notes.idb.import.storeIndex(node, notesIndex.words);
+
+        if (commentsIndex)
+            await Comments.idb.import.storeIndex(node, commentsIndex.words);
     }
 }

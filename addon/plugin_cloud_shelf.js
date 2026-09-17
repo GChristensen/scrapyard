@@ -14,12 +14,14 @@ import {ExternalNode} from "./storage_node_external.js";
 import {Bookmark} from "./bookmarks_bookmark.js";
 import {Node} from "./storage_entities.js";
 import {ProgressCounter, sleep} from "./utils.js";
-import {CloudError} from "./cloud_client_base.js";
+import {CLOUD_CONCURRENCY, CloudError} from "./cloud_client_base.js";
 import {StorageProxy} from "./storage_proxy.js";
 import {UnmarshallerCloud} from "./marshaller_cloud.js";
 
 const CLOUD_SYNC_ALARM_NAME = "cloud-sync-alarm";
 const CLOUD_SYNC_ALARM_PERIOD = 60;
+// the number of nodes which content is downloaded simultaneously during reconciliation
+const CLOUD_SYNC_CONCURRENCY = CLOUD_CONCURRENCY;
 
 export const CLOUD_ERROR_MESSAGE = "Error accessing cloud.";
 
@@ -28,8 +30,11 @@ export class CloudShelfPlugin {
     }
 
     initialize() {
-        dropboxClient.initialize();
-        oneDriveClient.initialize();
+        for (const client of [dropboxClient, oneDriveClient]) {
+            client.initialize();
+            client.onIndexPersisted = (previous, current) => this._onIndexPersisted(previous, current);
+        }
+
         this.selectProvider(settings.active_cloud_provider())
         this._unmarshaller = new UnmarshallerCloud();
     }
@@ -44,7 +49,13 @@ export class CloudShelfPlugin {
     }
 
     async reset() {
-        await this._provider.reset();
+        try {
+            await this._provider.reset();
+        }
+        catch (e) {
+            console.error(e);
+            showNotification(e instanceof CloudError? e.message: CLOUD_ERROR_MESSAGE);
+        }
     }
 
     newCloudRootNode() {
@@ -58,18 +69,6 @@ export class CloudShelfPlugin {
 
     getRemoteLastModified() {
         return this._provider.getLastModified();
-    }
-
-    async withCloudDB(f, fe) {
-        try {
-            let db = await this._provider.downloadDB();
-            await f(db);
-            await this._provider.persistDB(db);
-        }
-        catch (e) {
-            console.error(e);
-            if (fe) fe(e);
-        }
     }
 
     isAuthenticated() {
@@ -196,16 +195,23 @@ export class CloudShelfPlugin {
         }
     }
 
-    async _isRemoteDBModified(cloudShelfNode) {
-        const remoteLastModified = await this.getRemoteLastModified();
-        const modified = cloudShelfNode.date_modified?.getTime() !== remoteLastModified?.getTime();
+    // the modification time of the cloud shelf node is the modification time of the last reconciled cloud index
+    _isSameModificationTime(date1, date2) {
+        return (date1?.getTime() ?? null) === (date2?.getTime() ?? null);
+    }
 
-        if (modified) {
-            cloudShelfNode.date_modified = remoteLastModified;
-            await Node.idb.update(cloudShelfNode, false);
-        }
+    async _setReconciledModificationTime(cloudShelfNode, lastModified) {
+        cloudShelfNode.date_modified = lastModified || null;
+        await Node.idb.update(cloudShelfNode, false);
+    }
 
-        return modified;
+    // the index persisted by this browser does not need to be reconciled, unless it contained
+    // changes from elsewhere that have not been reconciled yet
+    async _onIndexPersisted(previousModified, currentModified) {
+        const cloudShelfNode = await Node.get(CLOUD_SHELF_ID);
+
+        if (cloudShelfNode && this._isSameModificationTime(cloudShelfNode.date_modified, previousModified))
+            await this._setReconciledModificationTime(cloudShelfNode, currentModified);
     }
 
     async createCloudShelf() {
@@ -245,7 +251,18 @@ export class CloudShelfPlugin {
                 try {await send.shelvesChanged()} catch (e) {console.error(e)}
             }
 
-            if (!await this._isRemoteDBModified(cloudShelfNode))
+            let remoteLastModified;
+            try {
+                remoteLastModified = await this.getRemoteLastModified();
+            }
+            catch (e) {
+                console.error(e);
+                if (verbose)
+                    showNotification(e instanceof CloudError? e.message: CLOUD_ERROR_MESSAGE);
+                return;
+            }
+
+            if (this._isSameModificationTime(cloudShelfNode.date_modified, remoteLastModified))
                 return;
 
             send.cloudSyncStart();
@@ -261,16 +278,13 @@ export class CloudShelfPlugin {
                 await ExternalNode.idb.deleteMissingIn(remoteIDs, CLOUD_EXTERNAL_TYPE);
 
                 const objects = remoteDB.sortedNodes;
-                const progressCounter = new ProgressCounter(objects.length, "cloudSyncProgress");
-                for (const object of objects)
-                    try {
-                        await this._unmarshaller.unmarshal(this._provider, object);
-                        progressCounter.incrementAndNotify();
-                    }
-                    catch (e) {
-                        console.error(e);
-                    }
-                progressCounter.finish();
+                const failures = await this._unmarshalObjects(objects);
+
+                // the index is reconciled again on the next synchronization if some items have failed
+                if (failures)
+                    console.error(`cloud reconciliation: ${failures} item(s) have failed`);
+                else
+                    await this._setReconciledModificationTime(cloudShelfNode, remoteDB.lastModified);
 
                 console.log("cloud reconciliation time: " + ((new Date().getTime() - beginTime) / 1000) + "s");
 
@@ -291,6 +305,44 @@ export class CloudShelfPlugin {
             await ExternalNode.idb.delete(CLOUD_EXTERNAL_TYPE);
             send.shelvesChanged();
         }
+    }
+
+    // node content is downloaded concurrently, but nodes are stored in order, so parents are stored before children
+    async _unmarshalObjects(objects) {
+        const progressCounter = new ProgressCounter(objects.length, "cloudSyncProgress");
+        const pending = [];
+        let failures = 0;
+
+        const storeNext = async () => {
+            const {prepared, error} = await pending.shift();
+
+            try {
+                if (error)
+                    throw error;
+
+                await this._unmarshaller.store(prepared);
+                progressCounter.incrementAndNotify();
+            }
+            catch (e) {
+                failures += 1;
+                console.error(e);
+            }
+        };
+
+        for (const object of objects) {
+            pending.push(this._unmarshaller.prepare(this._provider, object)
+                .then(prepared => ({prepared}), error => ({error})));
+
+            if (pending.length >= CLOUD_SYNC_CONCURRENCY)
+                await storeNext();
+        }
+
+        while (pending.length)
+            await storeNext();
+
+        progressCounter.finish();
+
+        return failures;
     }
 
     async enableBackgroundSync(enable) {

@@ -2,38 +2,76 @@ import {ARCHIVE_TYPE_FILES, ARCHIVE_TYPE_TEXT, CLOUD_EXTERNAL_TYPE, UNPACKED_ARC
 import {CONTEXT_BACKGROUND, getContextType} from "./utils_browser.js";
 import {unzip} from "./lib/unzipit.js";
 import {send} from "./proxy.js";
+import {CLOUD_CONCURRENCY, CloudConflictError, mapConcurrently} from "./cloud_client_base.js";
+
+const MAX_CONFLICT_ATTEMPTS = 4;
 
 export class StorageAdapterCloud {
     _provider;
     _batchCloudDB;
+    _batchOperations;
+    _lock = Promise.resolve();
 
     setProvider(provider) {
         this._provider = provider;
     }
 
+    // operations on the cloud index in this context are performed one at a time,
+    // otherwise a concurrent download-modify-upload cycle would discard changes of another
+    _exclusive(action) {
+        const result = this._lock.then(action);
+        this._lock = result.catch(() => {});
+        return result;
+    }
+
+    // f modifies the index and may be called several times: the index is downloaded and the modifications
+    // are applied again if it has been changed by someone else (e.g., another browser) in the meantime
     async withCloudDB(f, fe) {
-        if (this._batchCloudDB) {
-            try {
-                await f(this._batchCloudDB);
-            } catch (e) {
-                console.error(e);
-                if (fe) fe(e);
-            }
+        try {
+            return await this._exclusive(() => this._batchCloudDB
+                ? this._applyBatchOperation(f)
+                : this._transact(f));
+        } catch (e) {
+            console.error(e);
+
+            if (fe)
+                fe(e);
+            else
+                throw e;
         }
-        else {
+    }
+
+    async _transact(f) {
+        for (let attempt = 1; ; ++attempt) {
+            const db = await this._provider.downloadDB();
+            const result = await f(db);
+
             try {
-                let db = await this._provider.downloadDB();
-                await f(db);
                 await this._provider.persistDB(db);
-            } catch (e) {
-                console.error(e);
-                if (fe) fe(e);
+                return result;
+            }
+            catch (e) {
+                if (!(e instanceof CloudConflictError) || attempt >= MAX_CONFLICT_ATTEMPTS)
+                    throw e;
+
+                console.warn("Cloud index is modified concurrently, retrying");
             }
         }
     }
 
+    async _applyBatchOperation(f) {
+        const result = await f(this._batchCloudDB);
+        this._batchOperations.push(f);
+        return result;
+    }
+
     async #openBatchSession() {
-        this._batchCloudDB = await this._provider.downloadDB();
+        return this._exclusive(async () => {
+            if (!this._batchCloudDB) {
+                this._batchCloudDB = await this._provider.downloadDB();
+                this._batchOperations = [];
+            }
+        });
     }
 
     async openBatchSession() {
@@ -44,12 +82,31 @@ export class StorageAdapterCloud {
     }
 
     async #closeBatchSession() {
-        try {
-            await this._provider.persistDB(this._batchCloudDB);
-        }
-        finally {
+        return this._exclusive(async () => {
+            const db = this._batchCloudDB;
+            const operations = this._batchOperations;
+
             this._batchCloudDB = undefined;
-        }
+            this._batchOperations = undefined;
+
+            if (!db)
+                return;
+
+            try {
+                await this._provider.persistDB(db);
+            }
+            catch (e) {
+                if (!(e instanceof CloudConflictError))
+                    throw e;
+
+                console.warn("Cloud index is modified concurrently, replaying the batch session");
+
+                await this._transact(async db => {
+                    for (const f of operations)
+                        await f(db);
+                });
+            }
+        });
     }
 
     async closeBatchSession() {
@@ -124,17 +181,22 @@ export class StorageAdapterCloud {
 
         if (params.contains === ARCHIVE_TYPE_FILES) {
             const {entries} = await unzip(params.content);
+            const files = Object.entries(entries).filter(([name, entry]) => !entry.isDirectory);
 
-            for (const [name, entry] of Object.entries(entries)) {
+            await mapConcurrently(files, CLOUD_CONCURRENCY, async ([name, entry]) => {
                 const filePath = `${UNPACKED_ARCHIVE_DIRECTORY}/${name.startsWith("/")? name.substring(1): name}`;
                 const bytes = await entry.arrayBuffer();
                 await this._provider.assets.storeArchiveFile(params.uuid, bytes, filePath);
-            }
-
-            return this._provider.assets.storeArchiveContent(params.uuid, params.content);
+            });
         }
-        else
-            return this._provider.assets.storeArchiveContent(params.uuid, params.content);
+
+        return this._provider.assets.storeArchiveContent(params.uuid, params.content);
+    }
+
+    // the word index of the archive is not computed in the cloud
+    async saveArchiveFile(params) {
+        const filePath = `${UNPACKED_ARCHIVE_DIRECTORY}/${params.file}`;
+        await this._provider.assets.storeArchiveFile(params.uuid, params.content, filePath);
     }
 
     async getArchiveSize(params) {
@@ -149,7 +211,7 @@ export class StorageAdapterCloud {
 
         //archive = JSON.parse(archive);
 
-        if (!node.contains || node.contains === ARCHIVE_TYPE_TEXT) {
+        if (content && !node.contains || node.contains === ARCHIVE_TYPE_TEXT) {
             const decoder = new TextDecoder();
             content = decoder.decode(content);
         }

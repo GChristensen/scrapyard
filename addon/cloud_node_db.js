@@ -10,6 +10,9 @@ import UUID from "./uuid.js";
 export class CloudStorage {
     constructor() {
         this._objects = new Map();
+        // the provider-specific version and modification time of the downloaded index
+        this.version = undefined;
+        this.lastModified = undefined;
     }
 
     static deserialize(jsonLines) {
@@ -96,29 +99,41 @@ export class CloudStorage {
         return this._treeSortObjects();
     }
 
+    // objects are ordered parents first; objects unreachable from the shelf root are not included
     _treeSortObjects() {
         const children = new Map();
-        children.set(CLOUD_SHELF_UUID, []);
 
         for (const object of this._objects.values()) {
-            if (children.has(object.parent))
-                children.get(object.parent).push(object.uuid);
+            const siblings = children.get(object.parent);
+
+            if (siblings)
+                siblings.push(object);
             else
-                children.set(object.parent, [object.uuid]);
+                children.set(object.parent, [object]);
         }
 
-        const getSubtree = (parentUUID, acc = []) => {
-            const childrenUUIDs = children.get(parentUUID);
+        const result = [];
+        const visited = new Set();
+        const stack = [...(children.get(CLOUD_SHELF_UUID) || [])].reverse();
 
-            if (childrenUUIDs)
-                for (const uuid of childrenUUIDs) {
-                    acc.push(this._objects.get(uuid));
-                    getSubtree(uuid, acc);
-                }
+        while (stack.length) {
+            const object = stack.pop();
 
-            return acc;
+            if (visited.has(object.uuid))
+                continue;
+
+            visited.add(object.uuid);
+            result.push(object);
+
+            const objectChildren = children.get(object.uuid);
+            if (objectChildren)
+                for (let i = objectChildren.length - 1; i >= 0; --i)
+                    stack.push(objectChildren[i]);
         }
 
-        return getSubtree(CLOUD_SHELF_UUID);
+        if (result.length < this._objects.size)
+            console.warn(`Cloud index: ${this._objects.size - result.length} orphaned item(s) are omitted`);
+
+        return result;
     }
 }
