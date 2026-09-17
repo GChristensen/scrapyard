@@ -163,7 +163,11 @@
         <li><b>Filesystem</b> - content is stored in a directory on this computer by the backend
             application, which is started by the browser.</li>
         <li><b>Server</b> - content is stored by the backend application hosted on a server,
-            which could be shared by several browsers and computers. This mode is experimental. Please, backup often.</li>
+            which could be shared by several browsers and computers. Because of the limitations of plain-text storage,
+            this mode is not designed for heavy multi-user
+            collaboration.
+            Although Scrapyard tries its best to prevent data loss, please back up your data often when using server mode.
+        </li>
         <li><b>Browser internal storage</b> - this option provides a limited set of features available
             without the backend application or server. Convenient when you only need to store bookmarks or notes
             and sometimes archive simple pages. If you switch to another storage type, content stored in the
@@ -224,7 +228,7 @@
         <img src="../../../icons/server_warning.svg" style="width: 16px; margin-bottom: -3px"/>
         is displayed at the sidebar toolbar. Scrapyard reconnects automatically, the icon could also be
         clicked to reconnect immediately. If some changes could not be saved to the server, they are
-        discarded, and the local data is restored from the server after the connection is restored.</p>
+        discarded, and the local data is updated from the server after the connection is restored.</p>
 
     <p>Links to archives opened from the sidebar are valid for a limited time configurable at the server settings.
         If an old archive tab displays the "LINK EXPIRED" message, click the link on the page

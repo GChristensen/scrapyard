@@ -280,7 +280,17 @@ async function init() {
     let fontSize = parseInt(localStorage.getItem("notes-font-size") || DEFAULT_FONT_SIZE);
     $("#notes").css("font-size", fontSize + "%");
 
-    $("#close-button").on("click", e => {
+    $("#close-button").on("click", async e => {
+        // the pending changes are saved before the frame is removed; the notes are left open
+        // if the save has failed, so the error is visible and the save is retried
+        if (editorChanged) {
+            clearTimeout(editorTimeout);
+            await saveNotes();
+
+            if (editorChanged)
+                return;
+        }
+
         if (window.parent)
             window.parent.postMessage("SCRAPYARD_CLOSE_NOTES");
     });
@@ -307,6 +317,17 @@ window.onbeforeunload = function() {
     if (editorChanged)
         return true;
 };
+
+// The inline notes frame is removed from the archive page without onbeforeunload, e.g., by the toolbar button,
+// and the rich text editor does not report the loss of focus when a button is clicked, so the changes made
+// within the input timeout would be lost. The save message is sent synchronously and is delivered
+// to the background even though the page is unloaded.
+window.addEventListener("pagehide", () => {
+    if (editorChanged) {
+        clearTimeout(editorTimeout);
+        saveNotes();
+    }
+});
 
 function createEditor(format = "delta") {
     let editor;

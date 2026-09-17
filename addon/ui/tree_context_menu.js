@@ -84,6 +84,26 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
         }
     }
 
+    // a separator is created below the context node, or as the first child of a shelf, which has no siblings
+    const createSeparator = async name => {
+        const onShelf = ctxNode.type === NODE_TYPE_SHELF;
+        const jparent = onShelf? ctxJNode: tree.get_node(ctxJNode.parent);
+        const position = onShelf? 0: $.inArray(ctxJNode.id, jparent.children) + 1;
+        let separator = {id: Bookmark.setTentativeId({}), type: NODE_TYPE_SEPARATOR,
+                         name, parent_id: o(jparent).id};
+
+        const jnode = bookmarkTree.constructor.toJsTreeNode(separator);
+        const separatorJNode = tree.get_node(tree.create_node(jparent, jnode, position));
+
+        if (onShelf)
+            tree.open_node(jparent);
+
+        separator = await send.addSeparator({parent_id: o(jparent).id, name});
+        tree.set_id(separatorJNode.id, separator.id);
+        Object.assign(o(separatorJNode), separator);
+        bookmarkTree.reorderNodes(jparent);
+    };
+
     let containers = bookmarkTree._containers || [];
     let containersSubmenu = {};
 
@@ -408,20 +428,7 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                 newSeparatorItem: {
                     label: "Separator Below",
                     icon: `/icons/separator${lightTheme? "": "2"}.svg`,
-                    action: async () => {
-                        const jparent = tree.get_node(ctxJNode.parent);
-                        const position = $.inArray(ctxJNode.id, jparent.children);
-                        let separator = {id: Bookmark.setTentativeId({}), type: NODE_TYPE_SEPARATOR,
-                                         parent_id: o(jparent).id};
-
-                        const jnode = bookmarkTree.constructor.toJsTreeNode(separator);
-                        const separatorJNode = tree.get_node(tree.create_node(jparent, jnode, position + 1));
-
-                        separator = await send.addSeparator({parent_id: o(jparent).id});
-                        tree.set_id(separatorJNode.id, separator.id);
-                        Object.assign(o(separatorJNode), separator);
-                        bookmarkTree.reorderNodes(jparent);
-                    }
+                    action: () => createSeparator()
                 },
                 newLabeledSeparatorItem: {
                     label: "Labeled Separator",
@@ -431,18 +438,7 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                         if (!options?.title)
                             return;
 
-                        const jparent = tree.get_node(ctxJNode.parent);
-                        const position = $.inArray(ctxJNode.id, jparent.children);
-                        let separator = {id: Bookmark.setTentativeId({}), type: NODE_TYPE_SEPARATOR,
-                                         name: options.title, parent_id: o(jparent).id};
-
-                        const jnode = bookmarkTree.constructor.toJsTreeNode(separator);
-                        const separatorJNode = tree.get_node(tree.create_node(jparent, jnode, position + 1));
-
-                        separator = await send.addSeparator({parent_id: o(jparent).id, name: options.title});
-                        tree.set_id(separatorJNode.id, separator.id);
-                        Object.assign(o(separatorJNode), separator);
-                        bookmarkTree.reorderNodes(jparent);
+                        return createSeparator(options.title);
                     }
                 },
             }
@@ -919,8 +915,9 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
             delete items.cutItem;
             delete items.copyItem;
             delete items.shareItem;
-            delete items.newItem.submenu.newSeparatorItem;
             delete items.newItem.submenu.newSiblingFolderItem;
+            if (items.newItem.submenu.newSeparatorItem)
+                items.newItem.submenu.newSeparatorItem.label = "Separator";
             if (ctxNode.id === BROWSER_SHELF_ID) {
                 items = {};
             }
@@ -947,6 +944,7 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                 delete items.renameItem;
                 delete items.deleteItem;
                 delete items.newItem.submenu.newSeparatorItem;
+                delete items.newItem.submenu.newLabeledSeparatorItem;
                 delete items.newItem.submenu.newSiblingFolderItem;
             }
             if (ctxNode.external === RDF_EXTERNAL_TYPE) {
@@ -1024,6 +1022,7 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
 
     if (ctxNode.__extended_todo) {
         delete items.newItem.submenu.newSeparatorItem;
+        delete items.newItem.submenu.newLabeledSeparatorItem;
         delete items.newItem.submenu.newSiblingFolderItem;
     }
 
