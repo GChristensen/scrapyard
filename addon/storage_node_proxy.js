@@ -1,6 +1,7 @@
 import {Node} from "./storage_entities.js";
 import {MarshallerJSONScrapbook} from "./marshaller_json_scrapbook.js";
 import {StorageProxy} from "./storage_proxy.js";
+import {clearNodePending} from "./storage_pending.js";
 
 export class NodeProxy extends StorageProxy {
     #marshaller = new MarshallerJSONScrapbook();
@@ -26,8 +27,13 @@ export class NodeProxy extends StorageProxy {
 
         if (Array.isArray(node))
             await this.#updateNodes(node);
-        else
+        else {
             await this.#updateNode(node, upsert);
+
+            // the node is added to the storage, the synchronization may process it as any other node
+            if (upsert)
+                clearNodePending(node);
+        }
 
         return result;
     }
@@ -116,16 +122,23 @@ export class NodeProxy extends StorageProxy {
         }
     }
 
+    // The deleted nodes are the full subtrees of the selected items. The roots of the subtrees are also passed
+    // separately (root_uuids), so a backend shared by several browsers can resolve the subtrees against the actual
+    // state of the storage, which may differ from the local one; older backends ignore the field.
+    #deletionParams(nodes) {
+        const ids = new Set(nodes.map(n => n.id));
+
+        return {
+            node_uuids: nodes.map(n => n.uuid),
+            root_uuids: nodes.filter(n => !ids.has(n.parent_id)).map(n => n.uuid)
+        };
+    }
+
     async #unpersistNode(node) {
         const adapter = this.adapter(node);
 
-        if (adapter) {
-            const params = {
-                node_uuids: [node.uuid]
-            };
-
-            return adapter.deleteNodes(params);
-        }
+        if (adapter)
+            return adapter.deleteNodes(this.#deletionParams([node]));
     }
 
     async #deleteNodesShallow(nodes) {
@@ -134,13 +147,8 @@ export class NodeProxy extends StorageProxy {
 
         const adapter = this.adapter(nodes);
 
-        if (adapter) {
-            const params = {
-                node_uuids: nodes.map(n => n.uuid)
-            };
-
-            return adapter.deleteNodesShallow(params);
-        }
+        if (adapter)
+            return adapter.deleteNodesShallow(this.#deletionParams(nodes));
     }
 
     async #deleteNodeContent(nodes) {
@@ -149,13 +157,8 @@ export class NodeProxy extends StorageProxy {
 
         const adapter = this.adapter(nodes);
 
-        if (adapter) {
-            const params = {
-                node_uuids: nodes.map(n => n.uuid)
-            };
-
-            return adapter.deleteNodeContent(params);
-        }
+        if (adapter)
+            return adapter.deleteNodeContent(this.#deletionParams(nodes));
     }
 }
 

@@ -613,7 +613,12 @@ async function importShelf(e) {
 
         if (lname === DEFAULT_SHELF_NAME || lname === EVERYTHING_SHELF_NAME || !isBuiltInShelf(lname)) {
             if (shelfList.hasShelf(name)) {
-                if (await confirm("Warning", "This will replace '" + name + "'.")) {
+                let warning = "This will replace '" + name + "'.";
+
+                if (lname === EVERYTHING_SHELF_NAME && settings.storage_mode_server())
+                    warning += " The content stored on the server will be erased for all browsers that use it.";
+
+                if (await confirm("Warning", warning)) {
                     await performImport(e.target.files[0], name, ext);
                     $("#file-picker").val("");
                 }

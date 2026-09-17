@@ -85,6 +85,38 @@ class NodeDB:
         return new_uuid.upper()
 
     @classmethod
+    def children_map(cls, nodes):
+        """Returns a dictionary: parent uuid -> list of child uuids."""
+        children = dict()
+
+        for uuid, n in nodes.items():
+            parent_uuid = n.get("parent", None)
+            if parent_uuid is not None:
+                children.setdefault(parent_uuid, []).append(uuid)
+
+        return children
+
+    def subtree_uuids(self, root_uuid, children=None):
+        """Returns the uuid of the given node and the uuids of all its descendants in the index."""
+        if children is None:
+            children = NodeDB.children_map(self.nodes)
+
+        result = []
+        visited = set()
+        stack = [root_uuid]
+
+        # a damaged index may contain a cycle of parent references
+        while stack:
+            uuid = stack.pop()
+            if uuid in visited:
+                continue
+            visited.add(uuid)
+            result.append(uuid)
+            stack.extend(children.get(uuid, []))
+
+        return result
+
+    @classmethod
     def tree_sort_nodes(cls, nodes):
         items = nodes.items()
         children = dict()

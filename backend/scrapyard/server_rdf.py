@@ -108,7 +108,7 @@ rdf_page_directories = CacheDict()
 
 @app.route("/rdf/browse/<uuid>/", methods=['GET'])
 def rdf_browse(uuid):
-    msg = current_channel().send_with_response({"type": "REQUEST_RDF_PATH", "uuid": uuid})
+    msg = current_channel(any_client=True).send_with_response({"type": "REQUEST_RDF_PATH", "uuid": uuid})
 
     if not msg.get("rdf_archive_path", None):
         return render_template("404.html"), 404

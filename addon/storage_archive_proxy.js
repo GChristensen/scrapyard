@@ -4,6 +4,7 @@ import {StorageProxy} from "./storage_proxy.js";
 import {settings} from "./settings.js";
 import {showNotification} from "./utils_browser.js";
 import {isTransientError} from "./helper_app.js";
+import {scheduleStorageRecovery} from "./storage_divergence.js";
 
 export class ArchiveProxy extends StorageProxy {
     #marshaller = new MarshallerJSONScrapbook();
@@ -95,6 +96,8 @@ export class ArchiveProxy extends StorageProxy {
     async #retainArchive(node, archive) {
         try {
             await this.wrapped._add(node, {...archive});
+            // the upload is retried when the backend is available (see storage_uploads.js)
+            scheduleStorageRecovery();
             return true;
         }
         catch (e) {

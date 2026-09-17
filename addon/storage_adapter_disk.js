@@ -1,7 +1,15 @@
-import {helperApp} from "./helper_app.js";
+import {helperApp, isStaleItemError} from "./helper_app.js";
 import {settings} from "./settings.js";
 import {ARCHIVE_TYPE_TEXT} from "./storage.js";
-import {markStorageDiverged} from "./storage_divergence.js";
+import {markStorageDiverged, scheduleConflictSync} from "./storage_divergence.js";
+
+// a request to an unreachable backend (e.g., a VPN that is down) may hang for many minutes otherwise
+const REQUEST_TIMEOUT = 120000;
+// uploads of archive content may be large
+const UPLOAD_TIMEOUT = 600000;
+
+// modifications rejected with 409 because the local copy of the item is stale (see scheduleConflictSync)
+const STALE_ITEM_PATHS = ["/storage/persist_node", "/storage/update_node", "/storage/update_nodes"];
 
 export class StorageAdapterDisk {
     async _postJSON(path, fields) {
@@ -9,7 +17,7 @@ export class StorageAdapterDisk {
             fields.data_path = helperApp.dataPath();
 
             if (fields.data_path)
-                return helperApp.postJSON(path, fields);
+                return helperApp.postJSON(path, fields, {timeout: REQUEST_TIMEOUT});
         }
         catch (e) {
             console.error(e);
@@ -21,7 +29,7 @@ export class StorageAdapterDisk {
             fields.data_path = helperApp.dataPath();
 
             if (fields.data_path) {
-                const response = await helperApp.postJSON(path, fields);
+                const response = await helperApp.postJSON(path, fields, {timeout: REQUEST_TIMEOUT});
 
                 if (response.ok)
                     return response.json();
@@ -32,9 +40,12 @@ export class StorageAdapterDisk {
         }
     }
 
-    // Performs a modification of the storage. Unlike _postJSON, throws if the request has failed,
-    // and marks the internal storage as diverged from the backend storage, which is already modified.
-    async _write(path, fields, form = false) {
+    // Performs a modification of the storage. Unlike _postJSON, throws if the request has failed.
+    // diverges: the internal storage has already been modified, so a failure leaves it diverged from the backend
+    // storage, which is marked to restore the internal storage later. The writes that are performed before
+    // the internal storage is modified (e.g., archive content and notes, which are not stored internally)
+    // do not mark the divergence, so a rejected write does not cause a needless restore.
+    async _write(path, fields, form = false, diverges = true) {
         fields.data_path = helperApp.dataPath();
 
         if (!fields.data_path)
@@ -44,14 +55,18 @@ export class StorageAdapterDisk {
 
         try {
             response = await this._request(() => form
-                ? helperApp.post(path, fields)
-                : helperApp.postJSON(path, fields));
+                ? helperApp.post(path, fields, {timeout: UPLOAD_TIMEOUT})
+                : helperApp.postJSON(path, fields, {timeout: REQUEST_TIMEOUT}));
 
             if (!response.ok)
                 throw await helperApp.errorFromResponse(response);
         }
         catch (e) {
-            await markStorageDiverged(e);
+            if (isStaleItemError(e) && STALE_ITEM_PATHS.includes(path))
+                scheduleConflictSync(e);
+            else if (diverges)
+                await markStorageDiverged(e);
+
             throw e;
         }
 
@@ -76,7 +91,7 @@ export class StorageAdapterDisk {
         if (!params.data_path)
             return;
 
-        const response = await this._request(() => helperApp.postJSON(path, params));
+        const response = await this._request(() => helperApp.postJSON(path, params, {timeout: REQUEST_TIMEOUT}));
 
         if (response.ok)
             return response;
@@ -126,6 +141,7 @@ export class StorageAdapterDisk {
         return this._write("/storage/persist_archive_index", params);
     }
 
+    // the internal storage is modified after the content is uploaded (see ArchiveProxy)
     async persistArchive(params) {
         const content = params.content;
 
@@ -138,7 +154,7 @@ export class StorageAdapterDisk {
             uuid: params.uuid
         };
 
-        return this._write(`/storage/persist_archive_content`, fields, true);
+        return this._write(`/storage/persist_archive_content`, fields, true, false);
     }
 
     async getArchiveSize(params) {
@@ -183,11 +199,12 @@ export class StorageAdapterDisk {
         }
     }
 
+    // files of unpacked archives are not stored internally
     async saveArchiveFile(params) {
         params.content = new Blob([params.content]);
         params.compute_index = true;
 
-        const response = await this._write(`/storage/save_archive_file`, params, true);
+        const response = await this._write(`/storage/save_archive_file`, params, true, false);
 
         if (response)
             return response.json();
@@ -197,8 +214,9 @@ export class StorageAdapterDisk {
         return this._write("/storage/persist_notes_index", params);
     }
 
+    // notes are not stored internally, a failed save is retried by the notes editor
     async persistNotes(params) {
-        return this._write("/storage/persist_notes", params);
+        return this._write("/storage/persist_notes", params, false, false);
     }
 
     // returns undefined only if there are no notes, throws if the notes could not be fetched,

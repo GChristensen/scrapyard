@@ -76,14 +76,14 @@ export class BookmarkManager extends EntityManager {
 
         const [iconId, dataUrl] = await this.storeIcon(data);
 
-        if (iconId)
-            data.content_modified = new Date();
-
         const node = await this._Node.add(data);
 
         if (iconId) {
             await Icon.update(iconId, {node_id: node.id});
+            // the icon is stored before the node receives its content_modified date,
+            // so other browsers that synchronize the node always find the icon in the storage
             await Icon.persist(node, dataUrl);
+            await this._Node.updateContentModified(node);
         }
 
         await this.plugins.createBookmark(node, parent);
@@ -169,7 +169,14 @@ export class BookmarkManager extends EntityManager {
         if (sync && exists) {
             const node = await Node.getByUUID(data.uuid);
             data.id = node.id;
-            result = this._Node.update(data, false);
+
+            // the icon is present only if the content is pulled, otherwise the local value is retained,
+            // unless the icon has been removed in the storage (which is reflected by stored_icon)
+            if (!data.icon && !!node.stored_icon === !!data.stored_icon)
+                data.icon = node.icon;
+
+            // the record is replaced, so the fields removed in the storage are removed locally as well
+            result = this._Node.put(data);
         }
         else
             result = this._Node.import(data);

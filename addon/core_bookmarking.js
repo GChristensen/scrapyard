@@ -35,6 +35,7 @@ import {browseNodeBackground} from "./browse.js";
 import UUID from "./uuid.js";
 import {ensureSidebarHost} from "./utils_sidebar.js";
 import {getFaviconFromContent, getFaviconFromTab} from "./favicon.js";
+import {markNodePending} from "./storage_pending.js";
 
 async function canUseBookmarking() {
     return settings.storage_mode_internal() || await helperApp.hasVersion("2.0", HELPER_APP_v2_IS_REQUIRED);
@@ -101,6 +102,7 @@ receive.createArchive = async message => {
     async function addBookmark() {
         try {
             const bookmark = await Bookmark.idb.add(node, NODE_TYPE_ARCHIVE); // added to the storage on archive content update
+            markNodePending(bookmark);
 
             if (settings.add_to_bookmarks_toolbar())
                 await addToBookmarksToolbar(bookmark);

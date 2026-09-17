@@ -31,13 +31,20 @@ export class HTTPError extends Error {
 }
 
 // true if a failed request may succeed later (connection errors, server errors, rate limiting, etc.),
-// false if it is rejected by the backend (e.g., the request body is too large for a reverse proxy)
+// false if it is rejected by the backend (e.g., the request body is too large for a reverse proxy,
+// or the item does not exist in the storage anymore)
 export function isTransientError(error) {
     if (!(error instanceof HTTPError))
         return true;
 
     const status = error.httpError.status;
-    return status >= 500 || [401, 408, 409, 425, 429].includes(status);
+    return status >= 500 || [401, 408, 425, 429].includes(status);
+}
+
+// true if the backend has rejected a modification because the local copy of the item is stale:
+// the item or its parent folder has been deleted in the storage (e.g., by another browser)
+export function isStaleItemError(error) {
+    return error instanceof HTTPError && error.httpError.status === 409;
 }
 
 export function httpErrorMessage(response) {
@@ -647,7 +654,7 @@ class HelperApp {
         return response;
     }
 
-    async post(path, fields) {
+    async post(path, fields, init) {
         let form = new FormData();
 
         for (let [k, v] of Object.entries(fields)) {
@@ -659,7 +666,7 @@ class HelperApp {
             }
         }
 
-        const init = {method: "POST", body: form};
+        init = {...init, method: "POST", body: form};
 
         return this.fetch(path, init);
     }

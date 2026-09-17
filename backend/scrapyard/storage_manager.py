@@ -198,6 +198,13 @@ class StorageManager:
                 if not self.batch_owners:
                     self._save_batch_session()
 
+    def touch_batch_session(self):
+        """Marks an open batch session as active, so it is not closed as abandoned by the watchdog
+        during an operation that writes item content without modifying the index for a while."""
+        with self.batch_mutex:
+            if self.bach_node_db:
+                self.batch_activity = time.monotonic()
+
     def flush_batch_session(self):
         """Writes the index of an open batch session, so the index file could be read by other clients."""
         with self.batch_mutex:
@@ -271,6 +278,7 @@ class StorageManager:
 
     def persist_node(self, params):
         def persist(node_db):
+            self.check_parent_exists(node_db, params["node"])
             node_db.add_node(params["node"])
             self.persist_node_object(params)
 
@@ -278,18 +286,31 @@ class StorageManager:
 
     @staticmethod
     def check_nodes_exist(node_db, nodes):
-        # updates contain only the modified fields, an update of a node that has been deleted
-        # (e.g., by a concurrent request) would add an incomplete node to the index
+        # an update of a node that has been deleted (e.g., by another browser) would re-add it to the index,
+        # the client refreshes its copy of the storage after this error
         missing = [n["uuid"] for n in nodes if n["uuid"] not in node_db.nodes]
 
         if missing:
             raise Conflict(f"Can not update nonexistent items: {', '.join(missing)}")
 
+    @staticmethod
+    def check_parent_exists(node_db, node):
+        # a node added under a parent that has been deleted (e.g., by another browser) would be unreachable
+        # in the tree: it is never pulled by the synchronization, but remains in the index forever
+        parent = node.get("parent", None)
+
+        if parent is not None and parent not in node_db.nodes:
+            raise Conflict(f"The parent folder of the item {node['uuid']} does not exist: {parent}")
+
     def update_node(self, params):
         def update(node_db):
             # an upsert contains the complete node, e.g., a new archive that is added to the storage after its capture
-            if not params.get("upsert", False):
+            if params.get("upsert", False):
+                if params["node"]["uuid"] not in node_db.nodes:
+                    self.check_parent_exists(node_db, params["node"])
+            else:
                 self.check_nodes_exist(node_db, [params["node"]])
+
             params["node"] = node_db.update_node(params["node"], params["remove_fields"])
             self.persist_node_object(params)
 
@@ -308,19 +329,73 @@ class StorageManager:
 
         self.with_node_db(params, update)
 
+    # Deletion is hierarchical and is resolved against the actual index, because the list of items sent by a client
+    # is computed from its local copy of the tree, which may be stale when the storage is shared by several browsers:
+    #  - the descendants of the deleted items are deleted even if the client does not know about them (they were
+    #    added by another browser), otherwise they would remain in the index unreachable from the tree;
+    #  - the items that have been moved out of the deleted subtrees by another browser are retained.
+    # The roots of the deleted subtrees are passed by newer add-ons in root_uuids; older add-ons send only the flat
+    # list, and every item whose parent is not in the list is considered a root, as before.
+
+    @staticmethod
+    def resolve_deletion(node_db, params):
+        """Returns the set of uuids to delete: the actual subtrees of the requested roots
+        and the requested items that are not in the index (their content may still exist)."""
+        requested = list(params["node_uuids"])
+        roots = params.get("root_uuids", None)
+
+        if roots is None:
+            requested_set = set(requested)
+            roots = [uuid for uuid in requested
+                     if node_db.nodes.get(uuid, {}).get("parent", None) not in requested_set]
+
+        children = NodeDB.children_map(node_db.nodes)
+        result = set()
+
+        for root in roots:
+            if root in node_db.nodes and root != NodeDB.DEFAULT_SHELF_UUID:
+                result.update(node_db.subtree_uuids(root, children))
+
+        result.update(uuid for uuid in requested
+                      if uuid not in node_db.nodes and uuid != NodeDB.DEFAULT_SHELF_UUID)
+
+        return result
+
     def delete_nodes(self, params):
-        self.delete_nodes_shallow(params)
-        self.delete_node_content(params)
+        # the index and the content are modified under the same lock, so the resolved set is consistent
+        def delete(node_db):
+            uuids = self.resolve_deletion(node_db, params)
+
+            for uuid in uuids:
+                node_db.delete_node(uuid)
+
+            self.remove_node_content(params, uuids)
+
+        self.with_node_db(params, delete)
 
     def delete_nodes_shallow(self, params):
+        """Removes the items from the index, but retains their content (e.g., for undo)."""
         def delete(node_db):
-            for uuid in params["node_uuids"]:
+            uuids = self.resolve_deletion(node_db, params)
+
+            for uuid in uuids:
                 node_db.delete_node(uuid)
+
+            # the client does not know about the descendants added by other browsers and will never
+            # delete their content, so it is removed here
+            self.remove_node_content(params, uuids - set(params["node_uuids"]))
 
         self.with_node_db(params, delete)
 
     def delete_node_content(self, params):
-        for uuid in params["node_uuids"]:
+        # the content of the items that are still in the index but have been moved out of the deleted subtrees
+        # is retained; the content of the items that are not in the index anymore (e.g., of a committed undo)
+        # is removed
+        uuids = self.inspect_node_db(params, lambda node_db: self.resolve_deletion(node_db, params))
+        self.remove_node_content(params, uuids)
+
+    def remove_node_content(self, params, uuids):
+        for uuid in uuids:
             object_directory_path = self.get_object_directory(params, uuid)
 
             with path_lock(object_directory_path).write_locked():
@@ -358,6 +433,7 @@ class StorageManager:
         object_file_path = os.path.join(object_directory_path, object_file_name)
 
         atomic_write(object_file_path, params[param_name])
+        self.touch_batch_session()
 
     def persist_node_object(self, params):
         params["uuid"] = params["node"]["uuid"]
@@ -383,6 +459,8 @@ class StorageManager:
                 with atomic_file(content_file_path) as content_file:
                     files["content"].save(content_file)
 
+        self.touch_batch_session()
+
     def save_archive_file(self, params, files, compute_index=False):
         """Saves a file of an unpacked archive, returns the word index of the archive if requested."""
         from .storage_rdf import build_archive_index
@@ -394,6 +472,8 @@ class StorageManager:
         with path_lock(object_directory_path).write_locked():
             with atomic_file(archive_file_path) as archive_file:
                 files["content"].save(archive_file)
+
+            self.touch_batch_session()
 
             if compute_index:
                 return build_archive_index(archive_directory_path)
@@ -575,7 +655,7 @@ class StorageManager:
             if existing:
                 raise Conflict(f"Items are not orphaned: {', '.join(existing)}")
 
-            self.delete_node_content(params)
+            self.remove_node_content(params, params["node_uuids"])
 
         self.inspect_node_db(params, delete)
 

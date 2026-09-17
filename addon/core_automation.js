@@ -24,6 +24,7 @@ import {Archive, Comments, Icon, Node, Notes} from "./storage_entities.js";
 import {browseNode} from "./browse.js";
 import {DiskStorage} from "./storage_external.js";
 import {notes2html} from "./notes_render.js";
+import {markNodePending} from "./storage_pending.js";
 
 export function isAutomationAllowed(sender) {
     const extension_whitelist = settings.extension_whitelist();
@@ -166,6 +167,7 @@ receiveExternal.scrapyardAddArchive = async (message, sender) => {
 
     return Bookmark.idb.add(node, NODE_TYPE_ARCHIVE) // added to storage in Archive.add
         .then(async bookmark => {
+            markNodePending(bookmark);
 
             if (node.comments)
                 await Bookmark.storeComments(bookmark.id, node.comments);

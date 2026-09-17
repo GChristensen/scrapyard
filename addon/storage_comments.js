@@ -56,17 +56,19 @@ export class CommentsIDB extends EntityIDB {
     async add(node, comments) {
         await this._add(node, comments);
 
-        if (!this._importer) {
-            node.has_comments = !!comments;
-            await Node.updateContentModified(node);
-        }
-
+        // the index is stored before the node is updated, so other browsers that synchronize the node
+        // with the new content_modified date always find the index in the storage
         if (comments) {
             let words = indexString(comments);
             await this.storeIndex(node, words);
         }
         else
             await this.storeIndex(node, []);
+
+        if (!this._importer) {
+            node.has_comments = !!comments;
+            await Node.updateContentModified(node);
+        }
     }
 
     async get(node) {

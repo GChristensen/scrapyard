@@ -221,18 +221,23 @@ def send_with_response(msg):
     return native_channel.send_with_response(msg)
 
 
-def current_channel():
-    """Returns the channel to the add-on that issued the current request."""
+def current_channel(any_client=False):
+    """Returns the channel to the add-on that issued the current request.
+    any_client: the channel of any connected add-on is acceptable, e.g., for a signed URL opened after
+    the session that has signed it has expired (all clients share the same storage)."""
     from . import config
 
     if not config.SERVER_MODE:
         return native_channel
 
     from flask import abort
-    from .server_auth import current_session
+    from .server_auth import current_session, sessions
 
     session = current_session()
     channel = session.channel if session else None
+
+    if (not channel or not channel.connected) and any_client:
+        channel = sessions.any_channel()
 
     if not channel or not channel.connected:
         abort(409, "The browser is not connected to the server over WebSocket.")

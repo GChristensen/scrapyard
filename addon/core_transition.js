@@ -77,7 +77,8 @@ async function collectNodes() {
 }
 
 async function transferNode(node) {
-    Node.put(node);
+    // awaited: the nodes should reach the storage in the tree order, parents first
+    await Node.put(node);
 
     if (node.stored_icon) {
         let icon = await Icon.idb.import.get(node);

@@ -11,9 +11,11 @@ const BATCH_CLOSE_ATTEMPTS = 3;
 const BATCH_CLOSE_RETRY_DELAY = 2000;
 
 class StorageDisk extends StorageAdapterDisk {
+    // throws if the storage could not be wiped, so an import that replaces everything does not proceed
+    // and leave the old and the new items mixed in the storage
     wipeStorage() {
         if (!settings.storage_mode_internal())
-            return this._postJSON("/storage/wipe", {});
+            return this._write("/storage/wipe", {});
     }
 
     openBatchSession() {

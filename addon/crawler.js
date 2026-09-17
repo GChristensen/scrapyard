@@ -6,6 +6,7 @@ import {send} from "./proxy.js";
 import {sleep} from "./utils.js";
 import {isHTMLLink} from "./utils_html.js";
 import {showNotification} from "./utils_browser.js";
+import {markNodePending} from "./storage_pending.js";
 
 class Rules {
     #rules;
@@ -227,6 +228,7 @@ class Crawler {
         };
 
         const node = await Bookmark.idb.add(bookmark, NODE_TYPE_ARCHIVE);
+        markNodePending(node);
         const isHTML = await isHTMLLink(link.url);
         let resource;
 

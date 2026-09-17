@@ -1,8 +1,8 @@
 import {receive, send, sendLocal} from "./proxy.js";
 import {SCRAPYARD_SYNC_METADATA, settings} from "./settings.js";
-import {Node} from "./storage_entities.js";
+import {Archive, Node} from "./storage_entities.js";
 import {HELPER_APP_v2_IS_REQUIRED, helperApp} from "./helper_app.js";
-import {ACTION_ICONS, showNotification} from "./utils_browser.js";
+import {ACTION_ICONS, CONTEXT_BACKGROUND, getContextType, showNotification} from "./utils_browser.js";
 import {DEFAULT_SHELF_UUID, NON_SYNCHRONIZED_EXTERNALS, JSON_SCRAPBOOK_VERSION} from "./storage.js";
 import {chunk, ProgressCounter} from "./utils.js";
 import {MarshallerSync, UnmarshallerSync} from "./marshaller_sync.js";
@@ -11,12 +11,18 @@ import {undoManager} from "./bookmarks_undo.js";
 import {
     clearStorageDivergence,
     getStorageDivergence,
+    resetStorageRecoveryAttempts,
     scheduleStorageRecovery,
     setStorageRecovery
 } from "./storage_divergence.js";
 import {uploadPendingArchives} from "./storage_uploads.js";
+import {isNodePending} from "./storage_pending.js";
 
 const SYNC_NODE_CHUNK_SIZE = 10;
+
+// in the server mode the storage is shared with other browsers, whose changes are picked up periodically
+const SERVER_SYNC_ALARM_NAME = "scrapyard-server-sync";
+const SERVER_SYNC_ALARM_PERIOD = 10; // minutes
 
 let syncing = false;
 
@@ -39,23 +45,76 @@ receive.checkSyncDirectory = async message => {
     }
 };
 
-// restores the internal storage from the backend storage after failed writes
+// restores the internal storage from the backend storage after failed writes,
+// and uploads the archives kept in the browser after failed uploads
 async function recoverStorage() {
     await settings.load();
 
-    if (!settings.storage_mode_internal() && await getStorageDivergence())
+    if (settings.storage_mode_internal())
+        return;
+
+    if (await getStorageDivergence())
+        return sendLocal.performSync({verbose: false});
+
+    if (await Archive.idb.hasPendingUploads())
+        return uploadPendingArchives();
+}
+
+async function isRecoveryRequired() {
+    await settings.load();
+
+    return !settings.storage_mode_internal()
+        && (!!await getStorageDivergence() || await Archive.idb.hasPendingUploads());
+}
+
+setStorageRecovery(recoverStorage, isRecoveryRequired);
+
+// The restore is performed when the backend is available again. In the server mode the storage is shared
+// with other browsers, so the local data is refreshed on every (re)connection regardless of the divergence:
+// the changes made by other browsers while the server was unreachable would be missed otherwise.
+async function onBackendConnected() {
+    await settings.load();
+    resetStorageRecoveryAttempts();
+
+    if (settings.storage_mode_server())
+        return sendLocal.performSync({verbose: false});
+
+    return recoverStorage();
+}
+
+helperApp.addConnectionListener(onBackendConnected);
+
+// pending restores and uploads are resumed after the browser is restarted
+isRecoveryRequired()
+    .then(required => required && scheduleStorageRecovery())
+    .catch(e => console.error(e));
+
+// The periodic synchronization in the server mode: the storage is synchronized only if it has been modified
+// since the last synchronization (the index metadata timestamp changes on every write, including the own ones,
+// which results in a synchronization without changes at most once per period).
+async function performPeriodicSync() {
+    await settings.load();
+
+    if (!settings.storage_mode_server() || syncing || !helperApp.port)
+        return;
+
+    const storageMetadata = await getStorageMetadata(helperApp.dataPath(), false);
+    const dbMetadata = await settings.get(SCRAPYARD_SYNC_METADATA);
+
+    if (storageMetadata && storageMetadata.timestamp !== dbMetadata?.timestamp)
         return sendLocal.performSync({verbose: false});
 }
 
-setStorageRecovery(recoverStorage);
+if (getContextType() === CONTEXT_BACKGROUND) {
+    browser.alarms.get(SERVER_SYNC_ALARM_NAME)
+        .then(alarm => alarm || browser.alarms.create(SERVER_SYNC_ALARM_NAME, {periodInMinutes: SERVER_SYNC_ALARM_PERIOD}))
+        .catch(e => console.error(e));
 
-// the restore is performed when the backend is available again
-helperApp.addConnectionListener(recoverStorage);
-
-// pending restores are resumed after the browser is restarted
-getStorageDivergence()
-    .then(divergence => divergence && scheduleStorageRecovery())
-    .catch(e => console.error(e));
+    browser.alarms.onAlarm.addListener(alarm => {
+        if (alarm.name === SERVER_SYNC_ALARM_NAME)
+            performPeriodicSync().catch(e => console.error(e));
+    });
+}
 
 receive.performSync = async message => {
     let synced;
@@ -207,7 +266,9 @@ async function getNodesForSync() {
     await Node.iterate(node => {
         const nonSyncable = node.external && NON_SYNCHRONIZED_EXTERNALS.some(ex => ex === node.external);
 
-        if (!nonSyncable) {
+        // the nodes with a capture in progress are not in the storage yet and are not reported to it,
+        // otherwise they would be deleted as absent in the storage
+        if (!nonSyncable && !isNodePending(node)) {
             const syncNode = marshaller.createSyncNode(node);
             syncNodes.push(syncNode);
         }
@@ -328,7 +389,7 @@ async function deleteStorageNodes(syncNodes) {
 async function deleteNodes(syncNodes) {
     for (const syncNode of syncNodes)
         try {
-            if (syncNode.uuid === DEFAULT_SHELF_UUID)
+            if (syncNode.uuid === DEFAULT_SHELF_UUID || isNodePending(syncNode))
                 continue;
             const node = await Node.getByUUID(syncNode.uuid)
             await Node.idb.delete(node)

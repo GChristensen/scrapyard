@@ -296,7 +296,12 @@ export class BackupManager {
         shelves.push({name: EVERYTHING_SHELF_NAME});
 
         if (shelves.find(s => s.name.toLowerCase() === backupName.toLowerCase())) {
-            if (!await confirm("Warning", `This will replace "${backupName}". Continue?`))
+            let warning = `This will replace "${backupName}".`;
+
+            if (backupName.toLowerCase() === EVERYTHING_SHELF_NAME && settings.storage_mode_server())
+                warning += " The content stored on the server will be erased for all browsers that use it.";
+
+            if (!await confirm("Warning", warning + " Continue?"))
                 return;
         }
 

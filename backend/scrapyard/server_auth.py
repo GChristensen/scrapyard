@@ -89,6 +89,13 @@ class SessionStore:
                 if session.channel:
                     session.channel.close()
 
+    def any_channel(self):
+        """Returns the channel of any connected client, e.g., to serve a signed URL whose session has expired."""
+        with self._mutex:
+            for session in self._by_token.values():
+                if session.channel and session.channel.connected:
+                    return session.channel
+
     def _cleanup(self):
         expired = [s for s in self._by_token.values() if s.expired and not (s.channel and s.channel.connected)]
         for session in expired:
@@ -284,10 +291,12 @@ def auth_guard():
 
     if signed is not None:
         if signed["error"]:
-            forged = signed["error"] in ("forged", "malformed")
+            # only a signature that fails verification is an attempt to guess the key; a malformed token
+            # is usually a relative link of an archived page that has escaped the signed prefix
+            forged = signed["error"] == "forged"
 
             if forged:
-                limiter.failure(address, "signed_url_" + signed["error"])
+                limiter.failure(address, "signed_url_forged")
 
             # the page is recognized by the add-on, which does not inject the edit toolbar into it
             # and offers to reopen the archive

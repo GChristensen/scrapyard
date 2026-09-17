@@ -6,12 +6,12 @@ export class IconProxy extends StorageProxy {
     #marshaller = new MarshallerJSONScrapbook();
 
     async add(node, dataUrl) {
-        const result = await this.wrapped.add(node, dataUrl);
-
+        // the icon is stored before the node is updated with the new content_modified date (see IconIDB.add),
+        // so other browsers that synchronize the node always find the icon in the storage
         if (node.uuid)
             await this.#persistIcon(node, dataUrl);
 
-        return result;
+        return this.wrapped.add(node, dataUrl);
     }
 
     async persist(node, dataUrl) {

@@ -48,11 +48,8 @@ export class NotesIDB extends EntityIDB {
     async add(node, options, propertyChange) {
         await this._add(node, options, propertyChange);
 
-        if (!this._importer) {
-            node.has_notes = propertyChange || !!options.content;
-            await Node.updateContentModified(node);
-        }
-
+        // the index is stored before the node is updated, so other browsers that synchronize the node
+        // with the new content_modified date always find the index in the storage
         if (options.content) {
             let words;
 
@@ -75,6 +72,11 @@ export class NotesIDB extends EntityIDB {
         }
         else
             await this.storeIndex(node, []);
+
+        if (!this._importer) {
+            node.has_notes = propertyChange || !!options.content;
+            await Node.updateContentModified(node);
+        }
     }
 
     async get(node) {

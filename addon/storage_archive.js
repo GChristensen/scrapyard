@@ -93,12 +93,15 @@ export class ArchiveIDB extends EntityIDB {
             archive = Archive.entity(node, archive.object, archive.type, archive.byte_length);
 
         await this._add(node, archive);
-        await this.updateContentModified(node, archive, true);
 
+        // the index is stored before the node is updated, so other browsers that synchronize the node
+        // with the new content_modified date always find the index in the storage
         if (index?.words)
             await this.storeIndex(node, index.words);
         else if (typeof archive.object === "string" && !archive.byte_length)
             await this.storeIndex(node, indexHTML(archive.object));
+
+        await this.updateContentModified(node, archive, true);
     }
 
     // upsert: a new archive node is added to the storage here, see Node.updateContentModified
@@ -139,6 +142,10 @@ export class ArchiveIDB extends EntityIDB {
     // to the backend storage (see ArchiveProxy), they are uploaded when the backend is available again.
     async getPendingUploads() {
         return this._db.blobs.toArray();
+    }
+
+    async hasPendingUploads() {
+        return !!await this._db.blobs.count();
     }
 
     async removePendingUpload(node) {

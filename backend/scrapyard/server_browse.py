@@ -38,7 +38,7 @@ def request_archive_info(uuid):
                 "contains": node.get("contains", None)
             }
 
-    return current_channel().send_with_response({"type": "REQUEST_ARCHIVE", "uuid": uuid})
+    return current_channel(any_client=True).send_with_response({"type": "REQUEST_ARCHIVE", "uuid": uuid})
 
 
 @app.route("/browse/<uuid>/")
