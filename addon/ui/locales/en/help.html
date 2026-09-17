@@ -630,6 +630,12 @@
     <p>It is possible to edit the path of the imported RDF file through the "RDF Directory..." context
         menu item of a reel shelf.</p>
 
+    <p><b>Note:</b> when Scrapyard is connected to a server, the RDF directory is read by the server, so
+        a path on the server machine located inside the data directory (<code>DATA_PATH</code>)
+        should be specified.
+        A relative path is resolved against the data directory, and paths outside of it are rejected.
+        Copy the RDF archive into the data directory on the server before importing it.</p>
+
     <p style="text-align: center">
         <img src="images/quick-imported-rdf.png">
     </p>
