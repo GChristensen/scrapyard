@@ -1,0 +1,8 @@
+@import url("a.css");
+@font-face {
+    font-family: "Fixture Font";
+    src: url(/fonts/missing.woff2) format("woff2"), url(/fonts/test.ttf) format("truetype");
+    font-display: swap;
+}
+.main-bg { background: url(/img/main.png) no-repeat; padding: 8px; }
+.text { font-family: "Fixture Font", sans-serif; }

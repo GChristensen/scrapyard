@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+  images.html: <img> (src, srcset, picture), <input type=image>, body background, hidden images.
+  A correct capture contains: data URIs for the visible images; data-scrapyard-srcset with an empty srcset;
+  the display:none image replaced by the scrapyard-img-remove comment; the opacity:0 image without src/srcset but with
+  /*scrapyard-remove*/ width/height pinned; the body background inlined; the lazy image promoted from data-src.
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>images fixture</title>
+    <link rel="icon" href="/img/icon.png">
+    <style>
+        .hidden { display: none; }
+        .invisible { opacity: 0; width: 40px; height: 40px; }
+    </style>
+</head>
+<body background="/img/bg.png">
+    <h1>Images</h1>
+    <img src="/img/plain.png" alt="plain">
+    <img src="/img/small.png" srcset="/img/small.png 1x, /img/large.png 2x" alt="srcset">
+    <picture>
+        <source srcset="/img/wide.png" media="(min-width: 1px)">
+        <img src="/img/fallback.png" alt="picture">
+    </picture>
+    <input type="image" src="/img/button.png" alt="input image">
+    <img class="hidden" src="/img/hidden.png" alt="hidden">
+    <img class="invisible" src="/img/invisible.png" alt="invisible">
+    <img data-src="/img/lazy.png" src="/img/placeholder.gif" alt="lazy library">
+    <img src="/img/fragment.png#frag" alt="fragment">
+    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" alt="data uri">
+</body>
+</html>

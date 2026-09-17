@@ -1,5 +1,5 @@
 {
-    "version": "2.2.5.11",
+    "version": "2.3",
     "applications": {
         "gecko": {
             "id": "scrapyard@firefox",
@@ -84,10 +84,15 @@
         "icons/lock.svg",
         "icons/scrapyard.svg",
         "ui/edit_toolbar.css",
-        "savepage/shadowloader.js",
         "ui/site_capture.html",
         "ui/notes_iframe.html",
-        "ui/notes.html"
+        "ui/notes.html",
+        "capture/shared/*",
+        "capture/content/*",
+        "capture/content/core/*",
+        "capture/content/passes/*",
+        "capture/content/sinks/*",
+        "capture/content/rules/*"
     ],
     "protocol_handlers": [
         {

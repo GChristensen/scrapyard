@@ -14,16 +14,15 @@ import {HELPER_APP_v2_IS_REQUIRED, helperApp} from "./helper_app.js";
 import {settings} from "./settings.js";
 import {
     captureTab,
-    finalizeCapture,
     isSpecialPage,
     notifySpecialPage,
     packUrlExt,
     showSiteCaptureOptions,
     performSiteCapture,
-    startCrawling,
     abortCrawling,
     archiveBookmark, addToBookmarksToolbar
 } from "./bookmarking.js";
+import {collectTabLinks} from "./capture/background/service.js";
 import {fetchText} from "./utils_io.js";
 import {TODO} from "./bookmarks_todo.js";
 import {Folder} from "./bookmarks_folder.js";
@@ -107,7 +106,6 @@ receive.createArchive = async message => {
             if (settings.add_to_bookmarks_toolbar())
                 await addToBookmarksToolbar(bookmark);
 
-            bookmark.__tab_id = tab.id;
             captureTab(tab, bookmark); // !sic
             return bookmark;
         }
@@ -291,30 +289,6 @@ receive.reorderNodesUndoable = async message => {
     return Bookmark.reorderUndoable(message.positions, message.oldPositions, message.posProperty);
 };
 
-receive.storePageHtml = message => {
-    if (message.bookmark.__url_packing)
-        return;
-
-    return Bookmark.storeArchive(message.bookmark, message.html, "text/html", message.bookmark.__index)
-        .then(() => {
-            if (!message.bookmark.__mute_ui) {
-                browser.tabs.sendMessage(message.bookmark.__tab_id, {type: "UNLOCK_DOCUMENT"});
-
-                finalizeCapture(message.bookmark);
-
-                if (message.bookmark.__crawl)
-                    startCrawling(message.bookmark);
-            }
-        })
-        .catch(e => {
-            console.error(e);
-            if (!message.bookmark.__mute_ui) {
-                chrome.tabs.sendMessage(message.bookmark.__tab_id, {type: "UNLOCK_DOCUMENT"});
-                showNotification("Error archiving page.");
-            }
-        });
-};
-
 receive.addNotes = message => Bookmark.addNotes(message.parent_id, message.name);
 
 receive.storeNotes = message => Bookmark.storeNotes(message.options, message.property_change);
@@ -416,9 +390,8 @@ receive.abortRequested = message => {
     abortCrawling();
 };
 
-receive.replyFrameSiteCapture = (message, sender) => {
-    browser.tabs.sendMessage(sender.tab.id, message);
-};
+// the site-capture options page (an extension iframe inside the tab) asks for the links of every frame
+receive.collectTabLinks = (message, sender) => collectTabLinks(sender.tab.id);
 
 receive.cancelSiteCapture = (message, sender) => {
     browser.tabs.sendMessage(sender.tab.id, message);
@@ -451,6 +424,3 @@ receive.performUndo = async message => {
     }
 };
 
-receive.saveResource = async message => {
-    return Archive.saveFile(message.node, message.filename, message.content);
-};

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!--
+  forms.html: type into the fields, tick boxes, change the select and the textarea before capturing.
+  A correct capture contains: the typed text as the value attribute, checked="" on the ticked boxes only,
+  selected="" on the chosen option only, the textarea text, an empty value on the password field.
+-->
+<html>
+<head><meta charset="utf-8"><title>forms fixture</title></head>
+<body>
+    <form>
+        <input type="text" value="initial"> <input type="password" value="secret">
+        <input type="checkbox" checked> <input type="checkbox"> <input type="radio" name="r" checked> <input type="radio" name="r">
+        <select><option>one</option><option selected>two</option><option>three</option></select>
+        <textarea>initial text</textarea>
+        <input type="file">
+        <button>outer <button>nested button</button></button>
+    </form>
+</body>
+</html>

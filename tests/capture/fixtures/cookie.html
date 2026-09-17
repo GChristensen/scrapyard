@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<!--
+  cookie.html: served by serve.py with "Set-Cookie: fixture=1"; the image below is on the second origin and is
+  only served when the request carries that cookie (set it there first by opening http://localhost:8081/cookie.html).
+  The in-page fetch of a cross-origin image without CORS headers fails, so the background fallback loads it with
+  credentials. A correct capture contains the gated image as a data URI (and no "load:403" failure).
+-->
+<html>
+<head><meta charset="utf-8"><title>cookie fixture</title></head>
+<body>
+    <p>gated <img src="http://localhost:8081/gated/logo.png" alt="gated image"></p>
+    <p>same origin gated <img src="/gated/logo.png" alt="same origin gated"></p>
+</body>
+</html>

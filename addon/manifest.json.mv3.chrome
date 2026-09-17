@@ -94,6 +94,17 @@
                 "ui/notes.html"
             ],
             "matches": ["*://*/*"]
+        },
+        {
+            "resources": [
+                "capture/shared/*",
+                "capture/content/*",
+                "capture/content/core/*",
+                "capture/content/passes/*",
+                "capture/content/sinks/*",
+                "capture/content/rules/*"
+            ],
+            "matches": ["<all_urls>"]
         }
     ],
     "omnibox": {

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+  shadow.html: open and closed shadow roots, nested. Enable "Load shadow DOM" before capturing.
+  A correct capture contains: <template data-scrapyard-shadowroot=""> before the light children of #open and
+  #closed, the nested root inside, the <script id="scrapyard-shadowloader"> in <head>; the opened archive
+  shows the shadow content (red and blue boxes) exactly like the live page.
+-->
+<html>
+<head><meta charset="utf-8"><title>shadow fixture</title></head>
+<body>
+    <div id="open">light content of open host</div>
+    <div id="closed">light content of closed host</div>
+    <script>
+        const open = document.getElementById("open").attachShadow({mode: "open"});
+        open.innerHTML = "<style>:host { display: block } .box { background: red; padding: 4px }</style><div class='box'>open shadow <span id='nested'></span></div>";
+        const nested = open.getElementById("nested").attachShadow({mode: "open"});
+        nested.innerHTML = "<em>nested shadow</em>";
+        const closed = document.getElementById("closed").attachShadow({mode: "closed"});
+        closed.innerHTML = "<div style='background: blue; color: white; padding: 4px'>closed shadow <img src='/img/shadow.png'></div>";
+    </script>
+</body>
+</html>

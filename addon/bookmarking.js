@@ -25,6 +25,9 @@ import {Folder} from "./bookmarks_folder.js";
 import {isHTMLLink, parseHtml} from "./utils_html.js";
 import {getSidebarWindow, openSidePanel, toggleSidebarWindow} from "./utils_sidebar.js";
 import {helperApp} from "./helper_app.js";
+import {Archive} from "./storage_entities.js";
+import {buildCaptureOptions} from "./capture_options.js";
+import * as captureEngine from "./capture/background/service.js";
 
 const SCRAPYARD_FOLDER_NAME = "Scrapyard";
 
@@ -101,66 +104,85 @@ async function extractSelection(tab, bookmark) {
 }
 
 async function captureHTMLTab(tab, bookmark) {
-    if (!_BACKGROUND_PAGE)
-        await injectScriptFile(tab.id, {file: "/lib/browser-polyfill.js", allFrames: true});
-
-    let response;
-    const selection = await extractSelection(tab, bookmark);
-    try { response = await startSavePageCapture(tab, bookmark, selection); } catch (e) {}
-
-    if (typeof response == "undefined") { /* no response received - content script not loaded in active tab */
-        let onScriptInitialized = async (message, sender) => {
-            if (message.type === "CAPTURE_SCRIPT_INITIALIZED" && tab.id === sender.tab.id) {
-                browser.runtime.onMessage.removeListener(onScriptInitialized);
-
-                try {
-                    response = await startSavePageCapture(tab, bookmark, selection);
-                } catch (e) {
-                    console.error(e);
-                }
-
-                if (typeof response == "undefined")
-                    showNotification("Cannot initialize the capture script, please retry.");
-            }
-        };
-        browser.runtime.onMessage.addListener(onScriptInitialized);
-
-        await injectSavePageScripts(tab)
-    }
-}
-
-function startSavePageCapture(tab, bookmark, selection) {
-    if (settings.save_unpacked_archives())
-        bookmark.contains = ARCHIVE_TYPE_FILES;
-
-    return browser.tabs.sendMessage(tab.id, {
-        type: "performAction",
-        menuaction: 1,
-        saveditems: 2,
-        bookmark,
-        selection
-    });
-}
-
-async function injectSavePageScripts(tab, onError) {
     if (!await hasCSRPermission())
         return;
 
-    try {
-        try {
-            await injectScriptFile(tab.id, {file: "/savepage/content-frame.js", allFrames: true});
-            await injectScriptFile(tab.id, {file: "/savepage/content-fontface.js", allFrames: true});
-        } catch (e) {
-            console.error(e);
-        }
+    if (!_BACKGROUND_PAGE)
+        await injectScriptFile(tab.id, {file: "/lib/browser-polyfill.js", allFrames: true});
 
-        await injectScriptFile(tab.id, {file: "/savepage/content.js"});
+    const selection = await extractSelection(tab, bookmark);
+    let result;
+
+    try {
+        result = await runPageCapture(tab, bookmark, selection);
+    }
+    catch (e) {
+        console.error(e);
+        captureEngine.unlockTab(tab.id);
+        showNotification("Cannot capture the page, please retry.");
+        return;
+    }
+
+    await storeCapturedPage(bookmark, result, tab.id);
+}
+
+// Runs the capture engine on a tab; the archive is not stored here.
+async function runPageCapture(tab, bookmark, selection) {
+    // packUrl/packUrlExt pass a placeholder object with no node to write files to
+    const unpacked = settings.save_unpacked_archives() && !bookmark.__url_packing && !!bookmark.uuid;
+
+    if (unpacked)
+        bookmark.contains = ARCHIVE_TYPE_FILES;
+
+    const request = {
+        options: await buildCaptureOptions(tab),
+        mode: unpacked? "unpacked": "packed",
+        selection,
+        extras: {index: true, links: !!bookmark.__site_capture}
+    };
+
+    if (unpacked)
+        request.writer = {write: file => Archive.saveFile(bookmark, file.path, file.bytes)};
+
+    const result = await captureEngine.captureTab(tab.id, request);
+
+    // consumers of the bookmark object (crawler, automation) read the index and the links from it
+    bookmark.__index = {words: result.index || []};
+
+    if (bookmark.__site_capture)
+        bookmark.__site_capture.links = result.links || [];
+
+    if (result.failures?.length)
+        console.log(`Scrapyard: ${result.failures.length} of ${result.manifest.resources.length} resources were not saved`,
+            result.failures);
+
+    return result;
+}
+
+// Stores the result of a capture and finishes the UI choreography (formerly the storePageHtml message handler).
+async function storeCapturedPage(bookmark, result, tabId) {
+    try {
+        await Bookmark.storeArchive(bookmark, result.html, "text/html", bookmark.__index);
+
+        if (!bookmark.__mute_ui) {
+            if (tabId != null)
+                captureEngine.unlockTab(tabId);
+
+            finalizeCapture(bookmark);
+
+            if (bookmark.__crawl)
+                startCrawling(bookmark);
+        }
     }
     catch (e) {
         console.error(e);
 
-        if (onError)
-            onError(e);
+        if (!bookmark.__mute_ui) {
+            if (tabId != null)
+                captureEngine.unlockTab(tabId);
+
+            showNotification("Error archiving page.");
+        }
     }
 }
 
@@ -227,7 +249,6 @@ export async function showSiteCaptureOptions(tab, bookmark) {
         if (!_BACKGROUND_PAGE)
             await injectScriptFile(tab.id, {file: "/lib/browser-polyfill.js", allFrames: true});
 
-        await injectScriptFile(tab.id, {file: "/savepage/content-frame.js", allFrames: true});
         await injectCSSFile(tab.id, {file: "/ui/site_capture_content.css"});
         await injectScriptFile(tab.id, {file: "/ui/site_capture_content.js", frameId: 0});
         browser.tabs.sendMessage(tab.id, {type: "storeBookmark", bookmark});
@@ -258,81 +279,90 @@ export function abortCrawling() {
     crawler.abort();
 }
 
+// Opens the URL in a background tab, waits for it to load, captures it and closes the tab.
+// The resolver receives {html, bookmark} (html is absent when the tab was closed prematurely) and the tab.
 export async function packPage(url, bookmark, initializer, resolver, hide_tab) {
-    return new Promise(async (resolve, reject) => {
-        let initializationListener;
-        let changedTab;
-        let packing;
+    const packingTab = await browser.tabs.create({url: url, active: false});
 
-        let completionListener = function (message, sender, sendResponse) {
-            if (message.type === "storePageHtml" && message.bookmark.__tab_id === packingTab.id) {
+    if (hide_tab)
+        browser.tabs.hide(packingTab.id);
+
+    let changedTab = packingTab;
+
+    try {
+        changedTab = await waitForTabComplete(packingTab.id);
+
+        if (initializer)
+            await initializer(bookmark, changedTab);
+
+        const result = await runPageCapture(changedTab, bookmark);
+
+        if (!bookmark.__url_packing) // archiveBookmark: the page is stored here, the callers of packUrl store it themselves
+            await storeCapturedPage(bookmark, result, null);
+
+        try { // the title and the favicon may have changed after the load event
+            changedTab = await browser.tabs.get(packingTab.id);
+        } catch (e) {}
+
+        return resolver({html: result.html, bookmark, result}, changedTab);
+    }
+    catch (e) {
+        if (e?.message?.includes("tab was closed"))
+            return resolver({bookmark}, changedTab);
+
+        throw e;
+    }
+    finally {
+        browser.tabs.remove(packingTab.id).catch(() => {});
+    }
+}
+
+// Resolves with the latest tab object once the tab has loaded; rejects when the tab is closed before that.
+function waitForTabComplete(tabId) {
+    return new Promise((resolve, reject) => {
+        let latestTab;
+
+        const onUpdated = (id, changed, tab) => {
+            if (id !== tabId)
+                return;
+
+            latestTab = latestTab || tab;
+
+            if (changed.favIconUrl)
+                latestTab.favIconUrl = changed.favIconUrl;
+
+            if (changed.title)
+                latestTab.title = changed.title;
+
+            if (changed.status === "complete") { // may be invoked several times
                 removeListeners();
-                browser.tabs.remove(packingTab?.id);
-
-                resolve(resolver(message, changedTab));
+                resolve(latestTab);
             }
         };
 
-        let tabRemovedListener = function (tabId) {
-            if (tabId === changedTab.id) {
+        const onRemoved = id => {
+            if (id === tabId) {
                 removeListeners();
-                const message = {bookmark};
-                resolve(resolver(message, changedTab));
-            }
-        };
-
-        browser.runtime.onMessage.addListener(completionListener);
-
-        var tabUpdateListener = async (id, changed, tab) => {
-            if (!changedTab && id === packingTab.id)
-                changedTab = tab;
-            if (id === packingTab.id && changed.favIconUrl)
-                changedTab.favIconUrl = changed.favIconUrl;
-            if (id === packingTab.id && changed.title)
-                changedTab.title = changed.title;
-            if (id === packingTab.id && changed.status === "complete") { // may be invoked several times
-                if (packing)
-                    return;
-                packing = true;
-
-                initializationListener = async function (message, sender, sendResponse) {
-                    if (message.type === "CAPTURE_SCRIPT_INITIALIZED" && sender.tab.id === packingTab.id) {
-                        if (initializer)
-                            await initializer(bookmark, tab);
-                        bookmark.__tab_id = packingTab.id;
-
-                        try {
-                            await startSavePageCapture(packingTab, bookmark);
-                        } catch (e) {
-                            console.error(e);
-                            reject(e);
-                        }
-                    }
-                };
-
-                browser.runtime.onMessage.addListener(initializationListener);
-
-                if (!_BACKGROUND_PAGE)
-                    await injectScriptFile(packingTab.id, {file: "/lib/browser-polyfill.js", allFrames: true});
-
-                await injectSavePageScripts(packingTab, reject);
+                reject(new Error("The tab was closed before the page loaded"));
             }
         };
 
         function removeListeners() {
-            browser.tabs.onUpdated.removeListener(tabUpdateListener);
-            browser.tabs.onRemoved.removeListener(tabRemovedListener);
-            browser.runtime.onMessage.removeListener(completionListener);
-            browser.runtime.onMessage.removeListener(initializationListener);
+            browser.tabs.onUpdated.removeListener(onUpdated);
+            browser.tabs.onRemoved.removeListener(onRemoved);
         }
 
-        browser.tabs.onUpdated.addListener(tabUpdateListener);
-        browser.tabs.onRemoved.addListener(tabRemovedListener);
+        browser.tabs.onUpdated.addListener(onUpdated);
+        browser.tabs.onRemoved.addListener(onRemoved);
 
-        var packingTab = await browser.tabs.create({url: url, active: false});
+        browser.tabs.get(tabId).then(tab => {
+            latestTab = latestTab || tab;
 
-        if (hide_tab)
-            browser.tabs.hide(packingTab.id)
+            if (tab.status === "complete") {
+                removeListeners();
+                resolve(latestTab);
+            }
+        }).catch(onRemoved.bind(null, tabId));
     });
 }
 

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+  media.html: audio with two sources, a track, a video with a poster, a video fed from a blob (canvas stream).
+  A correct capture contains: the WAV as a data:audio/wav URI on the <source> that is the currentSrc only (the
+  other source gets an empty src); the <track> as a data:text/vtt URI; the poster inlined; the blob video with a
+  data:image/png poster and an empty src.
+-->
+<html>
+<head><meta charset="utf-8"><title>media fixture</title></head>
+<body>
+    <audio controls>
+        <source src="/media/missing.ogg" type="audio/ogg">
+        <source src="/media/tone.wav" type="audio/wav">
+        <track src="/media/subs.vtt" kind="subtitles" srclang="en">
+    </audio>
+    <video controls width="160" poster="/img/poster.png" src="/media/missing.mp4"></video>
+    <video id="blob" controls width="160" height="90" autoplay muted></video>
+    <canvas id="c" width="160" height="90" style="display: none"></canvas>
+    <script>
+        const canvas = document.getElementById("c"), ctx = canvas.getContext("2d");
+        setInterval(() => { ctx.fillStyle = "hsl(" + (Date.now() / 10 % 360) + ",80%,50%)"; ctx.fillRect(0, 0, 160, 90); }, 100);
+        const video = document.getElementById("blob");
+        try {
+            const recorder = new MediaRecorder(canvas.captureStream(10));
+            const chunks = [];
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => { video.src = URL.createObjectURL(new Blob(chunks, {type: "video/webm"})); };
+            recorder.start();
+            setTimeout(() => recorder.stop(), 1500);
+        } catch (e) { console.log("MediaRecorder unavailable", e); }
+    </script>
+</body>
+</html>

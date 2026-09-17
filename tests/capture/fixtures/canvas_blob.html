@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!--
+  canvas_blob.html: a drawn canvas and an image loaded from a blob: URL.
+  A correct capture contains: the canvas with style="/*scrapyard-canvas-image*/ background-image: url(data:image/png...)";
+  the blob image with a data:image/png src and data-scrapyard-currentsrc holding the blob: URL.
+-->
+<html>
+<head><meta charset="utf-8"><title>canvas and blob fixture</title></head>
+<body>
+    <canvas id="c" width="120" height="60"></canvas>
+    <img id="blob" alt="blob image">
+    <script>
+        const ctx = document.getElementById("c").getContext("2d");
+        ctx.fillStyle = "orange"; ctx.fillRect(0, 0, 120, 60);
+        ctx.fillStyle = "black"; ctx.fillText("canvas", 30, 35);
+        fetch("/img/blob.png").then(r => r.blob()).then(b => { document.getElementById("blob").src = URL.createObjectURL(b); });
+    </script>
+</body>
+</html>

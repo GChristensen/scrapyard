@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+  css.html: <link> and <style>, @import chains with a cycle, a font with several formats, CSS images inside strings
+  and comments, escaped URLs, a style attribute image.
+  A correct capture contains: <style data-scrapyard-href="/css/main.css"> with the rewritten sheet;
+  /*scrapyard-import-url=a.css*/ followed by the inlined a.css, which inlines b.css once (b imports a again: cycle);
+  the @font-face rule with /*scrapyard-font-display=swap*/ and a data URI (or a corsfail failure when the font
+  did not load); url(inside-comment.png) and "url(in-string.png)" untouched; the escaped URL resolved to
+  /img/esc.png?a=1&b=2; the style attribute image inlined (or as var(--scrapyard-url-N) with merging).
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>css fixture</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        @import "/css/a.css";
+        /* url(inside-comment.png) */
+        .s::before { content: "url(in-string.png)"; }
+        .esc { background: url("/img/esc.png?a=1\26 b=2"); }
+        .text { font-family: "Fixture Font", sans-serif; }
+    </style>
+</head>
+<body>
+    <h1 class="text">Stylesheets</h1>
+    <div class="main-bg">from main.css</div>
+    <div class="a-bg">from a.css</div>
+    <div class="b-bg">from b.css</div>
+    <div class="esc">escaped url</div>
+    <div class="s">string</div>
+    <div style="background-image: url(/img/inline.png); width: 40px; height: 40px;">inline style</div>
+</body>
+</html>

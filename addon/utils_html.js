@@ -199,18 +199,22 @@ export function rebuildIFramesRecursive(doc, topIFrames) {
     })
 }
 
-export async function buildIFramesRecursive(node, doc, topIFrames, acc = []) {
+export async function buildIFramesRecursive(node, doc, topIFrames, acc = [], file = "index.html") {
     for (let i = 0; i < topIFrames.length; ++i) {
         const iframe = topIFrames[i];
 
         let iframeHTML = iframe.srcdoc;
+        let iframeFile = file;
+        const src = iframe.getAttribute("src");
 
-        if (!iframeHTML && iframe.src && !iframe.src.startsWith("http"))
-            iframeHTML = await Archive.getFile(node, iframe.src);
+        if (!iframeHTML && src && !/^[a-z][a-z0-9+.-]*:/i.test(src)) {
+            iframeFile = resolveArchivePath(file, src);
+            iframeHTML = await Archive.getFile(node, iframeFile);
+        }
 
         if (iframeHTML) {
             const iframeDoc = parseHtml(iframeHTML);
-            await buildIFramesRecursive(node, iframeDoc, iframeDoc.querySelectorAll("iframe"), acc);
+            await buildIFramesRecursive(node, iframeDoc, iframeDoc.querySelectorAll("iframe"), acc, iframeFile);
             iframe.__doc = iframeDoc;
             acc.push(iframeDoc);
         }
@@ -230,7 +234,22 @@ export async function assembleUnpackedIndex(node) {
     }
 }
 
-const RX_IFRAME_TAG = /<iframe\s[^>]*>/ig;
+const RX_IFRAME_TAG = /<i?frame\s[^>]*>/ig;
+
+// Resolves a relative reference found in an archive file against the directory of that file:
+// "0-1-0.html" in "frames/0-1.html" is "frames/0-1-0.html", "../resources/a.png" there is "resources/a.png".
+export function resolveArchivePath(fromFile, reference) {
+    const parts = fromFile.split("/").slice(0, -1);
+
+    for (const part of reference.split("/")) {
+        if (part === "..")
+            parts.pop();
+        else if (part !== "." && part !== "")
+            parts.push(part);
+    }
+
+    return parts.join("/");
+}
 const RX_SRCDOC_ATTR = /\ssrcdoc\s*=/i;
 const RX_SRC_ATTR = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
 
@@ -257,8 +276,8 @@ export async function assembleUnpackedContent(node, file = "index.html", acc = [
         const src = tag.match(RX_SRC_ATTR);
         const path = src? (src[1] ?? src[2] ?? src[3]): null;
 
-        if (path && !path.startsWith("http"))
-            await assembleUnpackedContent(node, unescapeHtml(path), acc, visited);
+        if (path && !/^[a-z][a-z0-9+.-]*:/i.test(path)) // skip absolute URLs (http:, data:, about:)
+            await assembleUnpackedContent(node, resolveArchivePath(file, unescapeHtml(path)), acc, visited);
     }
 
     return acc;

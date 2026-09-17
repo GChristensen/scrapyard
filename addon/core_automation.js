@@ -199,7 +199,6 @@ receiveExternal.scrapyardAddArchive = async (message, sender) => {
             }
             else {
                 Object.assign(bookmark, node);
-                bookmark.__tab_id = activeTab.id;
                 captureTab(activeTab, bookmark);
 
                 return bookmark.uuid;

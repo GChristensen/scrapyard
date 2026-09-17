@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!--
+  svg.html: use of an external symbol, an svg image href, a link inside inline svg, an svg anchor.
+  A correct capture contains: the use element with data-scrapyard-href="/svg/symbols.svg#star" href="#star",
+  followed by the scrapyard-symbol-insert comment and the star symbol; the image with a data:image/png href;
+  no link element inside the inline svg; the anchor href made absolute.
+-->
+<html>
+<head><meta charset="utf-8"><title>svg fixture</title></head>
+<body>
+    <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <link rel="stylesheet" href="/css/a.css">
+        <use xlink:href="/svg/symbols.svg#star" width="60" height="60"></use>
+        <image href="/img/svg_image.png" x="60" y="0" width="40" height="40"></image>
+        <a href="frames.html"><text x="0" y="110">svg link</text></a>
+    </svg>
+</body>
+</html>

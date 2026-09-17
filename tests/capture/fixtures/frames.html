@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+  frames.html: nested same-origin frames, a cross-origin frame (second port), a srcdoc frame, a frameset page,
+  and a frame beyond the depth cap (set "Maximum depth of saved nested frames" to 2 to see it).
+  A correct capture contains: the same-origin frames as srcdoc with data-scrapyard-sameorigin and an empty src
+  (data-scrapyard-src keeps the original); the cross-origin frame with data-scrapyard-crossorigin and its image
+  inlined; the srcdoc frame re-serialized (data-scrapyard-srcdoc keeps the original); the frameset page as a
+  data:text/html src on each <frame>; the frame beyond the cap with an empty src. In unpacked mode the frames
+  with a src attribute are files under frames/.
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>frames fixture</title>
+</head>
+<body>
+    <h1>Frames</h1>
+    <iframe src="/frame_a.html" width="400" height="200"></iframe>
+    <iframe src="http://localhost:8081/frame_b.html" width="400" height="120"></iframe>
+    <iframe srcdoc="<p style='color: green'>srcdoc frame <img src='/img/srcdoc.png'></p>" width="400" height="60"></iframe>
+    <iframe src="/frameset.html" width="400" height="200"></iframe>
+    <iframe src="/frame_deep.html" width="400" height="200"></iframe>
+</body>
+</html>

@@ -35,22 +35,15 @@ function init() {
             browser.runtime.sendMessage({type: "continueSiteCapture", options});
         });
 
-    const message = {type: "requestFrames", siteCapture: true, siteCaptureOptions: true};
-    browser.runtime.sendMessage(message);
+    browser.runtime.sendMessage({type: "collectTabLinks"})
+        .then(response => {
+            if (response) {
+                pageURL = response.url || null;
+                pageLinks = response.links || [];
+            }
+        })
+        .catch(e => console.error(e));
 };
-
-chrome.runtime.onMessage.addListener(
-    function(message) {
-        switch (message.type) {
-            case "replyFrameSiteCapture":
-                if (message.key === "0")
-                    pageURL = message.url;
-
-                if (message.links)
-                    pageLinks = [...pageLinks, ...message.links]
-                break;
-        }
-    });
 
 function setUpMenu(id) {
     document.querySelectorAll(`#${id}-presets-menu-dropdown, #${id}-presets-menu-dropdown .dropdown-symbol`)

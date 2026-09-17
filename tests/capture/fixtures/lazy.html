@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+  lazy.html: images far below the fold with loading="lazy" and a scroll-driven lazy library imitation.
+  With the lazy loading option off the bottom images are not loaded (empty or placeholder src).
+  With "Scroll down page" or "Shrink page" on: every image is loaded and inlined; data-scrapyard-loading="lazy"
+  marks the promoted attribute; the page is scrolled back to the top afterwards.
+-->
+<html>
+<head><meta charset="utf-8"><title>lazy fixture</title></head>
+<body>
+    <p>top</p>
+    <div style="height: 4000px"></div>
+    <img loading="lazy" src="/img/lazy_native.png" alt="native lazy">
+    <img class="lib" data-src="/img/lazy_lib.png" alt="library lazy">
+    <div style="height: 4000px"></div>
+    <img loading="lazy" src="/img/lazy_bottom.png" alt="bottom">
+    <script>
+        addEventListener("scroll", () => {
+            document.querySelectorAll("img.lib[data-src]").forEach(img => {
+                if (img.getBoundingClientRect().top < innerHeight) { img.src = img.dataset.src; img.removeAttribute("data-src"); }
+            });
+        });
+    </script>
+</body>
+</html>

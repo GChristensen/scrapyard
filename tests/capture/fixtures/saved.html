@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+  saved.html: a page saved by the old engine (savepage-* markers) captured again.
+  A correct capture: the old savepage-* metas and the old cssvariables style are not duplicated (the script/meta
+  leftovers are skipped, the new scrapyard-* metas are written with scrapyard-url = the original URL);
+  the data URIs pass through unchanged; the remaining http image is fetched and inlined.
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>saved page fixture</title>
+    <style id="savepage-cssvariables">:root { --savepage-url-0: url(data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==); }</style>
+    <style>.v { background: var(--savepage-url-0); width: 20px; height: 20px; }</style>
+    <meta name="savepage-url" content="https://example.com/original">
+    <meta name="savepage-title" content="saved page fixture">
+    <meta name="savepage-date" content="Mon Jan 01 2024 00:00:00">
+    <meta name="savepage-version" content="2.2">
+</head>
+<body>
+    <p>saved <img data-savepage-src="/img/old.png" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" alt="old data uri"></p>
+    <div class="v"></div>
+    <p>not yet saved <img src="/img/new.png" alt="new"></p>
+</body>
+</html>

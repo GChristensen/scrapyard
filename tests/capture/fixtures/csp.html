@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!--
+  csp.html: served by serve.py with the response header "Content-Security-Policy: script-src 'none'" and a meta CSP.
+  A correct capture: the capture succeeds (the engine's import() is governed by the extension, not the page);
+  the meta gets content="" with data-scrapyard-content holding the original; the lock overlay image shows during
+  the capture (img-src is not restricted).
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'none'; img-src *">
+    <title>csp fixture</title>
+</head>
+<body>
+    <p>CSP page <img src="/img/csp.png" alt="csp"></p>
+    <script>document.body.style.background = "red";</script>
+</body>
+</html>

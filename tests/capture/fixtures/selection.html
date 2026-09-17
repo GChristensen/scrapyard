@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!--
+  selection.html: select the second paragraph (with its image) and archive.
+  A correct capture: the <head> (with the style) is intact; the body contains only the selected content with
+  the image inlined; the first and third paragraphs are absent.
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>selection fixture</title>
+    <style>p { border: 1px solid gray; padding: 4px; }</style>
+</head>
+<body>
+    <p>first paragraph, not selected</p>
+    <p>second paragraph <img src="/img/selected.png" alt="selected"> select me</p>
+    <p>third paragraph, not selected</p>
+</body>
+</html>

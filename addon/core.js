@@ -18,6 +18,7 @@ import "./core_ishell.js";
 import "./core_automation.js";
 import "./core_sync.js";
 import "./core_transition.js";
+import "./capture/background/service.js"; // registers the capture port server and the frame relay
 import {filesShelf} from "./plugin_files_shelf.js";
 
 if (_BACKGROUND_PAGE)

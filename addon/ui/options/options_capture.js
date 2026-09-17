@@ -1,10 +1,9 @@
-import {send} from "../../proxy.js";
 import {settings} from "../../settings.js";
 import {setSaveCheckHandler} from "../options.js";
+import {CAPTURE_SETTINGS_KEY, loadCaptureSettings as loadStoredCaptureSettings} from "../../capture_options.js";
 
 async function loadCaptureSettings() {
-    let object = await browser.storage.local.get("savepage-settings");
-    object = object["savepage-settings"];
+    const object = await loadStoredCaptureSettings();
 
     function loadCheck(id, v) {
         $(`#${id}`).prop("checked", v || object[id]);
@@ -92,14 +91,12 @@ async function storeCaptureSettings(e) {
         "options-lazyloadtype": lazyLoadType
     };
 
-    let settings = await browser.storage.local.get("savepage-settings");
-    settings = settings["savepage-settings"] || {};
+    let settings = await browser.storage.local.get(CAPTURE_SETTINGS_KEY);
+    settings = settings[CAPTURE_SETTINGS_KEY] || {};
 
     Object.assign(settings, newSettings);
 
-    await browser.storage.local.set({"savepage-settings": settings});
-
-    send.savepageSettingsChanged();
+    await browser.storage.local.set({[CAPTURE_SETTINGS_KEY]: settings});
 }
 
 async function loadSaveSettings() {

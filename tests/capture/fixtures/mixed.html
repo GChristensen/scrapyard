@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<!--
+  mixed.html: an http: image. Open this page over https (a TLS-terminating proxy in front of serve.py, or copy it
+  to an https host) so the image is mixed content.
+  A correct capture: the http image fails with the reason "mixed" (archive.json / console failure list) and gets an
+  empty src; with "Allow passive mixed content" on it is loaded (an <img> without srcset/crossorigin is passive).
+  Served over plain http the image simply loads.
+-->
+<html>
+<head><meta charset="utf-8"><title>mixed content fixture</title></head>
+<body>
+    <p>mixed <img src="http://localhost:8081/img/mixed.png" alt="http image"></p>
+</body>
+</html>

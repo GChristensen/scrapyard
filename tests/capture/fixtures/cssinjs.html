@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  cssinjs.html: a <style> whose sheet is mutated with insertRule (styled-components style), its textContent stays empty.
+  A correct capture contains: the captured <style> holding ".injected { background: ... }" (taken from the live
+  sheet through data-scrapyard-sheetrules, the attribute itself is not in the output); the box is green when opened.
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>css-in-js fixture</title>
+    <style data-styled="active"></style>
+</head>
+<body>
+    <div class="injected">injected rule</div>
+    <script>
+        const sheet = document.querySelector("style[data-styled]").sheet;
+        sheet.insertRule(".injected { background: lightgreen; padding: 8px; background-image: url(/img/cssinjs.png); }", 0);
+    </script>
+</body>
+</html>

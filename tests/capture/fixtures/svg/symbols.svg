@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+    <symbol id="star" viewBox="0 0 24 24">
+        <polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill="gold" stroke="black"/>
+    </symbol>
+</svg>
