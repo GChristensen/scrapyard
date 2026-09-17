@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" version="1.1" id="gallery2">
+  <!-- Dark theme variant of gallery.svg. -->
+  <path
+     d="M1.5 1h13A1.5 1.5 0 0 1 16 2.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 13.5v-11A1.5 1.5 0 0 1 1.5 1zm0 1a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5z"
+     style="fill:#8c8c90" />
+  <path
+     d="M2 3h12v10H2z"
+     style="fill:#4f4f54;fill-opacity:1" />
+  <path
+     d="M2.5 3h11a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm.5 1v8h10V4z"
+     style="fill:#8c8c90" />
+  <circle
+     cx="5.25"
+     cy="6.25"
+     r="1.25"
+     style="fill:#8c8c90" />
+  <path
+     d="M3 12l3-3.5L8 11l2.5-3L13 12z"
+     style="fill:#8c8c90" />
+</svg>

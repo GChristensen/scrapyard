@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>Gallery</title>
+
+    <link rel="icon" href="../icons/scrapyard.svg" type="image/png"/>
+    <link rel="stylesheet" type="text/css" href="gallery.css" media="all"/>
+
+    <script type="text/javascript" src="../lib/jquery.js"></script>
+    <script type="text/javascript" src="../global.js"></script>
+    <script type="module" src="gallery.js"></script>
+</head>
+<body>
+
+<div id="gallery-header">
+    <a id="gallery-back" href="#" style="display: none;">&#8592; Gallery</a>
+    <span id="gallery-title"></span>
+    <a id="gallery-info-link" href="#" style="display: none;">Image Info</a>
+</div>
+
+<div id="gallery-message" style="display: none;"></div>
+
+<!-- grid view -->
+<div id="gallery-grid" style="display: none;"></div>
+
+<!-- single image view -->
+<div id="gallery-item" style="display: none;">
+    <div id="gallery-item-image"></div>
+</div>
+
+<!-- image info popup: a dimmed backdrop with a centered, width-capped box; opened from the "Image Info" header
+     link, populated by renderItem() in gallery.js -->
+<div id="gallery-info-overlay" style="display: none;">
+    <div id="gallery-info-box">
+        <div id="gallery-info-close-row">
+            <a id="gallery-info-close" href="#" title="Close">&#x2715;</a>
+        </div>
+        <div id="gallery-info-prompt-section" style="display: none;">
+            <h2>Prompt</h2>
+            <div id="gallery-info-prompt"></div>
+        </div>
+        <div id="gallery-info-negative-prompt-section" style="display: none;">
+            <h2>Negative Prompt</h2>
+            <div id="gallery-info-negative-prompt"></div>
+        </div>
+        <div id="gallery-info-resources-section" style="display: none;">
+            <h2>Resources</h2>
+            <div id="gallery-info-resources"></div>
+        </div>
+    </div>
+</div>
+
+<!-- the templates are kept on a single line so that they do not introduce stray whitespace text nodes -->
+<template id="gallery-thumbnail-template"><a class="gallery-thumbnail" href="#"><img alt=""/></a></template>
+
+<template id="gallery-resource-template"><div class="gallery-resource"><a target="_blank" rel="noreferrer noopener"></a></div></template>
+
+</body>
+</html>

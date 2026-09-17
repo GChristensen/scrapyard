@@ -832,7 +832,10 @@ async function displayRandomBookmark() {
 
 async function addFilesDirectory() {
     return showDlg("orgdir", {
-        caption: "Add Org-mode Directory"
+        caption: "Add Files Directory"
+    }, $dlg => {
+        if (settings.storage_mode_server())
+            $dlg.find('input[name="path"]').attr("placeholder", "Path in the server data directory");
     });
 }
 

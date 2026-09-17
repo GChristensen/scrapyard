@@ -84,20 +84,34 @@ export async function isHTMLTab(tab) {
     }
 }
 
+// args.imageUrl requests a picture notification: a real large preview on Chrome (type "image"), or, on Firefox
+// (which currently implements only type "basic" - see notifications.TemplateType on MDN), the same picture shown
+// small as the icon instead, unless args.iconUrl already asked for something else there.
 export function showNotification(args) {
     if (typeof arguments[0] === "string")
         args = {message: arguments[0]};
 
-    const iconUrl = _BACKGROUND_PAGE
+    const defaultIconUrl = _BACKGROUND_PAGE
         ? "/icons/scrapyard.svg"
         : "/icons/logo128.png";
 
-    return browser.notifications.create(`sbi-notification-${args.type}`, {
+    const options = {
         type: args.type ? args.type : "basic",
         title: args.title ? args.title : "Scrapyard",
         message: args.message,
-        iconUrl
-    });
+        iconUrl: args.iconUrl || defaultIconUrl
+    };
+
+    if (args.imageUrl) {
+        if (settings.platform.chrome) {
+            options.type = "image";
+            options.imageUrl = args.imageUrl;
+        }
+        else if (!args.iconUrl)
+            options.iconUrl = args.imageUrl;
+    }
+
+    return browser.notifications.create(`sbi-notification-${args.type}`, options);
 }
 
 export function makeReferenceURL(uuid) {

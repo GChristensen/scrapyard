@@ -1,4 +1,4 @@
-import {send} from "../proxy.js";
+import {send, sendLocal} from "../proxy.js";
 import {cloudShelf} from "../plugin_cloud_shelf.js"
 import {showDlg, confirm, showUploadDlg} from "./dialog.js"
 import {settings} from "../settings.js";
@@ -33,6 +33,9 @@ import {Bookmark} from "../bookmarks_bookmark.js";
 import {Comments, Icon, Node} from "../storage_entities.js";
 import UUID from "../uuid.js";
 import {ExternalStorage} from "../storage_external.js";
+import {Query} from "../storage_query.js";
+import {getGalleryShelf, isGalleryFolder, isGalleryShelf, readGallerySelectors, writeGallerySelectors}
+    from "../gallery.js";
 
 // return the original Scrapyard node object stored in a jsTree node
 const o = n => n.data;
@@ -49,6 +52,41 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
 
     let selectedNodes = tree.get_selected(true) || [];
     const multiselect = selectedNodes.length > 1;
+
+    // a shelf may be converted into a gallery and back only if it is an ordinary user shelf
+    const convertibleToGallery = ctxNode.type === NODE_TYPE_SHELF && !ctxNode.external && !isBuiltInShelf(ctxNode.name);
+
+    // Switches an ordinary shelf into a gallery shelf and back, propagating the flag to the folders directly under
+    // the shelf (deeper folders are ordinary folders).
+    const setGalleryShelf = async gallery => {
+        bookmarkTree.startProcessingIndication();
+
+        try {
+            const shelf = await Node.get(ctxNode.id);
+            shelf.gallery = gallery || undefined;
+            await Node.update(shelf);
+
+            const childIds = [];
+            await Query.selectDirectChildrenIdsOf(ctxNode.id, childIds);
+
+            for (const childId of childIds) {
+                const child = await Node.get(childId);
+
+                if (child?.type !== NODE_TYPE_FOLDER)
+                    continue;
+
+                child.gallery = gallery || undefined;
+                await Node.update(child);
+            }
+        }
+        finally {
+            bookmarkTree.stopProcessingIndication();
+        }
+
+        // the icon, the CSS class and the clickable flag of a jsTree node are all computed when the tree is built,
+        // so the shelf is reloaded instead of being patched in place
+        return sendLocal.shelvesChanged();
+    };
 
     const setTODOState = async state => {
         let selectedIds = selectedNodes.map(n => o(n).type === NODE_TYPE_FOLDER || o(n).type === NODE_TYPE_SHELF
@@ -884,6 +922,24 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                 }
             }
         },
+        galleryItem: {
+            separator_before: true,
+            label: "Gallery Settings...",
+            action: async () => {
+                const node = await Node.get(ctxNode.id);
+                const shelf = await getGalleryShelf(node);
+
+                if (!shelf)
+                    return;
+
+                const selectors = await showDlg("gallery", {...readGallerySelectors(shelf), width: 300});
+
+                if (selectors) {
+                    writeGallerySelectors(shelf, selectors);
+                    await Node.update(shelf);
+                }
+            }
+        },
         debugItem: {
             separator_before: true,
             label: "Debug",
@@ -904,7 +960,10 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                         console.log(stub);
                     }
                 },
-
+                toggleGalleryItem: {
+                    label: ctxNode.gallery? "Convert to ordinary shelf": "Convert to gallery shelf",
+                    action: async () => setGalleryShelf(!ctxNode.gallery)
+                },
             }
         },
     };
@@ -1043,8 +1102,14 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
         items["openOriginalItem"] && (items["openOriginalItem"]._disabled = true);
     }
 
+    // the gallery settings live on the shelf, but are reachable from its gallery folders as well
+    if (!isGalleryShelf(ctxNode) && !isGalleryFolder(ctxNode))
+        delete items.galleryItem;
+
     if (!settings.debug_mode())
         delete items.debugItem;
+    else if (!convertibleToGallery && items.debugItem)
+        delete items.debugItem.submenu.toggleGalleryItem;
 
     if (!browser.contextualIdentities)
         delete items.openInContainerItem;

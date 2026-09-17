@@ -48,6 +48,8 @@
     --themed-containers-icon: url("../icons/containers2.svg");
     --themed-image-icon: url("../icons/format-image2.svg");
     --themed-pdf-icon: url("../icons/format-pdf2.svg");
+    --themed-gallery-icon: url("../icons/gallery2.svg") !important;
+    --themed-gallery-folder-icon: url("../icons/gallery-folder2.svg") !important;
 }
 
 html, body, .toolbar, .footer, .black-button, .simple-menu, .dlg, .dlg *, #settings-menu, .settings-content, .settings-content * {
@@ -201,6 +203,15 @@ select,
 
 .jstree-default .rdf-archive > .jstree-anchor .jstree-themeicon {
     background-image: url("../icons/tape2.svg") !important;
+}
+
+.jstree-default .gallery-shelf > .jstree-anchor .jstree-themeicon {
+    background-image: url("../icons/gallery2.svg") !important;
+}
+
+/* must follow .scrapyard-group, which gallery folders also carry */
+.jstree-default .gallery-folder > .jstree-anchor .jstree-themeicon {
+    background-image: url("../icons/gallery-folder2.svg") !important;
 }
 
 input[type=text], .selectric, .selectric .button, .selectric-items, .selectric-scroll li, .simple-menu div  {

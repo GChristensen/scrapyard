@@ -285,7 +285,7 @@ class BookmarkTree {
         if (node?.has_comments) {
             const comment = await Comments.get(node);
             if (comment)
-                element.title = BookmarkTree._formatNodeTooltip(node) + "\x0A💬 " + comment;
+                element.title = BookmarkTree._formatNodeTooltip(node) + "\x0A\x0A💬 " + comment;
         }
     }
 
@@ -393,6 +393,12 @@ class BookmarkTree {
             jnode.li_attr = {"class": "rdf-archive"};
             jnode.icon = "/icons/tape.svg";
         }
+        else if (node.type === NODE_TYPE_SHELF && node.gallery) {
+            if (node.name && isBuiltInShelf(node.name))
+                jnode.text = formatShelfName(node.name);
+            jnode.icon = "var(--themed-gallery-icon)";
+            jnode.li_attr = {"class": "gallery-shelf", "data-clickable": "true"};
+        }
         else if (node.type === NODE_TYPE_SHELF) {
             if (node.name && isBuiltInShelf(node.name))
                 jnode.text = formatShelfName(node.name);
@@ -407,6 +413,11 @@ class BookmarkTree {
                 jnode.li_attr["data-clickable"] = "true";
                 jnode.li_attr["class"] += " scrapyard-site"
                 jnode.icon = "/icons/web.svg";
+            }
+            else if (node.gallery) {
+                jnode.li_attr["data-clickable"] = "true";
+                jnode.li_attr["class"] += " gallery-folder"
+                jnode.icon = "var(--themed-gallery-folder-icon)";
             }
 
             BookmarkTree.styleFirefoxFolders(node, jnode);

@@ -43,9 +43,20 @@ class FolderManager extends EntityManager {
         }, parent);
     }
 
+    // Only the folders directly under a gallery shelf are galleries; deeper folders are ordinary folders.
+    // Applied wherever a folder is created, including the paths auto-created for the automation and iShell APIs.
+    _inheritGallery(node, parent) {
+        if (node.type === NODE_TYPE_FOLDER && parent?.type === NODE_TYPE_SHELF && parent.gallery)
+            node.gallery = true;
+
+        return node;
+    }
+
     async _addNode(node, parent) {
         node.name = await this.ensureUniqueName(parent?.id, node.name);
         node.external = parent?.external;
+        this._inheritGallery(node, parent);
+
         node = await this.#Node.add(node);
 
         try {
@@ -119,12 +130,12 @@ class FolderManager extends EntityManager {
                 parent = folder;
             }
             else {
-                let node = await this.#Node.add({
+                let node = await this.#Node.add(this._inheritGallery({
                     parent_id: parent.id,
                     external: parent.external,
                     name: name,
                     type: NODE_TYPE_FOLDER
-                });
+                }, parent));
 
                 try {
                     await this.plugins.createBookmarkFolder(node, parent);

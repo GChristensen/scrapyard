@@ -28,6 +28,9 @@ async function openReference(tab) {
                     case "notes":
                         send.browseNotes({uuid: node.uuid, tab: tab});
                         break;
+                    case "gallery":
+                        await updateTabURL(tab, browser.runtime.getURL("ui/gallery.html#" + node.uuid), false);
+                        break;
                 }
         }
         else {

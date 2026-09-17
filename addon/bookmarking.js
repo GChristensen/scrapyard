@@ -28,6 +28,7 @@ import {helperApp} from "./helper_app.js";
 import {Archive} from "./storage_entities.js";
 import {buildCaptureOptions} from "./capture_options.js";
 import * as captureEngine from "./capture/background/service.js";
+import {isGalleryCapture, captureGalleryTab} from "./bookmarking_gallery.js";
 
 const SCRAPYARD_FOLDER_NAME = "Scrapyard";
 
@@ -72,6 +73,8 @@ export async function getActiveTabMetadata() {
 export async function captureTab(tab, bookmark) {
     if (isSpecialPage(tab.url))
         notifySpecialPage();
+    else if (await isGalleryCapture(bookmark))
+        await captureGalleryTab(tab, bookmark);
     else {
         if (await isHTMLTab(tab))
             await captureHTMLTab(tab, bookmark)

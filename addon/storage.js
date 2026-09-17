@@ -134,7 +134,8 @@ export const NODE_PROPERTIES =
      "contains",
      "encoding",
      "_unlisted",
-     "site"
+     "site",
+     "gallery"
     ];
 
 export function isContainerNode(node) {

@@ -4,6 +4,7 @@ import {
     NODE_TYPE_BOOKMARK, NODE_TYPE_FILE,
     NODE_TYPE_FOLDER,
     NODE_TYPE_NOTES,
+    NODE_TYPE_SHELF,
     RDF_EXTERNAL_TYPE
 } from "./storage.js";
 import {Archive, Node} from "./storage_entities.js";
@@ -265,6 +266,8 @@ export async function onRequestRdfPathMessage(msg) {
 async function browseFolder(node, options) {
     if (node.__filtering)
         send.selectNode({node, open: true, forceScroll: true});
+    else if (node.gallery)
+        return openURL("ui/gallery.html#" + node.uuid, options);
     else if (node.site) {
         const archives = await listSiteArchives(node);
         const page = archives[0];
@@ -308,6 +311,12 @@ export async function browseNodeBackground(node, options) {
 
         case NODE_TYPE_FOLDER:
             return browseFolder(node, options);
+
+        // only gallery shelves are clickable in the tree
+        case NODE_TYPE_SHELF:
+            if (node.gallery)
+                return openURL("ui/gallery.html#" + node.uuid, options);
+            return;
 
         case NODE_TYPE_FILE:
             return browseFile(node);

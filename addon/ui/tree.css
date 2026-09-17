@@ -9,6 +9,8 @@
     --themed-cloud-sync-icon: url("../icons/cloud_sync.svg");
     --themed-image-icon: url("../icons/format-image.svg");
     --themed-pdf-icon: url("../icons/format-pdf.svg");
+    --themed-gallery-icon: url("../icons/gallery.svg");
+    --themed-gallery-folder-icon: url("../icons/gallery-folder.svg");
 }
 
 .jstree-default .jstree-node {

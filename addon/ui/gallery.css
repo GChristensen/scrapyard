@@ -1,0 +1,250 @@
+:root {
+    --gallery-background: #ffffff;
+    --gallery-color: #0c0c0d;
+    --gallery-muted: #737373;
+    --gallery-border: #d7d7db;
+    --gallery-tile: #f0f0f4;
+    --gallery-link: #0060df;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --gallery-background: #2a2a2e;
+        --gallery-color: #f9f9fa;
+        --gallery-muted: #b1b1b3;
+        --gallery-border: #4a4a4f;
+        --gallery-tile: #38383d;
+        --gallery-link: #75baff;
+    }
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--gallery-background);
+    color: var(--gallery-color);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+}
+
+/* the page itself is a fixed-height column - the header stays put and each view below it manages its own
+   scrolling (or, for the single-image view, its own containment) within whatever space remains */
+body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+a {
+    color: var(--gallery-link);
+}
+
+#gallery-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background-color: var(--gallery-background);
+    border-bottom: 1px solid var(--gallery-border);
+}
+
+#gallery-title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--gallery-muted);
+}
+
+#gallery-back {
+    flex: none;
+    text-decoration: none;
+}
+
+/* pinned to the right of the header regardless of how much room the title takes */
+#gallery-info-link {
+    flex: none;
+    margin-left: auto;
+    text-decoration: none;
+}
+
+#gallery-message {
+    flex: 1 1 auto;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--gallery-muted);
+}
+
+/* grid view */
+
+#gallery-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    /* the tiles grow up to 300px and wrap; they never stretch past it, and never past a narrow window either */
+    grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), min(300px, 100%)));
+    justify-content: start;
+    /* without this, a grid shorter than its (flex-stretched, overflow-y:auto) container gets its leftover
+       vertical space distributed into the gaps between rows instead of collecting below the last row - the
+       fewer the rows, the more spare height there is to dump into each gap, so the row-gap below inflates far
+       past its declared value exactly when the gallery is sparse */
+    align-content: start;
+    column-gap: 8px;
+    row-gap: 24px;
+    padding: 20px;
+}
+
+.gallery-thumbnail {
+    display: block;
+    aspect-ratio: 1 / 1;
+    max-width: 300px;
+    max-height: 300px;
+    overflow: hidden;
+    border: 1px solid var(--gallery-border);
+    border-radius: 4px;
+    background-color: var(--gallery-tile);
+}
+
+.gallery-thumbnail:hover {
+    border-color: var(--gallery-link);
+}
+
+/* the whole image is fitted inside the tile rather than cropped to fill it */
+.gallery-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* single image view */
+
+#gallery-item {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 20px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* the box the image is fitted into: it takes all the height #gallery-item has left after its other (currently
+   hidden) sections, and centers its content */
+#gallery-item-image {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* the anchor is sized to exactly fill #gallery-item-image, which is what gives the percentage max-width/max-height
+   below something definite to resolve against; without it the anchor would just shrink-wrap the image and the
+   percentages would be meaningless */
+#gallery-item-image a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* the actual containment: an unconstrained img/a pair, scaled down to fit the box, aspect ratio preserved, never
+   upscaled past its natural size */
+#gallery-item-image img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 4px;
+}
+
+/* image info popup */
+
+#gallery-info-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+#gallery-info-box {
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+    max-height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 20px 28px 28px;
+    background-color: var(--gallery-background);
+    color: var(--gallery-color);
+    border-radius: 6px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+#gallery-info-close-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#gallery-info-close {
+    text-decoration: none;
+    color: var(--gallery-muted);
+    font-size: 18px;
+    line-height: 1;
+}
+
+#gallery-info-box h2 {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--gallery-muted);
+    margin: 32px 0 12px;
+}
+
+/* Prompt is always the first section when shown, right under the close button - selected directly by its section
+   id rather than :first-of-type, which (once each heading is the lone h2 in its own section div) matches every
+   heading, not just the first. */
+#gallery-info-prompt-section h2 {
+    margin-top: 0;
+}
+
+#gallery-info-prompt,
+#gallery-info-negative-prompt {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+    padding: 12px 14px;
+    background-color: var(--gallery-tile);
+    border-radius: 4px;
+}
+
+#gallery-info-resources {
+    columns: 2;
+    column-gap: 32px;
+}
+
+.gallery-resource {
+    break-inside: avoid;
+    padding: 3px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 600px) {
+    #gallery-info-resources {
+        columns: 1;
+    }
+}
