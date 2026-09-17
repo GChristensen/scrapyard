@@ -359,10 +359,12 @@ async function loadSidebar() {
 let processingTimeout;
 function startProcessingIndication(noWait) {
     const startIndication = () => $("#shelf-menu-button").attr("src", "/icons/grid.svg");
-    if (noWait) {
+
+    // a pending timeout is cleared, otherwise it would be lost on overlapping calls and fire after the stop
+    clearTimeout(processingTimeout);
+
+    if (noWait)
         startIndication();
-        clearTimeout(processingTimeout);
-    }
     else
         processingTimeout = setTimeout(startIndication, 1000);
 }

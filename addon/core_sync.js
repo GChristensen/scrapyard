@@ -117,14 +117,21 @@ if (getContextType() === CONTEXT_BACKGROUND) {
 }
 
 receive.performSync = async message => {
+    // the flag is set synchronously, so concurrent requests (e.g., the startup synchronization and the one
+    // triggered by the backend connection) do not pass the check during the asynchronous preparations
+    if (syncing)
+        return;
+
     let synced;
 
+    syncing = true;
     send.startProcessingIndication();
 
     try {
         synced = await performSync(message?.verbose !== false);
     }
     finally {
+        syncing = false;
         send.stopProcessingIndication();
 
         if (synced)
@@ -139,71 +146,64 @@ async function performSync(verbose) {
 
     const syncDirectory = helperApp.dataPath();
 
-    if (syncing || !syncDirectory || !await helperApp.probe(verbose))
+    if (!syncDirectory || !await helperApp.probe(verbose))
         return;
 
-    try {
-        syncing = true;
-
-        // archives kept in the browser after failed uploads would be lost if the database is reset
-        if (!await uploadPendingArchives()) {
-            if (verbose)
-                showNotification("Synchronization is postponed until the archives saved in the browser are uploaded.");
-            return;
-        }
-
-        // failed writes have left the internal storage diverged from the backend storage,
-        // it is reset and populated from the backend storage
-        const divergence = await getStorageDivergence();
-
-        let storageMetadata = await getStorageMetadata(syncDirectory, verbose);
-
-        if (storageMetadata) {
-            const dbMetadata = divergence? null: await settings.get(SCRAPYARD_SYNC_METADATA);
-            const reset = isDatabaseResetRequired(storageMetadata, dbMetadata);
-
-            // the operations are computed before the database is reset, so it is not left empty
-            // if the backend becomes unavailable
-            const syncOperations = await computeSync(syncDirectory, reset);
-
-            if (syncOperations) {
-                if (reset)
-                    await resetDatabase();
-
-                const {changes, errors} = await syncWithStorage(syncOperations, syncDirectory);
-                result = changes;
-
-                try {
-                    await helperApp.fetch("/storage/sync_close_session");
-                }
-                catch (e) {
-                    console.error(e);
-                }
-
-                await settings.set(SCRAPYARD_SYNC_METADATA, storageMetadata);
-
-                if (divergence) {
-                    const storage = helperApp.isServerMode()? "server": "disk storage";
-
-                    if (errors) {
-                        showNotification(`The local data could not be completely restored from the ${storage}, `
-                            + "restoring will be retried.");
-                        scheduleStorageRecovery();
-                    }
-                    else {
-                        await clearStorageDivergence(divergence);
-                        showNotification(`Unsaved changes have been discarded, the local data is restored from the ${storage}.`);
-                    }
-
-                    result = true;
-                }
-            }
-            else if (verbose)
-                showNotification("Synchronization could not be performed because of an error.");
-        }
+    // archives kept in the browser after failed uploads would be lost if the database is reset
+    if (!await uploadPendingArchives()) {
+        if (verbose)
+            showNotification("Synchronization is postponed until the archives saved in the browser are uploaded.");
+        return;
     }
-    finally {
-        syncing = false;
+
+    // failed writes have left the internal storage diverged from the backend storage,
+    // it is reset and populated from the backend storage
+    const divergence = await getStorageDivergence();
+
+    let storageMetadata = await getStorageMetadata(syncDirectory, verbose);
+
+    if (storageMetadata) {
+        const dbMetadata = divergence? null: await settings.get(SCRAPYARD_SYNC_METADATA);
+        const reset = isDatabaseResetRequired(storageMetadata, dbMetadata);
+
+        // the operations are computed before the database is reset, so it is not left empty
+        // if the backend becomes unavailable
+        const syncOperations = await computeSync(syncDirectory, reset);
+
+        if (syncOperations) {
+            if (reset)
+                await resetDatabase();
+
+            const {changes, errors} = await syncWithStorage(syncOperations, syncDirectory);
+            result = changes;
+
+            try {
+                await helperApp.fetch("/storage/sync_close_session");
+            }
+            catch (e) {
+                console.error(e);
+            }
+
+            await settings.set(SCRAPYARD_SYNC_METADATA, storageMetadata);
+
+            if (divergence) {
+                const storage = helperApp.isServerMode()? "server": "disk storage";
+
+                if (errors) {
+                    showNotification(`The local data could not be completely restored from the ${storage}, `
+                        + "restoring will be retried.");
+                    scheduleStorageRecovery();
+                }
+                else {
+                    await clearStorageDivergence(divergence);
+                    showNotification(`Unsaved changes have been discarded, the local data is restored from the ${storage}.`);
+                }
+
+                result = true;
+            }
+        }
+        else if (verbose)
+            showNotification("Synchronization could not be performed because of an error.");
     }
 
     return result;
