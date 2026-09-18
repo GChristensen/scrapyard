@@ -46,21 +46,26 @@ chrome-mv3:
     cd addon && python ../scripts/mkmanifest.py manifest.json.mv3.chrome manifest.json `cat version.txt`
 
 backend-clean:
-    cd backend && rm -r -f dist
+    cd backend && rm -r -f python-dist
 
-# to create .local/dist
+# to create .local/python-dist
 # 1. download embeddable Python zip
 # 2. add pip with get-pip.py
-# 3. install the scrapyard package specifying the ./backend as the package directory
-# 4. delete pip-related packages at Lib/site-packages
+# 3. uncomment "import site" in the pythonXYZ._pth file so pip-installed packages
+#    (and the scrapyard package installed by `backend-win` below) are importable
+# keep pip in place - `backend-win` uses it on every build to (re)install scrapyard
+# 4. Update pip: python.exe -m pip install --upgrade pip
+# 5. Get "incude" and "libs" dirs from a regular python dist of the same version:
+#       winget install Microsoft.NuGet
+#       nuget install python -Version 3.XX.XX -OutputDirectory .
+# 6. Install setuptools.
 
 backend-win:
     just backend-clean
     cd backend && rm -f *.exe
     echo "DEBUG = False" > ./backend/scrapyard/server_debug.py
-    cp -r ./.local/dist ./backend/
-    rm -r -f ./backend/dist/Lib/site-packages/scrapyard
-    cp -r ./backend/scrapyard ./backend/dist/Lib/site-packages/
+    cp -r ./.local/python-dist ./backend/
+    cd backend && ./python-dist/python.exe -m pip install --force-reinstall .
     cd backend && makensis setup.nsi
     just backend-clean
     echo "DEBUG = True" > ./backend/scrapyard/server_debug.py

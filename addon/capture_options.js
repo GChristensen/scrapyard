@@ -8,7 +8,7 @@ export const CAPTURE_SETTINGS_KEY = "savepage-settings";
 export const CAPTURE_SETTINGS_DEFAULTS = Object.freeze({
     "options-retaincrossframes": true,
     "options-removeunsavedurls": true,
-    "options-loadshadow": false,
+    "options-loadshadow": true,
     "options-savehtmlimagesall": true,
     "options-savehtmlaudiovideo": true,
     "options-savehtmlobjectembed": true,

@@ -43,7 +43,7 @@ export function defaultOptions() {
         executeScripts: true,
         crossOriginFrames: true,
         maxFrameDepth: 5,
-        shadowDom: false,
+        shadowDom: true,
         hiddenElements: "remove",
         removeUnsavedUrls: true,
         prettyPrint: false,

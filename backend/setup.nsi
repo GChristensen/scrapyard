@@ -2,7 +2,7 @@ Unicode True
 
 !define APPNAME "Scrapyard Backend"
 !define DIRNAME "Scrapyard"
-!define VERSION "2.1.2"
+!define VERSION "2.2"
 
 !define APPNAMEANDVERSION "${APPNAME} ${VERSION}"
 
@@ -177,7 +177,7 @@ Section "Scrapyard Backend" Section1
 	; Set Section Files and Shortcuts
 	SetOutPath "$INSTDIR\"
 	File "assets\scrapyard.ico"
-	File /r "dist\"
+	File /r "python-dist\"
     File /r "scrapyard_backend.cmd"
 
 	Push '$INSTDIR\scrapyard_backend.cmd'

@@ -10,7 +10,7 @@ addon/.web-extension-id
 addon/_metadata
 __pycache__
 backend/build/
-backend/dist/
+backend/python-dist/
 backend/*.exe
 backend/*.zip
 backend/*.tgz
