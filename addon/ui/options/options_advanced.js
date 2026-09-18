@@ -73,7 +73,7 @@ function configureMaintenancePanel() {
         e.preventDefault();
 
         if (await confirm("Warning",
-            "This will reset the Scrapyard browser internal storage. Continue?"))
+            "This will reset the Scrapyard browser internal storage and fill it from index.jsbk. Continue?"))
             await send.resetScrapyard();
     });
 
@@ -86,8 +86,8 @@ function configureMaintenancePanel() {
         const orphanedItems = await send.getOrphanedItems();
 
         if (orphanedItems?.length) {
-            const message = `${orphanedItems.length} orphaned items found. Remove?`
-            if (await showDlg("confirm", {title: "Orphaned Items", message})) {
+            const message = `${orphanedItems.length} orphaned objects found that are missing from index.jsbk. Remove?<br>Note that this may be undoable deletes. Restart the browser before proceeding.`
+            if (await showDlg("confirm", {title: "Orphaned Objects", message})) {
                 await send.startProcessingIndication();
 
                 try {
@@ -99,7 +99,7 @@ function configureMaintenancePanel() {
             }
         }
         else
-            return showDlg("alert", {title: "Orphaned Items", message: "No orphaned items found."});
+            return showDlg("alert", {title: "Orphaned Objects", message: "No orphaned objects found."});
     });
 
     $("#rebuild-item-index-link").on("click", async e => {
@@ -108,8 +108,8 @@ function configureMaintenancePanel() {
         if (settings.storage_mode_internal())
             return;
 
-        const message = `This will restore orphaned items. Continue?`
-        if (await showDlg("confirm", {title: "Rebuild Item Index", message})) {
+        const message = `This will restore orphaned objects. Continue?`
+        if (await showDlg("confirm", {title: "Rebuild Object Index", message})) {
             await send.startProcessingIndication();
 
             try {
@@ -121,6 +121,23 @@ function configureMaintenancePanel() {
             }
         }
 
+    });
+
+    $("#rebuild-search-index-link").on("click", async e => {
+        e.preventDefault();
+
+        const message = "This will rebuild the full-text search indexes of archived pages, "
+            + "notes, and comments for all items. Continue?";
+        if (await showDlg("confirm", {title: "Rebuild Search Indexes", message})) {
+            await send.startProcessingIndication();
+
+            try {
+                await send.rebuildSearchIndex();
+            }
+            finally {
+                await send.stopProcessingIndication();
+            }
+        }
     });
 
     if (settings.transition_to_disk())

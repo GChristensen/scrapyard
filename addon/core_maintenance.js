@@ -4,11 +4,12 @@ import {
     NODE_TYPE_ARCHIVE,
     NODE_TYPE_BOOKMARK,
     NODE_TYPE_NOTES,
-    DEFAULT_SHELF_UUID
+    DEFAULT_SHELF_UUID,
+    FILES_EXTERNAL_TYPE
 } from "./storage.js";
 import {cloudShelf} from "./plugin_cloud_shelf.js";
 import {filesShelf} from "./plugin_files_shelf.js";
-import {Node} from "./storage_entities.js";
+import {Archive, Comments, Node, Notes} from "./storage_entities.js";
 import {Database} from "./storage_database.js";
 import {settings} from "./settings.js";
 import {helperApp} from "./helper_app.js";
@@ -17,6 +18,8 @@ import {FORMAT_DEFAULT_SHELF_UUID, UnmarshallerJSONScrapbook} from "./marshaller
 import {isDeepEqual} from "./utils.js";
 import {browserShelf} from "./plugin_browser_shelf.js";
 import {clearStorageDivergence} from "./storage_divergence.js";
+import {indexHTML, indexString} from "./utils_html.js";
+import {notes2html} from "./notes_render.js";
 
 receive.resetCloud = async message => {
     if (!cloudShelf.isAuthenticated())
@@ -105,6 +108,62 @@ receive.rebuildItemIndex = async message => {
     }
 };
 
+receive.rebuildSearchIndex = async message => {
+    const helper = await helperApp.probe();
+
+    const nodes = [];
+    await Node.iterate(node => nodes.push(node));
+
+    for (const node of nodes) {
+        try {
+            if (node.type === NODE_TYPE_ARCHIVE) {
+                const archive = await Archive.get(node);
+                if (archive && !archive.byte_length) {
+                    const content = await Archive.reify(archive);
+                    if (typeof content === "string")
+                        await Archive.storeIndex(node, indexHTML(content));
+                }
+            }
+
+            if (node.has_notes) {
+                if (node.external === FILES_EXTERNAL_TYPE) {
+                    if (helper) {
+                        const words = await helperApp.fetchJSON_postJSON("/files/create_index", {
+                            path: node.external_id
+                        });
+                        await Notes.storeIndex(node, words);
+                    }
+                }
+                else {
+                    const notes = await Notes.get(node);
+                    if (notes) {
+                        let words;
+                        if (notes.format === "delta" && notes.html)
+                            words = indexHTML(notes.html);
+                        else if (notes.format === "text")
+                            words = indexString(notes.content);
+                        else {
+                            const html = notes2html(notes);
+                            if (html)
+                                words = indexHTML(html);
+                        }
+                        await Notes.storeIndex(node, words || []);
+                    }
+                }
+            }
+
+            if (node.has_comments) {
+                const comments = await Comments.get(node);
+                if (comments)
+                    await Comments.storeIndex(node, indexString(comments));
+            }
+        }
+        catch (e) {
+            console.error(e);
+        }
+    }
+};
+
 receive.compareDatabaseStorage = async message => {
     const helper = await helperApp.probe(true);
 
@@ -133,8 +192,14 @@ receive.compareDatabaseStorage = async message => {
 
             console.log("Nodes only in IDB:");
             console.log(nodes);
+            console.table(nodes.map(n => ({uuid: n.uuid, name: n.name})));
+
             console.log("Nodes only in storage:")
             console.log(storedNodes);
+            console.table(Object.entries(storedNodes).map(([uuid, entry]) => ({
+                uuid,
+                name: entry.db_item?.title ?? entry.object_item?.title
+            })));
 
             return result;
         }
@@ -162,7 +227,8 @@ receive.compareDatabaseStorage = async message => {
                     delete node.tags;
 
                 if (!isDeepEqual(node, indexItem, true) || !isDeepEqual(node, objectItem, true)) {
-                    console.log("Objects do not match:\nIDB object:");
+                    console.log(`Objects do not match: [${node.uuid}] "${node.name}"`);
+                    console.log("IDB object:");
                     console.log(node);
                     console.log("Index object:");
                     console.log(indexItem);
@@ -173,7 +239,7 @@ receive.compareDatabaseStorage = async message => {
                 }
             }
             else {
-                console.log("No corresponding storage item for object:");
+                console.log(`No corresponding storage item for object: [${node.uuid}] "${node.name}"`);
                 console.log(node);
 
                 result = false;
