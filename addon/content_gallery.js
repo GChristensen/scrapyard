@@ -162,6 +162,17 @@
         return element? elementURL(element, true): undefined;
     }
 
+    // Some sites truncate a long prompt/negative prompt in the DOM and append a "Show more" toggle as trailing text
+    // (e.g. "... Show more") - that's UI chrome, not part of the actual prompt, so it's stripped off the end.
+    const SHOW_MORE_SUFFIX = /[\s.…]*show\s*more[\s.…]*$/i;
+
+    function stripShowMore(text) {
+        if (!text)
+            return text;
+
+        return text.replace(SHOW_MORE_SUFFIX, "").trim() || undefined;
+    }
+
     // Resolves a selector that is expected to yield a single block of text (the prompt). A CSS selector uses only
     // its first match, as before; an XPath selector that happens to match several nodes has them all joined, one
     // per line, rather than silently keeping only the first.
@@ -170,10 +181,10 @@
             return undefined;
 
         if (isXPathSelector(selector))
-            return xpathText(selector);
+            return stripShowMore(xpathText(selector));
 
         const element = queryFirst(selector);
-        return element? elementText(element): undefined;
+        return element? stripShowMore(elementText(element)): undefined;
     }
 
     // Resolves the resources selector. A CSS selector keeps matching every element and pairing each with a name and

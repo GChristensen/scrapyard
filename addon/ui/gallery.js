@@ -129,9 +129,9 @@ function resetViews() {
 
     closeInfoPopup();
     $("#gallery-info-link").hide();
-    $("#gallery-info-prompt-section").hide();
-    $("#gallery-info-negative-prompt-section").hide();
-    $("#gallery-info-resources-section").hide();
+    $("#gallery-info-prompt-section").hide().removeClass("gallery-info-first");
+    $("#gallery-info-negative-prompt-section").hide().removeClass("gallery-info-first");
+    $("#gallery-info-resources-section").hide().removeClass("gallery-info-first");
     $("#gallery-info-prompt").empty();
     $("#gallery-info-negative-prompt").empty();
     $("#gallery-info-resources").empty();
@@ -235,19 +235,24 @@ async function renderItem(node) {
         showMessage("No image is stored for this item.");
 
     // the prompt, negative prompt and resources are shown in the "Image Info" popup rather than on the page itself;
-    // the link that opens it is only shown when there is at least one of them to show
+    // the link that opens it is only shown when there is at least one of them to show. Whichever of them ends up
+    // first on screen is tagged "gallery-info-first" so its heading can have its top margin zeroed in CSS - which
+    // section that is depends on which fields are present, so it can't be pinned to a fixed id (see gallery.css).
     let hasInfo = false;
+    let infoSectionShown = false;
 
     if (metadata.prompt) {
         $("#gallery-info-prompt").text(metadata.prompt);
-        $("#gallery-info-prompt-section").show();
+        $("#gallery-info-prompt-section").show().toggleClass("gallery-info-first", !infoSectionShown);
         hasInfo = true;
+        infoSectionShown = true;
     }
 
     if (metadata.negative_prompt) {
         $("#gallery-info-negative-prompt").text(metadata.negative_prompt);
-        $("#gallery-info-negative-prompt-section").show();
+        $("#gallery-info-negative-prompt-section").show().toggleClass("gallery-info-first", !infoSectionShown);
         hasInfo = true;
+        infoSectionShown = true;
     }
 
     const resources = normalizeResources(metadata.resources);
@@ -271,8 +276,9 @@ async function renderItem(node) {
             container.append(row);
         }
 
-        $("#gallery-info-resources-section").show();
+        $("#gallery-info-resources-section").show().toggleClass("gallery-info-first", !infoSectionShown);
         hasInfo = true;
+        infoSectionShown = true;
     }
 
     if (hasInfo)

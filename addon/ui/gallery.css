@@ -213,11 +213,12 @@ a {
     margin: 32px 0 12px;
 }
 
-/* Prompt is always the first section when shown, right under the close button - selected directly by its section
-   id rather than :first-of-type, which (once each heading is the lone h2 in its own section div) matches every
-   heading, not just the first. */
-#gallery-info-prompt-section h2 {
-    margin-top: 0;
+/* Whichever of the three sections above ends up first on screen (Prompt, unless it's absent) needs a reduced top
+   margin under the close button rather than the full inter-section gap. Since each heading is the lone h2 in its
+   own section div, :first-of-type matches all of them, not just the true first one - so gallery.js tags the
+   actual first *visible* section with this class at render time instead. */
+.gallery-info-first h2 {
+    margin-top: 12px !important;
 }
 
 #gallery-info-prompt,

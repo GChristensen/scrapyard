@@ -341,6 +341,9 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                                 tree.rename_node(jnode, folder.name);
                                 Object.assign(o(jnode), folder);
                                 jnode.original = bookmarkTree.constructor.toJsTreeNode(folder);
+                                jnode.icon = jnode.original.icon;
+                                jnode.li_attr = jnode.original.li_attr;
+                                tree.redraw_node(jnode);
                                 await bookmarkTree.reorderNodes(ctxJNode);
                             }
                             finally {
@@ -392,6 +395,9 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                                 tree.rename_node(jnode, folder.name);
                                 Object.assign(o(jnode), folder);
                                 jnode.original = bookmarkTree.constructor.toJsTreeNode(folder);
+                                jnode.icon = jnode.original.icon;
+                                jnode.li_attr = jnode.original.li_attr;
+                                tree.redraw_node(jnode);
                                 await bookmarkTree.reorderNodes(jparent);
                             }
                             finally {
