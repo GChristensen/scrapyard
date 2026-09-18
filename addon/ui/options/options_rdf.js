@@ -121,6 +121,9 @@ function selectNode(e) {
 }
 
 export function load() {
+    if (settings.storage_mode_server())
+        $("#rdf-import-path").attr("placeholder", "For example: ~/scrapyard/scrapbook/scrapbook.rdf");
+
     const rdfImportTypeSelect = simpleSelectric("#rdf-import-type");
     selectricRefresh(rdfImportTypeSelect);
 

@@ -125,27 +125,6 @@ function configureMaintenancePanel() {
 
     if (settings.transition_to_disk())
         $("#backup-link-wrapper").hide();
-
-    $("#compare-database-storage-link").on("click", async e => {
-        e.preventDefault();
-
-        await send.startProcessingIndication();
-
-        try {
-            const result = await send.compareDatabaseStorage();
-
-            if (result)
-                await alert("DB Comparison", "Internal and external storages are identical.");
-            else
-                await alert("DB Comparison", "Internal and external storages are NOT identical.")
-        }
-        finally {
-            await send.stopProcessingIndication();
-        }
-    });
-
-    if (settings.debug_mode())
-        $("#compare-database-storage").show()
 }
 
 function configureImpExpPanel() {

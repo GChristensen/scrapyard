@@ -66,5 +66,5 @@ async function configureBackendSettingsPage() {
 
 export async function load() {
     await configureBackendSettingsPage();
-    await loadHelperAppLinks();
+    loadHelperAppLinks().catch(e => console.error(e));
 }

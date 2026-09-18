@@ -1,6 +1,8 @@
 import {setSaveCheckHandler} from "../options.js";
 import {settings} from "../../settings.js";
 import {helperApp} from "../../helper_app.js";
+import {send} from "../../proxy.js";
+import {alert} from "../dialog.js";
 
 export async function load() {
     $("a.settings-menu-item[href='#debug']").show();
@@ -24,5 +26,23 @@ export async function load() {
             console.error(e);
             $("#helper-app-log-link").prop("href", "#").attr("title", e.message);
         });
+
+    $("#compare-database-storage-link").on("click", async e => {
+        e.preventDefault();
+
+        await send.startProcessingIndication();
+
+        try {
+            const result = await send.compareDatabaseStorage();
+
+            if (result)
+                await alert("DB Comparison", "Internal and external storages are identical.");
+            else
+                await alert("DB Comparison", "Internal and external storages are NOT identical.")
+        }
+        finally {
+            await send.stopProcessingIndication();
+        }
+    });
 }
 
