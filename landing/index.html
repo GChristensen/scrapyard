@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scrapyard landing</title>
+<link rel="icon" type="image/svg+xml" href="img/logo.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Instrument+Sans:wght@400;500;600&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<link rel="stylesheet" href="styles.css">
+<script src="main.js" defer></script>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="site-header">
+  <a class="brand" href="#top" aria-label="Scrapyard home">
+    <img src="img/logo.svg" width="32" height="32" alt="">
+    <span class="brand__name">Scrapyard</span>
+  </a>
+  <nav class="site-nav">
+    <a href="#features">Features</a>
+    <a href="#interface">Interface</a>
+    <a href="#use-cases">Use cases</a>
+    <!--a class="btn" href="#install">Add to browser</a-->
+  </nav>
+</header>
+
+<main>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <h1 class="display hero__title">
+    <span class="display__line">Keep <span class="hero__highlight">the page,</span></span>
+    <span class="display__line display__line--em">not just the link.</span>
+  </h1>
+  <div class="hero__row">
+    <p class="hero__lede">Scrapyard is a bookmarking extension with a polished interface and almost no setup that keeps a faithful copy of the pages you save.</p>
+    <div class="hero__actions">
+      <a class="btn btn--lg" href="#install">Add to browser</a>
+      <!--a class="link-arrow" href="#use-cases">See it in use
+        <img src="img/icon-arrow-down.svg" width="16" height="16" alt="">
+      </a-->
+    </div>
+  </div>
+
+  <figure class="hero__figure">
+    <object class="diagram diagram--hero" type="image/svg+xml" data="img/hero-diagram.svg" role="img"
+            aria-label="Diagram. A plain bookmark keeps only an address, and months later that address leads to a 404. Scrapyard keeps a full copy of the page on your device, and months later it still opens, even offline."></object>
+  </figure>
+</section>
+
+<!-- WHAT IT IS -->
+<section class="section section--rule-top split">
+  <div class="split__aside intro__aside">
+    <div class="mono-label eyebrow"><span class="eyebrow__num">01</span><span>What it is</span></div>
+  </div>
+  <p class="split__main intro__statement">Links rot. <span class="intro__statement-rest">Pages get edited, paywalled, moved or deleted. Scrapyard stores the whole page, or just the part you need, right next to your bookmarks, so what you saved still opens when the original doesn't.</span></p>
+  <p class="split__main intro__note">Built as a modern alternative to the legacy ScrapBook add-on, with import for ScrapBook RDF archives.</p>
+</section>
+
+<!-- FEATURES -->
+<section class="section section--alt" id="features">
+  <div class="section-head">
+    <div class="mono-label eyebrow"><span class="eyebrow__num">02</span><span>Features</span></div>
+    <h2 class="section-title">Four things it gets right.</h2>
+  </div>
+
+  <div class="card-grid">
+    <article class="card">
+      <div class="card__top">
+        <div class="card__icon"><img src="img/icon-setup.svg" width="26" height="26" alt=""></div>
+        <span class="card__num">01</span>
+      </div>
+      <h3 class="title-md">Very easy setup</h3>
+      <p class="card__text">Install it and start saving. No intricate configuration, cumbersome backends and configs. Use automated filesystem backend app installer in Windows.</p>
+    </article>
+
+    <article class="card">
+      <div class="card__top">
+        <div class="card__icon"><img src="img/icon-sidebar.svg" width="26" height="26" alt=""></div>
+        <span class="card__num">02</span>
+      </div>
+      <h3 class="title-md">A polished, familiar interface</h3>
+      <p class="card__text">A sidebar tree to browse and a one-click popup to capture. It stays close to the original ScrapBook, so there is little to learn.</p>
+    </article>
+
+    <article class="card">
+      <div class="card__top">
+        <div class="card__icon"><img src="img/icon-capture.svg" width="26" height="26" alt=""></div>
+        <span class="card__num">03</span>
+      </div>
+      <h3 class="title-md">Faithful capture</h3>
+      <p class="card__text">Complete HTML pages, page fragments and PDF documents are saved the way you saw them, layout and images included.</p>
+    </article>
+
+    <article class="card">
+      <div class="card__top">
+        <div class="card__icon"><img src="img/icon-shelves.svg" width="26" height="26" alt=""></div>
+        <span class="card__num">04</span>
+      </div>
+      <h3 class="title-md">Multiple bookmark shelves</h3>
+      <p class="card__text">Separate bookmark trees you can group your archives into. Keep each subject on its own shelf, or filter the sidebar to see everything at once.</p>
+    </article>
+  </div>
+
+  <div class="subsection subsection--first split">
+    <h3 class="title-md split__aside">Choose where archives live.</h3>
+    <div class="split__main storage-grid">
+      <div class="storage-item">
+        <span class="mono-label">Filesystem</span>
+        <p class="storage-item__text">Kept in a folder you choose. Needs the Scrapyard backend app on your computer.</p>
+      </div>
+      <div class="storage-item">
+        <span class="mono-label storage-item__label">Server</span>
+        <p class="storage-item__text">Kept on a server you host, on your LAN or online. A VPN is advised for the online case.</p>
+      </div>
+        <div class="storage-item">
+            <span class="mono-label">Browser storage</span>
+            <p class="storage-item__text">Kept inside the browser profile. No backend app needed, but only for simple use cases.</p>
+        </div>
+    </div>
+  </div>
+
+  <div class="subsection split">
+    <h3 class="title-md split__aside">And the rest of the toolkit.</h3>
+    <div class="split__main chips">
+      <span class="chip">Text notes on any bookmark or archived page</span>
+      <span class="chip">Firefox bookmark integration</span>
+      <span class="chip">Cloud bookmarking</span>
+      <span class="chip">Bookmark TODO states</span>
+      <span class="chip">ScrapBook RDF import</span>
+      <span class="chip">iShell integration</span>
+    </div>
+  </div>
+</section>
+
+<!-- INTERFACE -->
+<section class="section" id="interface">
+  <div class="section-head section-head--narrow">
+    <div class="mono-label eyebrow"><span class="eyebrow__num">03</span><span>Interface</span></div>
+    <h2 class="section-title">Quiet on purpose.</h2>
+    <p class="lede">A sidebar to browse, a popup to capture. An interface close to the original ScrapBook.</p>
+  </div>
+
+  <div class="screenshot">
+    <object class="diagram diagram--interface" type="image/svg+xml" data="img/interface.svg" role="img"
+            aria-label="Schematic of Scrapyard in a browser window. On the left, the sidebar has a toolbar, a search field and a tree of shelves, folders and saved pages. On the right, the Bookmark to Scrapyard popup has a name field, a folder picker, a tags field, and Bookmark and Archive buttons."></object>
+  </div>
+
+  <div class="captions captions--2">
+    <div class="caption">
+      <span class="mono-label">The sidebar</span>
+      <h3 class="title-sm">Browse</h3>
+      <p class="caption__text">Shelves, folders and every saved page in one tree, with search and a shelf filter within reach.</p>
+    </div>
+    <div class="caption">
+      <span class="mono-label">The capture popup</span>
+      <h3 class="title-sm">Capture</h3>
+      <p class="caption__text">Name it, pick a folder, add tags. Then choose Bookmark for a link, or Archive for a full copy.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TEXT INTERFACE (iShell) -->
+<section class="section section--alt" id="text-interface">
+  <div class="section-head section-head--wide">
+    <div class="mono-label eyebrow"><span class="eyebrow__num">04</span><span>Text interface</span></div>
+    <h2 class="section-title">Bookmark with a sentence.</h2>
+    <p class="lede">Scrapyard also works with <a href="https://gchristensen.github.io/ishell/"><u>iShell</u></a>, a keyboard-first command prompt.
+        It follows the interface principles of Jef Raskin, author of <em>The Humane Interface</em>, to cut the bookmarking down to three steps: summon the prompt with Ctrl+Space,
+        say where the page goes, press Enter.</p>
+  </div>
+
+  <div class="screenshot">
+    <object class="diagram diagram--ishell" id="ishell-demo" type="image/svg+xml" data="img/ishell-demo.svg" role="img"
+            aria-label="Animation. A browser shows an article with the Scrapyard sidebar on the right. A command prompt appears at the top left, the words bookmark to art are typed into it, and after Enter the prompt disappears and the page shows up as a new item in the art folder of the sidebar."></object>
+  </div>
+
+  <div class="captions captions--3">
+    <div class="caption">
+      <span class="mono-label">One prompt</span>
+      <h3 class="title-sm">One place to type</h3>
+      <p class="caption__text">Every command lives behind the same prompt. There is no buttons to hunt with the mouse and no folder trees to explore.
+      Destination names are autocompleted.</p>
+    </div>
+    <div class="caption">
+      <span class="mono-label">No modes</span>
+      <h3 class="title-sm">Nothing to switch into</h3>
+      <p class="caption__text">The prompt appears over the page and vanishes when the command runs, so your attention never leaves what you are reading.</p>
+    </div>
+    <div class="caption">
+      <span class="mono-label">Habit</span>
+      <h3 class="title-sm">Fewer actions, then habit</h3>
+      <p class="caption__text">One line saves the page and names the folder it belongs in. Say it a few times and it becomes muscle memory.</p>
+    </div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section class="section section--ruled" id="use-cases">
+  <div class="section-head section-head--narrow">
+    <div class="mono-label eyebrow"><span class="eyebrow__num">05</span><span>Use cases</span></div>
+    <h2 class="section-title">Four ways to use it.</h2>
+    <p class="lede">How Scrapyard fits into everyday reading and research.</p>
+  </div>
+
+  <div class="card-grid">
+    <article class="card">
+      <div class="card__top">
+        <div class="card__icon"><img src="img/icon-offline.svg" width="26" height="26" alt=""></div>
+        <span class="card__num">01</span>
+      </div>
+      <h3 class="title-md">Reading offline</h3>
+      <p class="card__text">Load up a folder before a flight or a commute, then read it without a connection.</p>
+    </article>
+
+    <article class="card">
+      <div class="card__top">
+        <div class="card__icon"><img src="img/icon-research.svg" width="26" height="26" alt=""></div>
+        <span class="card__num">02</span>
+      </div>
+      <h3 class="title-md">Research you can cite</h3>
+      <p class="card__text">Keep the exact version of an article you read and attach a note to it, so a quote still matches its source.</p>
+    </article>
+
+    <article class="card">
+      <div class="card__top">
+        <div class="card__icon"><img src="img/icon-fragments.svg" width="26" height="26" alt=""></div>
+        <span class="card__num">03</span>
+      </div>
+      <h3 class="title-md">Fragments and PDFs</h3>
+      <p class="card__text">Clip just the part of a page you need, and keep PDF documents next to the pages that cite them.</p>
+    </article>
+
+    <article class="card">
+      <div class="card__top">
+        <div class="card__icon"><img src="img/icon-todo.svg" width="26" height="26" alt=""></div>
+        <span class="card__num">04</span>
+      </div>
+      <h3 class="title-md">Assigning TODOs</h3>
+      <p class="card__text">Mark saved pages as to do, waiting, postponed or done, so the reading list sorts itself and the pages that matter most come first.</p>
+    </article>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta" id="install">
+  <h2 class="display cta__title">
+    <span class="display__line">Bookmark it.</span>
+    <span class="display__line display__line--em">Then keep it.</span>
+  </h2>
+  <div class="cta__actions">
+    <a class="btn btn--xl" href="https://addons.mozilla.org/en-US/firefox/addon/scrapyard/"><img class="btn__icon" src="/images/firefox.png" width="22" height="22" alt="">Add to Firefox</a>
+    <a class="btn btn--xl" href="https://chrome.google.com/webstore/detail/scrapyard/jlpgjeiblkojkaedoobnfkgobdddimon"><img class="btn__icon" src="/images/chrome.png" width="22" height="22" alt="">Add to Chrome</a>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <a class="brand" href="#top" aria-label="Scrapyard home">
+    <img src="img/logo.svg" width="26" height="26" alt="">
+    <span class="brand__name">Scrapyard</span>
+  </a>
+  <nav class="site-nav">
+    <a href="#features">Features</a>
+    <a href="#interface">Interface</a>
+    <a href="#use-cases">Use cases</a>
+    <a href="https://gchristensen.github.io/scrapyard/addon/ui/locales/en/help.html">Online help</a>
+    <a href="https://github.com/GChristensen/scrapyard/issues">Report a bug</a>
+  </nav>
+  <span>© g/christensen</span>
+</footer>
+
+</body>
+</html>

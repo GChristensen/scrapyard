@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 440">
+<style><![CDATA[@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");]]></style>
+
+<!-- column headers -->
+<text x="300" y="22" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">1 · YOU FIND A PAGE</text>
+<text x="640" y="22" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">2 · YOU SAVE IT</text>
+<text x="980" y="22" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">3 · MONTHS LATER</text>
+
+<!-- row labels -->
+<text x="0" y="118" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">BOOKMARK</text>
+<text x="0" y="146" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="22" fill="#1D1B18">keeps an address</text>
+<text x="0" y="328" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">SCRAPYARD</text>
+<text x="0" y="356" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="22" fill="#1D1B18">keeps the page</text>
+
+<!-- row divider -->
+<path d="M0 235H1120" stroke="#E3DFD5" stroke-width="1.5" stroke-dasharray="3 5"></path>
+
+<!-- ROW A: bookmark. A1 live page -->
+<g transform="translate(200 60)">
+<rect x="1" y="1" width="198" height="138" rx="9" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5"></rect>
+<path d="M1 25H199" stroke="#1D1B18" stroke-width="1.5"></path>
+<circle cx="14" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="25" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="36" cy="13" r="3" fill="#D6D0C2"></circle>
+<rect x="54" y="7" width="128" height="12" rx="6" fill="#F1EEE6"></rect>
+<rect x="14" y="39" width="98" height="9" rx="2" fill="#1D1B18"></rect>
+<rect x="14" y="58" width="172" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="70" width="150" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="82" width="160" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="98" width="72" height="28" rx="3" fill="#E9E4D8"></rect>
+<rect x="98" y="100" width="88" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="98" y="111" width="64" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="98" y="122" width="76" height="5" rx="2.5" fill="#CFC9BB"></rect>
+</g>
+<!-- A: arrow to the saved address -->
+<path d="M408 130H532" stroke="#9A9488" stroke-width="1.5"></path>
+<path d="M524 124L532 130L524 136" stroke="#9A9488" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<!-- A2 just an address -->
+<rect x="540" y="111" width="200" height="38" rx="19" fill="#F3F1EB" stroke="#CFC9BB" stroke-width="1.5"></rect>
+<text x="640" y="135" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="13" fill="#57534B">essays.example.org</text>
+<!-- A: dashed arrow to the vanished page -->
+<path d="M748 130H872" stroke="#9A9488" stroke-width="1.5" stroke-dasharray="5 6"></path>
+<path d="M864 124L872 130L864 136" stroke="#9A9488" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<!-- A3 ghost page -->
+<g transform="translate(880 60)" opacity="0.4">
+<rect x="1" y="1" width="198" height="138" rx="9" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5" stroke-dasharray="6 5"></rect>
+<path d="M1 25H199" stroke="#1D1B18" stroke-width="1.5" stroke-dasharray="6 5"></path>
+<rect x="14" y="39" width="98" height="9" rx="2" fill="#1D1B18"></rect>
+<rect x="14" y="58" width="172" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="70" width="150" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="82" width="160" height="5" rx="2.5" fill="#CFC9BB"></rect>
+</g>
+<rect x="925" y="112" width="110" height="36" rx="18" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5"></rect>
+<text x="980" y="136" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-weight="500" font-size="16" fill="#1D1B18">404</text>
+
+<!-- ROW B: scrapyard. B1 live page -->
+<g transform="translate(200 270)">
+<rect x="1" y="1" width="198" height="138" rx="9" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5"></rect>
+<path d="M1 25H199" stroke="#1D1B18" stroke-width="1.5"></path>
+<circle cx="14" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="25" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="36" cy="13" r="3" fill="#D6D0C2"></circle>
+<rect x="54" y="7" width="128" height="12" rx="6" fill="#F1EEE6"></rect>
+<rect x="14" y="39" width="98" height="9" rx="2" fill="#1D1B18"></rect>
+<rect x="14" y="58" width="172" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="70" width="150" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="82" width="160" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="98" width="72" height="28" rx="3" fill="#E9E4D8"></rect>
+<rect x="98" y="100" width="88" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="98" y="111" width="64" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="98" y="122" width="76" height="5" rx="2.5" fill="#CFC9BB"></rect>
+</g>
+<!-- B: arrow through the add-on -->
+<path d="M408 340H452" stroke="#1D1B18" stroke-width="1.5"></path>
+<rect x="452" y="322" width="36" height="36" rx="10" fill="#FF9D33" stroke="#1D1B18" stroke-width="1.5"></rect>
+<path d="M462 330H478V350L470 344.5L462 350Z" fill="#1D1B18"></path>
+<path d="M488 340H532" stroke="#1D1B18" stroke-width="1.5"></path>
+<path d="M524 334L532 340L524 346" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<!-- B2 archive copy, stacked -->
+<rect x="561" y="291" width="198" height="138" rx="9" fill="#FFFFFF" stroke="#9A9488" stroke-width="1.5"></rect>
+<rect x="551" y="281" width="198" height="138" rx="9" fill="#FFFFFF" stroke="#9A9488" stroke-width="1.5"></rect>
+<g transform="translate(540 270)">
+<rect x="1" y="1" width="198" height="138" rx="9" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5"></rect>
+<path d="M1 25H199" stroke="#1D1B18" stroke-width="1.5"></path>
+<circle cx="14" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="25" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="36" cy="13" r="3" fill="#D6D0C2"></circle>
+<rect x="14" y="39" width="98" height="9" rx="2" fill="#1D1B18"></rect>
+<rect x="14" y="58" width="172" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="70" width="150" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="82" width="160" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="98" width="72" height="28" rx="3" fill="#E9E4D8"></rect>
+<rect x="98" y="100" width="88" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="98" y="111" width="64" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="98" y="122" width="76" height="5" rx="2.5" fill="#CFC9BB"></rect>
+</g>
+<rect x="596" y="259" width="136" height="22" rx="11" fill="#1D1B18"></rect>
+<text x="664" y="274" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="0.6" fill="#FBFAF7">ON YOUR DEVICE</text>
+<!-- B: arrow to later -->
+<path d="M772 340H872" stroke="#1D1B18" stroke-width="1.5"></path>
+<path d="M864 334L872 340L864 346" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<!-- B3 archive copy, still there -->
+<rect x="901" y="291" width="198" height="138" rx="9" fill="#FFFFFF" stroke="#9A9488" stroke-width="1.5"></rect>
+<rect x="891" y="281" width="198" height="138" rx="9" fill="#FFFFFF" stroke="#9A9488" stroke-width="1.5"></rect>
+<g transform="translate(880 270)">
+<rect x="1" y="1" width="198" height="138" rx="9" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5"></rect>
+<path d="M1 25H199" stroke="#1D1B18" stroke-width="1.5"></path>
+<circle cx="14" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="25" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="36" cy="13" r="3" fill="#D6D0C2"></circle>
+<rect x="14" y="39" width="98" height="9" rx="2" fill="#1D1B18"></rect>
+<rect x="14" y="58" width="172" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="70" width="150" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="82" width="160" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="98" width="72" height="28" rx="3" fill="#E9E4D8"></rect>
+<rect x="98" y="100" width="88" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="98" y="111" width="64" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="98" y="122" width="76" height="5" rx="2.5" fill="#CFC9BB"></rect>
+</g>
+<rect x="936" y="259" width="124" height="22" rx="11" fill="#1D1B18"></rect>
+<text x="998" y="274" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="0.6" fill="#FBFAF7">OPENS OFFLINE</text>
+<circle cx="880" cy="270" r="14" fill="#FF9D33" stroke="#1D1B18" stroke-width="1.5"></circle>
+<path d="M873.5 270.5L878 275L886.5 265.5" stroke="#1D1B18" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>

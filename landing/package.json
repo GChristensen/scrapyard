@@ -1,0 +1,13 @@
+{
+  "name": "scrapyard-landing",
+  "private": true,
+  "description": "Build script for the GitHub Pages landing page. Only needed for the minified build; see build.mjs.",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:plain": "node build.mjs --plain"
+  },
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0",
+    "svgo": "^3.3.2"
+  }
+}

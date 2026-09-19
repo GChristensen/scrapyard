@@ -1,0 +1,1342 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 1200 700"
+   version="1.1"
+   id="svg130"
+   sodipodi:docname="interface.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs130" />
+  <sodipodi:namedview
+     id="namedview130"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.83337585"
+     inkscape:cx="491.37493"
+     inkscape:cy="276.58589"
+     inkscape:window-width="1920"
+     inkscape:window-height="1027"
+     inkscape:window-x="-8"
+     inkscape:window-y="792"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg130" />
+  <style
+     id="style1"><![CDATA[@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");]]></style>
+  <!-- tab strip -->
+  <rect
+     x="0"
+     y="0"
+     width="1200"
+     height="44"
+     fill="#EEEBE3"
+     id="rect1" />
+  <path
+     d="M12 44V16a8 8 0 0 1 8-8H236a8 8 0 0 1 8 8V44Z"
+     fill="#FFFFFF"
+     id="path1" />
+  <rect
+     x="26"
+     y="19"
+     width="14"
+     height="14"
+     rx="4"
+     fill="#D6D0C2"
+     id="rect2" />
+  <text
+     x="50"
+     y="31"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13"
+     fill="#1D1B18"
+     id="text2">A field guide to marble</text>
+  <g
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="g5">
+    <path
+       d="M222 21L232 31M232 21L222 31"
+       id="path2" />
+    <path
+       d="M262 26H274M268 20V32"
+       id="path3" />
+    <path
+       d="M1076 26H1088"
+       id="path4" />
+    <rect
+       x="1124"
+       y="20"
+       width="11"
+       height="11"
+       rx="1.5"
+       id="rect4" />
+    <path
+       d="M1164 20L1175 31M1175 20L1164 31"
+       id="path5" />
+  </g>
+  <!-- toolbar -->
+  <rect
+     x="0"
+     y="44"
+     width="1200"
+     height="48"
+     fill="#FFFFFF"
+     id="rect5" />
+  <path
+     d="M0 92H1200"
+     stroke="#E3DFD5"
+     id="path6" />
+  <g
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="g8">
+    <path
+       d="M42 68H26M33 61L26 68L33 75"
+       id="path7" />
+    <path
+       d="M120 68a8 8 0 1 1-2.4-5.7M118 57V63H112"
+       id="path8" />
+  </g>
+  <path
+     d="M66 68H82M75 61L82 68L75 75"
+     fill="none"
+     stroke="#B5AFA2"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path9" />
+  <rect
+     x="146"
+     y="52"
+     width="850"
+     height="32"
+     rx="16"
+     fill="#F3F1EB"
+     id="rect9" />
+  <circle
+     cx="170"
+     cy="68"
+     r="6.5"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     id="circle9" />
+  <path
+     d="M166.5 68L169 70.5L173.5 65.5"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path10" />
+  <text
+     x="196"
+     y="73"
+     font-family="'DM Mono', ui-monospace, monospace"
+     font-size="13"
+     fill="#57534B"
+     id="text10">essays.example.org/a-field-guide-to-marble</text>
+  <rect
+     x="944"
+     y="60"
+     width="14"
+     height="16"
+     rx="2"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     id="rect10" />
+  <polygon
+     points="978,59 980.4,64.6 986.5,65.1 981.9,69.1 983.3,75 978,71.9 972.7,75 974.1,69.1 969.5,65.1 975.6,64.6"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     stroke-linejoin="round"
+     id="polygon10" />
+  <circle
+     cx="1030"
+     cy="68"
+     r="8"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     id="circle10" />
+  <rect
+     x="1074"
+     y="52"
+     width="36"
+     height="32"
+     rx="8"
+     fill="#E9E4D8"
+     id="rect11" />
+  <g
+     transform="translate(1080 56) scale(0.17652)"
+     id="g11">
+    <path
+       d="M67.98 0c7.17,0 14.08,1.11 20.57,3.17l-15.14 8.4 -6.97 28.8 -7.63 7.63c-2.25,2.25 -2.25,5.89 0,8.14l6.57 6.57c-5.36,5.54 -9.4,11.16 -7.24,20.33 2.68,11.39 -8.14,18.86 -16.18,10.82 -9.48,-9.48 6.99,-21.16 -0.57,-28.72 -4.31,-4.31 -5.17,4.31 -10.48,9.62 -22.83,22.83 12.35,57.44 34.75,35.04 15.87,-15.87 0.99,-28.93 7.89,-38.92l6.23 6.23c2.25,2.25 5.89,2.25 8.14,0l7.79 -7.79 28.54 -6.91 8.46 -15.25c2.11,6.56 3.25,13.56 3.25,20.82 0,37.54 -30.44,67.98 -67.98,67.98 -37.55,0 -67.98,-30.44 -67.98,-67.98 0,-37.55 30.44,-67.98 67.98,-67.98zm35.35 9.91c4.42,2.69 8.5,5.88 12.18,9.48l-42.05 0 1.74 -6.96 4.5 -2.52 23.64 0zm20.38 19.14c2.09,2.99 3.96,6.16 5.55,9.48l-60.6 0 2.37 -9.48 52.67 0zm-51.27 26.58l-0.24 -0.24c-1.36,-1.36 -1.89,-3.23 -1.61,-4.99l3.54 3.54c-0.56,0.56 -1.13,1.13 -1.69,1.69zm7.83 2.05l-9.48 -9.48 59.57 0 -5.31 9.48 -44.78 0zm0.21 5.99c0.59,-0.59 1.15,-1.15 1.69,-1.69l3.35 3.35c-1.76,0.28 -3.63,-0.25 -4.99,-1.61l-0.05 -0.05z"
+       fill="#FF9D33"
+       fill-rule="evenodd"
+       clip-rule="evenodd"
+       id="path11" />
+  </g>
+  <path
+     d="M1152 61H1168M1152 68H1168M1152 75H1168"
+     stroke="#57534B"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     id="path12" />
+  <!-- sidebar -->
+  <rect
+     x="0"
+     y="92"
+     width="380"
+     height="608"
+     fill="#FBFAF7"
+     id="rect12" />
+  <g
+     id="Icons"
+     style="fill:#57534b;fill-opacity:1;stroke:none;stroke-opacity:1"
+     transform="matrix(0.85572642,0,0,0.85572642,-3.0956968,84.727548)">
+	<g
+   id="settings"
+   style="fill:#57534b;fill-opacity:1;stroke:none;stroke-opacity:1">
+		<path
+   id="gear"
+   style="clip-rule:evenodd;fill:#57534b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-opacity:1"
+   d="m 121.62658,96.415394 c 0.079,-0.482 0.131,-0.972 0.131,-1.476 0,-0.504 -0.052,-0.994 -0.131,-1.476 l -2.463,-0.259 c -0.149,-0.556 -0.367,-1.082 -0.648,-1.57 l 1.558,-1.924 c -0.576,-0.806 -1.281,-1.511 -2.087,-2.087 l -1.924,1.558 c -0.488,-0.281 -1.015,-0.499 -1.57,-0.648 l -0.259,-2.463 c -0.482,-0.079 -0.972,-0.131 -1.476,-0.131 -0.504,0 -0.994,0.052 -1.476,0.131 l -0.259,2.463 c -0.555,0.149 -1.081,0.367 -1.57,0.648 l -1.924,-1.557 c -0.805,0.576 -1.51,1.281 -2.086,2.086 l 1.558,1.924 c -0.281,0.488 -0.499,1.015 -0.648,1.57 l -2.463,0.259 c -0.08,0.482 -0.132,0.972 -0.132,1.476 0,0.504 0.052,0.994 0.131,1.476 l 2.463,0.259 c 0.149,0.556 0.367,1.082 0.648,1.57 l -1.558,1.923996 c 0.576,0.806 1.281,1.511 2.087,2.087 l 1.924,-1.558 c 0.488,0.281 1.015,0.499 1.57,0.648 l 0.259,2.463 c 0.482,0.079 0.972,0.131 1.476,0.131 0.504,0 0.994,-0.052 1.476,-0.131 l 0.259,-2.463 c 0.556,-0.149 1.082,-0.367 1.57,-0.648 l 1.924,1.558 c 0.806,-0.576 1.511,-1.281 2.087,-2.087 l -1.558,-1.923996 c 0.281,-0.488 0.499,-1.015 0.648,-1.57 z m -8.869,2.522 c -2.209,0 -3.998,-1.789 -3.998,-3.998 0,-2.209 1.789,-3.998 3.998,-3.998 2.209,0 3.998,1.789 3.998,3.998 0,2.209 -1.789,3.998 -3.998,3.998 z" />
+
+	</g>
+
+</g>
+  <path
+     d="M380 92V700"
+     stroke="#E3DFD5"
+     id="path13" />
+  <g
+     transform="translate(20 105) scale(0.16181)"
+     id="g14">
+    <path
+       d="M67.98 0c7.17,0 14.08,1.11 20.57,3.17l-15.14 8.4 -6.97 28.8 -7.63 7.63c-2.25,2.25 -2.25,5.89 0,8.14l6.57 6.57c-5.36,5.54 -9.4,11.16 -7.24,20.33 2.68,11.39 -8.14,18.86 -16.18,10.82 -9.48,-9.48 6.99,-21.16 -0.57,-28.72 -4.31,-4.31 -5.17,4.31 -10.48,9.62 -22.83,22.83 12.35,57.44 34.75,35.04 15.87,-15.87 0.99,-28.93 7.89,-38.92l6.23 6.23c2.25,2.25 5.89,2.25 8.14,0l7.79 -7.79 28.54 -6.91 8.46 -15.25c2.11,6.56 3.25,13.56 3.25,20.82 0,37.54 -30.44,67.98 -67.98,67.98 -37.55,0 -67.98,-30.44 -67.98,-67.98 0,-37.55 30.44,-67.98 67.98,-67.98zm35.35 9.91c4.42,2.69 8.5,5.88 12.18,9.48l-42.05 0 1.74 -6.96 4.5 -2.52 23.64 0zm20.38 19.14c2.09,2.99 3.96,6.16 5.55,9.48l-60.6 0 2.37 -9.48 52.67 0zm-51.27 26.58l-0.24 -0.24c-1.36,-1.36 -1.89,-3.23 -1.61,-4.99l3.54 3.54c-0.56,0.56 -1.13,1.13 -1.69,1.69zm7.83 2.05l-9.48 -9.48 59.57 0 -5.31 9.48 -44.78 0zm0.21 5.99c0.59,-0.59 1.15,-1.15 1.69,-1.69l3.35 3.35c-1.76,0.28 -3.63,-0.25 -4.99,-1.61l-0.05 -0.05z"
+       fill="#FF9D33"
+       fill-rule="evenodd"
+       clip-rule="evenodd"
+       id="path14" />
+  </g>
+  <text
+     x="52"
+     y="122"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="15"
+     font-weight="600"
+     fill="#1D1B18"
+     id="text14">Scrapyard</text>
+  <path
+     d="M126 113L130 118L134 113"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path15" />
+  <path
+     d="M349 109L363 123M363 109L349 123"
+     stroke="#57534B"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     id="path16" />
+  <!-- sidebar toolbar row -->
+  <g
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="g21">
+    <path
+       d="M35 166a7 7 0 1 1-2-5M35 158V163H30"
+       id="path17" />
+    <circle
+       cx="61"
+       cy="165"
+       r="5.5"
+       id="circle17" />
+    <path
+       d="M65 169L70 174"
+       id="path18" />
+    <circle
+       cx="130"
+       cy="166"
+       r="8"
+       id="circle20" />
+    <path
+       d="M190 158V174M197 158V174M203 160L207 173"
+       stroke-width="2"
+       id="path20" />
+    <path
+       d="M344 160H360M344 166H360M344 172H360"
+       stroke="#1D1B18"
+       stroke-width="1.8"
+       id="path21" />
+  </g>
+  <text
+     x="127.56247"
+     y="170.20001"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="11px"
+     font-weight="600"
+     fill="#57534b"
+     id="text21">?</text>
+  <rect
+     x="216"
+     y="152"
+     width="106"
+     height="28"
+     rx="8"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect21" />
+  <text
+     x="228"
+     y="171"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13"
+     fill="#1D1B18"
+     id="text22">everything</text>
+  <path
+     d="M305 164L309 168L313 164"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path22" />
+  <!-- search -->
+  <rect
+     x="16"
+     y="192"
+     width="310"
+     height="32"
+     rx="10"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect22" />
+  <circle
+     cx="33"
+     cy="207"
+     r="5"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     id="circle22" />
+  <path
+     d="M37 211L41 215"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     id="path23" />
+  <text
+     x="52"
+     y="212"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13"
+     fill="#6F6A60"
+     id="text23">Search titles and page text</text>
+  <polygon
+     points="352,200 354.4,205.6 360.5,206.1 355.9,210.1 357.3,216 352,212.9 346.7,216 348.1,210.1 343.5,206.1 349.6,205.6"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     stroke-linejoin="round"
+     id="polygon23" />
+  <!-- tree: shelves -->
+  <g
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="g27">
+    <path
+       d="M15 251L20 256L15 261"
+       id="path24" />
+    <path
+       d="M15 283L20 288L15 293"
+       id="path25" />
+    <path
+       d="M15 315L20 320L15 325"
+       id="path26" />
+    <path
+       d="M14 350L19 355L24 350"
+       id="path27" />
+  </g>
+  <path
+     d="m 33.299832,262.27501 h 10.5 a 3.5032128,3.5032128 0 0 0 0.3,-7 5.5,5.5 0 0 0 -10.4,-1.2 4.1048752,4.1048752 0 0 0 -0.4,8.2 z"
+     fill="#d6d0c2"
+     stroke="#57534b"
+     stroke-width="1.2"
+     stroke-linejoin="round"
+     id="path28" />
+  <circle
+     cx="38"
+     cy="288"
+     r="7"
+     fill="#D6D0C2"
+     stroke="#57534B"
+     stroke-width="1.2"
+     id="circle28" />
+  <ellipse
+     cx="38"
+     cy="288"
+     rx="3"
+     ry="7"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1"
+     id="ellipse28" />
+  <path
+     d="M31 288H45"
+     stroke="#57534B"
+     stroke-width="1"
+     id="path29" />
+  <path
+     d="M32 314V326M37 314V326M42 315L46 325"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="2.2"
+     stroke-linecap="round"
+     id="path30" />
+  <path
+     d="M32 346V358M37 346V358M42 347L46 357"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="2.2"
+     stroke-linecap="round"
+     id="path31" />
+  <text
+     x="54"
+     y="261"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text31">cloud</text>
+  <text
+     x="54"
+     y="293"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text32">browser</text>
+  <text
+     x="54"
+     y="325"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text33">default</text>
+  <text
+     x="54"
+     y="357"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text34">art</text>
+  <!-- tree: folders under art -->
+  <g
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="g39">
+    <path
+       d="M43 379L47 384L43 389"
+       id="path34" />
+    <path
+       d="M43 411L47 416L43 421"
+       id="path35" />
+    <path
+       d="M43 443L47 448L43 453"
+       id="path36" />
+    <path
+       d="M43 475L47 480L43 485"
+       id="path37" />
+    <path
+       d="M43 507L47 512L43 517"
+       id="path38" />
+    <path
+       d="M41 542L46 547L51 542"
+       id="path39" />
+  </g>
+  <g
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.3"
+     stroke-linejoin="round"
+     id="g45">
+    <path
+       transform="translate(60 376)"
+       d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+       id="path40" />
+    <path
+       transform="translate(60 408)"
+       d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+       id="path41" />
+    <path
+       transform="translate(60 440)"
+       d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+       id="path42" />
+    <path
+       transform="translate(60 472)"
+       d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+       id="path43" />
+    <path
+       transform="translate(60 504)"
+       d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+       id="path44" />
+    <path
+       transform="translate(60 536)"
+       d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+       id="path45" />
+  </g>
+  <text
+     x="84"
+     y="389"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text45">illustration</text>
+  <text
+     x="84"
+     y="421"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text46">lessons</text>
+  <text
+     x="84"
+     y="453"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text47">literature</text>
+  <text
+     x="84"
+     y="485"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text48">music</text>
+  <text
+     x="84"
+     y="517"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text49">painters</text>
+  <text
+     x="84"
+     y="549"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text50">sculpture</text>
+  <!-- tree: saved pages -->
+  <rect
+     x="68"
+     y="592"
+     width="296"
+     height="32"
+     rx="8"
+     fill="#FFEFDE"
+     id="rect50" />
+  <rect
+     x="84"
+     y="569"
+     width="14"
+     height="14"
+     rx="4"
+     fill="#D6D0C2"
+     id="rect51" />
+  <rect
+     x="84"
+     y="601"
+     width="14"
+     height="14"
+     rx="4"
+     fill="#FF9D33"
+     stroke="#1D1B18"
+     stroke-width="1"
+     id="rect52" />
+  <circle
+     cx="91"
+     cy="640"
+     r="7"
+     fill="#9A9488"
+     id="circle52" />
+  <rect
+     x="84"
+     y="665"
+     width="14"
+     height="14"
+     rx="4"
+     fill="#9A9488"
+     id="rect53" />
+  <text
+     x="106"
+     y="581"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text53">How bronze is cast</text>
+  <text
+     x="106"
+     y="613"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text54">A field guide to marble</text>
+  <text
+     x="106"
+     y="645"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text55">Portrait busts, 1850 to 1900</text>
+  <text
+     x="106"
+     y="677"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text56">The sculptor's studio</text>
+  <rect
+     x="372"
+     y="240"
+     width="6"
+     height="200"
+     rx="3"
+     fill="#D6D0C2"
+     id="rect56" />
+  <!-- page being viewed -->
+  <rect
+     x="381"
+     y="93"
+     width="819"
+     height="607"
+     fill="#FFFFFF"
+     id="rect57" />
+  <text
+     x="432"
+     y="148"
+     font-family="'DM Mono', ui-monospace, monospace"
+     font-size="12"
+     letter-spacing="1"
+     fill="#6F6A60"
+     id="text57">FIELD NOTES</text>
+  <text
+     x="432"
+     y="204"
+     font-family="'Instrument Serif', Georgia, serif"
+     font-size="46"
+     fill="#1D1B18"
+     id="text58">A field guide</text>
+  <text
+     x="432"
+     y="252"
+     font-family="'Instrument Serif', Georgia, serif"
+     font-size="46"
+     fill="#1D1B18"
+     id="text59">to marble</text>
+  <rect
+     x="432"
+     y="278"
+     width="340"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect59" />
+  <rect
+     x="432"
+     y="298"
+     width="320"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect60" />
+  <rect
+     x="432"
+     y="318"
+     width="300"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect61" />
+  <rect
+     x="432"
+     y="338"
+     width="340"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect62" />
+  <rect
+     x="432"
+     y="358"
+     width="190"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect63" />
+  <rect
+     x="432"
+     y="392"
+     width="340"
+     height="188"
+     rx="10"
+     fill="#EEEAE0"
+     id="rect64" />
+  <circle
+     cx="602"
+     cy="486"
+     r="88"
+     fill="#E6E0D2"
+     id="circle64" />
+  <g
+     transform="translate(543 395) scale(0.577)"
+     fill="none"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="g109">
+    <path
+       d="M16 290A70 11 0 0 0 156 290L156 300A70 11 0 0 1 16 300Z"
+       fill="#FFFFFF"
+       stroke="#1D1B18"
+       stroke-width="2.6"
+       id="path64" />
+    <ellipse
+       cx="86"
+       cy="290"
+       rx="70"
+       ry="11"
+       fill="#FFFFFF"
+       stroke="#1D1B18"
+       stroke-width="2.6"
+       id="ellipse64" />
+    <path
+       d="M26 280A60 9.5 0 0 0 146 280L146 290A60 9.5 0 0 1 26 290Z"
+       fill="#FFFFFF"
+       stroke="#1D1B18"
+       stroke-width="2.6"
+       id="path65" />
+    <ellipse
+       cx="86"
+       cy="280"
+       rx="60"
+       ry="9.5"
+       fill="#FFFFFF"
+       stroke="#1D1B18"
+       stroke-width="2.6"
+       id="ellipse65" />
+    <path
+       d="M88 153C76 152 64 159 55 170"
+       stroke="#1D1B18"
+       stroke-width="33"
+       id="path66" />
+    <path
+       d="M88 153C76 152 64 159 55 170"
+       stroke="#FFFFFF"
+       stroke-width="27.8"
+       id="path67" />
+    <path
+       d="M55 172C51 198 48 230 47 259"
+       stroke="#1D1B18"
+       stroke-width="23"
+       id="path68" />
+    <path
+       d="M55 172C51 198 48 230 47 259"
+       stroke="#FFFFFF"
+       stroke-width="17.8"
+       id="path69" />
+    <path
+       d="M47 261C44 271 41 277 36 282"
+       stroke="#1D1B18"
+       stroke-width="13"
+       id="path70" />
+    <path
+       d="M47 261C44 271 41 277 36 282"
+       stroke="#FFFFFF"
+       stroke-width="7.8"
+       id="path71" />
+    <path
+       d="M58 188C55 212 53 236 53 256"
+       stroke="#C9C2B2"
+       stroke-width="1.8"
+       id="path72" />
+    <path
+       d="M103 155C112 168 117 188 119 206"
+       stroke="#1D1B18"
+       stroke-width="34"
+       id="path73" />
+    <path
+       d="M103 155C112 168 117 188 119 206"
+       stroke="#FFFFFF"
+       stroke-width="28.8"
+       id="path74" />
+    <path
+       d="M119 208C118 228 115 246 114 264"
+       stroke="#1D1B18"
+       stroke-width="23"
+       id="path75" />
+    <path
+       d="M119 208C118 228 115 246 114 264"
+       stroke="#FFFFFF"
+       stroke-width="17.8"
+       id="path76" />
+    <path
+       d="M114 266C120 277 128 282 135 283"
+       stroke="#1D1B18"
+       stroke-width="14"
+       id="path77" />
+    <path
+       d="M114 266C120 277 128 282 135 283"
+       stroke="#FFFFFF"
+       stroke-width="8.8"
+       id="path78" />
+    <path
+       d="M108 202C113 197 125 197 130 203"
+       stroke="#C9C2B2"
+       stroke-width="2.0"
+       id="path79" />
+    <path
+       d="M112 220C110 235 110 249 111 261"
+       stroke="#C9C2B2"
+       stroke-width="1.8"
+       id="path80" />
+    <path
+       d="M115 67C132 70 150 80 165 95C160 104 151 113 147 121C140 131 133 136 129 142C123 152 119 162 117 171C106 177 88 175 79 164C76 157 73 151 73 145C78 136 87 128 93 120C98 112 99 103 102 95C106 85 110 75 115 67Z"
+       fill="#FFFFFF"
+       stroke="#1D1B18"
+       stroke-width="2.6"
+       id="path81" />
+    <path
+       d="M111 85C121 97 134 102 149 105"
+       stroke="#C9C2B2"
+       stroke-width="2.0"
+       id="path82" />
+    <path
+       d="M130 96C123 113 114 131 106 148"
+       stroke="#C9C2B2"
+       stroke-width="2.0"
+       id="path83" />
+    <path
+       d="M93 126C103 136 114 141 125 144"
+       stroke="#C9C2B2"
+       stroke-width="2.0"
+       id="path84" />
+    <path
+       d="M80 150C88 158 94 163 100 170"
+       stroke="#C9C2B2"
+       stroke-width="1.8"
+       id="path85" />
+    <path
+       d="M116 163C110 165 105 167 100 170"
+       stroke="#C9C2B2"
+       stroke-width="1.8"
+       id="path86" />
+    <path
+       d="M168 98C173 116 169 136 162 152"
+       stroke="#1D1B18"
+       stroke-width="21"
+       id="path87" />
+    <path
+       d="M168 98C173 116 169 136 162 152"
+       stroke="#FFFFFF"
+       stroke-width="15.8"
+       id="path88" />
+    <path
+       d="M162 152C154 169 143 186 131 198"
+       stroke="#1D1B18"
+       stroke-width="17"
+       id="path89" />
+    <path
+       d="M162 152C154 169 143 186 131 198"
+       stroke="#FFFFFF"
+       stroke-width="11.8"
+       id="path90" />
+    <path
+       d="M131 198C125 204 118 209 110 214"
+       stroke="#1D1B18"
+       stroke-width="14"
+       id="path91" />
+    <path
+       d="M131 198C125 204 118 209 110 214"
+       stroke="#FFFFFF"
+       stroke-width="8.8"
+       id="path92" />
+    <path
+       d="M113 209L108 216"
+       stroke="#1D1B18"
+       stroke-width="2.2"
+       id="path93" />
+    <path
+       d="M117 213L112 219"
+       stroke="#1D1B18"
+       stroke-width="2.2"
+       id="path94" />
+    <path
+       d="M147 64C147 52 156 44 168 45C178 46 184 52 187 58C190 63 193 66 192 69C191 72 188 72 187 74C188 77 190 79 188 82C186 86 180 89 172 90C162 91 153 86 149 77C147 72 147 68 147 64Z"
+       fill="#FFFFFF"
+       stroke="#1D1B18"
+       stroke-width="2.6"
+       id="path95" />
+    <path
+       d="M151 60C154 55 159 53 164 54"
+       stroke="#C9C2B2"
+       stroke-width="2.0"
+       id="path96" />
+    <path
+       d="M162 52C167 49 173 50 177 54"
+       stroke="#C9C2B2"
+       stroke-width="2.0"
+       id="path97" />
+    <path
+       d="M150 70C153 67 157 67 160 70"
+       stroke="#C9C2B2"
+       stroke-width="2.0"
+       id="path98" />
+    <path
+       d="M181 62C184 61 186 62 187 64"
+       stroke="#C9C2B2"
+       stroke-width="1.8"
+       id="path99" />
+    <path
+       d="M155 71C158 69 161 71 161 75C161 78 158 79 156 77"
+       stroke="#1D1B18"
+       stroke-width="2.0"
+       id="path100" />
+    <g
+       transform="rotate(-20 32 24)"
+       id="g101">
+      <ellipse
+         cx="32"
+         cy="24"
+         rx="21"
+         ry="18"
+         fill="#EDE8DC"
+         stroke="#1D1B18"
+         stroke-width="2.6"
+         id="ellipse100" />
+      <ellipse
+         cx="32"
+         cy="24"
+         rx="12.5"
+         ry="10.5"
+         fill="none"
+         stroke="#C9C2B2"
+         stroke-width="2"
+         id="ellipse101" />
+    </g>
+    <path
+       d="M117 69C105 62 90 52 77 45"
+       stroke="#1D1B18"
+       stroke-width="22"
+       id="path101" />
+    <path
+       d="M117 69C105 62 90 52 77 45"
+       stroke="#FFFFFF"
+       stroke-width="16.8"
+       id="path102" />
+    <path
+       d="M77 45C64 38 52 32 40 26"
+       stroke="#1D1B18"
+       stroke-width="17.5"
+       id="path103" />
+    <path
+       d="M77 45C64 38 52 32 40 26"
+       stroke="#FFFFFF"
+       stroke-width="12.3"
+       id="path104" />
+    <path
+       d="M40 26C34 22 28 18 23 15"
+       stroke="#1D1B18"
+       stroke-width="16"
+       id="path105" />
+    <path
+       d="M40 26C34 22 28 18 23 15"
+       stroke="#FFFFFF"
+       stroke-width="10.8"
+       id="path106" />
+    <path
+       d="M21 11C18 9 15 10 15 13"
+       stroke="#1D1B18"
+       stroke-width="2.2"
+       id="path107" />
+    <path
+       d="M24 15C21 13 18 14 18 17"
+       stroke="#1D1B18"
+       stroke-width="2.2"
+       id="path108" />
+    <path
+       d="M27 19C24 18 21 19 21 22"
+       stroke="#1D1B18"
+       stroke-width="2.2"
+       id="path109" />
+  </g>
+  <rect
+     x="432"
+     y="608"
+     width="340"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect109" />
+  <rect
+     x="432"
+     y="628"
+     width="310"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect110" />
+  <rect
+     x="432"
+     y="648"
+     width="220"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect111" />
+  <!-- capture popup -->
+  <rect
+     x="812"
+     y="114"
+     width="360"
+     height="460"
+     rx="16"
+     fill="#1D1B18"
+     opacity="0.07"
+     id="rect112" />
+  <rect
+     x="812"
+     y="104"
+     width="360"
+     height="460"
+     rx="16"
+     fill="#FFFFFF"
+     stroke="#D9D4C8"
+     stroke-width="1.5"
+     id="rect113" />
+  <path
+     d="M1082 105L1092 96L1102 105Z"
+     fill="#FFFFFF"
+     stroke="#D9D4C8"
+     stroke-width="1.5"
+     stroke-linejoin="round"
+     id="path113" />
+  <path
+     d="M1083.5 104.5H1100.5"
+     stroke="#FFFFFF"
+     stroke-width="2.5"
+     id="path114" />
+  <g
+     transform="translate(832 122) scale(0.20594)"
+     id="g115">
+    <path
+       d="M67.98 0c7.17,0 14.08,1.11 20.57,3.17l-15.14 8.4 -6.97 28.8 -7.63 7.63c-2.25,2.25 -2.25,5.89 0,8.14l6.57 6.57c-5.36,5.54 -9.4,11.16 -7.24,20.33 2.68,11.39 -8.14,18.86 -16.18,10.82 -9.48,-9.48 6.99,-21.16 -0.57,-28.72 -4.31,-4.31 -5.17,4.31 -10.48,9.62 -22.83,22.83 12.35,57.44 34.75,35.04 15.87,-15.87 0.99,-28.93 7.89,-38.92l6.23 6.23c2.25,2.25 5.89,2.25 8.14,0l7.79 -7.79 28.54 -6.91 8.46 -15.25c2.11,6.56 3.25,13.56 3.25,20.82 0,37.54 -30.44,67.98 -67.98,67.98 -37.55,0 -67.98,-30.44 -67.98,-67.98 0,-37.55 30.44,-67.98 67.98,-67.98zm35.35 9.91c4.42,2.69 8.5,5.88 12.18,9.48l-42.05 0 1.74 -6.96 4.5 -2.52 23.64 0zm20.38 19.14c2.09,2.99 3.96,6.16 5.55,9.48l-60.6 0 2.37 -9.48 52.67 0zm-51.27 26.58l-0.24 -0.24c-1.36,-1.36 -1.89,-3.23 -1.61,-4.99l3.54 3.54c-0.56,0.56 -1.13,1.13 -1.69,1.69zm7.83 2.05l-9.48 -9.48 59.57 0 -5.31 9.48 -44.78 0zm0.21 5.99c0.59,-0.59 1.15,-1.15 1.69,-1.69l3.35 3.35c-1.76,0.28 -3.63,-0.25 -4.99,-1.61l-0.05 -0.05z"
+       fill="#FF9D33"
+       fill-rule="evenodd"
+       clip-rule="evenodd"
+       id="path115" />
+  </g>
+  <text
+     x="872"
+     y="143"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="19"
+     font-weight="600"
+     fill="#1D1B18"
+     id="text115">Bookmark to Scrapyard</text>
+  <rect
+     x="1126"
+     y="129"
+     width="18"
+     height="14"
+     rx="2"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     id="rect115" />
+  <path
+     d="M1133 129V143"
+     stroke="#57534B"
+     stroke-width="1.4"
+     id="path116" />
+  <text
+     x="832"
+     y="182"
+     font-family="'DM Mono', ui-monospace, monospace"
+     font-size="12"
+     letter-spacing="1"
+     fill="#6F6A60"
+     id="text116">NAME</text>
+  <rect
+     x="832"
+     y="190"
+     width="320"
+     height="32"
+     rx="9"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect116" />
+  <text
+     x="846"
+     y="211"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text117">A field guide to marble</text>
+  <text
+     x="832"
+     y="250"
+     font-family="'DM Mono', ui-monospace, monospace"
+     font-size="12"
+     letter-spacing="1"
+     fill="#6F6A60"
+     id="text118">FOLDER</text>
+  <rect
+     x="832"
+     y="258"
+     width="320"
+     height="32"
+     rx="9"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect118" />
+  <path
+     transform="translate(844 266)"
+     d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.3"
+     stroke-linejoin="round"
+     id="path118" />
+  <text
+     x="868"
+     y="279"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text119">default</text>
+  <path
+     d="M1131 272L1135 276L1139 272"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path119" />
+  <rect
+     x="832"
+     y="304"
+     width="320"
+     height="112"
+     rx="9"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect119" />
+  <rect
+     x="838"
+     y="359"
+     width="296"
+     height="26"
+     rx="6"
+     fill="#FFEFDE"
+     id="rect120" />
+  <path
+     d="m 851.79991,325.5 h 9 a 3.0037477,3.0037477 0 0 0 0.3,-6 4.7,4.7 0 0 0 -8.9,-1 3.5057096,3.5057096 0 0 0 -0.4,7 z"
+     fill="#d6d0c2"
+     stroke="#57534b"
+     stroke-width="1.1"
+     stroke-linejoin="round"
+     id="path120" />
+  <circle
+     cx="856"
+     cy="346"
+     r="6"
+     fill="#D6D0C2"
+     stroke="#57534B"
+     stroke-width="1.1"
+     id="circle120" />
+  <path
+     d="M851 367V377M855 367V377M859 368L862 376"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.9"
+     stroke-linecap="round"
+     id="path121" />
+  <path
+     d="M851 393V403M855 393V403M859 394L862 402"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.9"
+     stroke-linecap="round"
+     id="path122" />
+  <text
+     x="872"
+     y="325"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text122">cloud</text>
+  <text
+     x="872"
+     y="351"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text123">browser</text>
+  <text
+     x="872"
+     y="377"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text124">default</text>
+  <text
+     x="872"
+     y="403"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text125">art</text>
+  <rect
+     x="1139"
+     y="309"
+     width="6"
+     height="52"
+     rx="3"
+     fill="#D6D0C2"
+     id="rect125" />
+  <text
+     x="832"
+     y="442"
+     font-family="'DM Mono', ui-monospace, monospace"
+     font-size="12"
+     letter-spacing="1"
+     fill="#6F6A60"
+     id="text126">TAGS</text>
+  <rect
+     x="832"
+     y="450"
+     width="258"
+     height="32"
+     rx="9"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect126" />
+  <path
+     d="M846 458V474"
+     stroke="#1D1B18"
+     stroke-width="1.4"
+     id="path126" />
+  <rect
+     x="1098"
+     y="450"
+     width="26"
+     height="32"
+     rx="8"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect127" />
+  <path
+     d="M1105 459V473M1110 459V473M1115 460L1118 472"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.9"
+     stroke-linecap="round"
+     id="path127" />
+  <rect
+     x="1128"
+     y="450"
+     width="24"
+     height="32"
+     rx="8"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect128" />
+  <path
+     transform="translate(1132 458)"
+     d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.2"
+     stroke-linejoin="round"
+     id="path128" />
+  <rect
+     x="832"
+     y="504"
+     width="154"
+     height="44"
+     rx="22"
+     fill="#FFFFFF"
+     stroke="#1D1B18"
+     stroke-width="1.5"
+     id="rect129" />
+  <text
+     x="909"
+     y="532"
+     text-anchor="middle"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="16"
+     font-weight="600"
+     fill="#1D1B18"
+     id="text129">Bookmark</text>
+  <rect
+     x="998"
+     y="504"
+     width="154"
+     height="44"
+     rx="22"
+     fill="#FF9D33"
+     stroke="#1D1B18"
+     stroke-width="1.5"
+     id="rect130" />
+  <text
+     x="1062"
+     y="532"
+     text-anchor="middle"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="16"
+     font-weight="600"
+     fill="#1D1B18"
+     id="text130">Archive</text>
+  <circle
+     cx="1124"
+     cy="526"
+     r="11"
+     fill="#FFFFFF"
+     stroke="#1D1B18"
+     stroke-width="1.2"
+     id="circle130" />
+  <path
+     d="m 1120.325,520.075 h 5 l 3.5,3.5 v 8.5 h -8.5 z"
+     fill="none"
+     stroke="#1d1b18"
+     stroke-width="1.2"
+     stroke-linejoin="round"
+     id="path130" />
+</svg>

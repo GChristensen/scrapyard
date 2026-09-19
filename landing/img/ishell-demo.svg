@@ -1,0 +1,1311 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 1200 640"
+   version="1.1"
+   id="svg83"
+   sodipodi:docname="ishell-demo.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview83"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.91150484"
+     inkscape:cx="598.4609"
+     inkscape:cy="122.32519"
+     inkscape:window-width="1920"
+     inkscape:window-height="1027"
+     inkscape:window-x="-8"
+     inkscape:window-y="792"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg83" />
+  <style
+     id="style1"><![CDATA[@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");]]></style>
+  <defs
+     id="defs1">
+    <clipPath
+       id="ishClip">
+      <rect
+         x="24"
+         y="110"
+         width="660"
+         height="320"
+         rx="14"
+         id="rect1" />
+    </clipPath>
+  </defs>
+  <!-- tab strip -->
+  <rect
+     x="0"
+     y="0"
+     width="1200"
+     height="44"
+     fill="#EEEBE3"
+     id="rect2" />
+  <path
+     d="M12 44V16a8 8 0 0 1 8-8H236a8 8 0 0 1 8 8V44Z"
+     fill="#FFFFFF"
+     id="path2" />
+  <rect
+     x="26"
+     y="19"
+     width="14"
+     height="14"
+     rx="4"
+     fill="#D6D0C2"
+     id="rect3" />
+  <text
+     x="50"
+     y="31"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13"
+     fill="#1D1B18"
+     id="text3">A field guide to marble</text>
+  <g
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="g6">
+    <path
+       d="M222 21L232 31M232 21L222 31"
+       id="path3" />
+    <path
+       d="M262 26H274M268 20V32"
+       id="path4" />
+    <path
+       d="M1076 26H1088"
+       id="path5" />
+    <rect
+       x="1124"
+       y="20"
+       width="11"
+       height="11"
+       rx="1.5"
+       id="rect5" />
+    <path
+       d="M1164 20L1175 31M1175 20L1164 31"
+       id="path6" />
+  </g>
+  <!-- toolbar -->
+  <rect
+     x="0"
+     y="44"
+     width="1200"
+     height="48"
+     fill="#FFFFFF"
+     id="rect6" />
+  <path
+     d="M0 92H1200"
+     stroke="#E3DFD5"
+     id="path7" />
+  <g
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="g9">
+    <path
+       d="M42 68H26M33 61L26 68L33 75"
+       id="path8" />
+    <path
+       d="M120 68a8 8 0 1 1-2.4-5.7M118 57V63H112"
+       id="path9" />
+  </g>
+  <path
+     d="M66 68H82M75 61L82 68L75 75"
+     fill="none"
+     stroke="#B5AFA2"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path10" />
+  <rect
+     x="146"
+     y="52"
+     width="850"
+     height="32"
+     rx="16"
+     fill="#F3F1EB"
+     id="rect10" />
+  <circle
+     cx="170"
+     cy="68"
+     r="6.5"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     id="circle10" />
+  <path
+     d="M166.5 68L169 70.5L173.5 65.5"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path11" />
+  <text
+     x="196"
+     y="73"
+     font-family="'DM Mono', ui-monospace, monospace"
+     font-size="13"
+     fill="#57534B"
+     id="text11">essays.example.org/a-field-guide-to-marble</text>
+  <rect
+     x="944"
+     y="60"
+     width="14"
+     height="16"
+     rx="2"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     id="rect11" />
+  <polygon
+     points="978,59 980.4,64.6 986.5,65.1 981.9,69.1 983.3,75 978,71.9 972.7,75 974.1,69.1 969.5,65.1 975.6,64.6"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     stroke-linejoin="round"
+     id="polygon11" />
+  <circle
+     cx="1030"
+     cy="68"
+     r="8"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     id="circle11" />
+  <rect
+     x="1074"
+     y="52"
+     width="36"
+     height="32"
+     rx="8"
+     fill="#E9E4D8"
+     id="rect12" />
+  <g
+     transform="translate(1080 56) scale(0.17652)"
+     id="g12">
+    <path
+       d="M67.98 0c7.17,0 14.08,1.11 20.57,3.17l-15.14 8.4 -6.97 28.8 -7.63 7.63c-2.25,2.25 -2.25,5.89 0,8.14l6.57 6.57c-5.36,5.54 -9.4,11.16 -7.24,20.33 2.68,11.39 -8.14,18.86 -16.18,10.82 -9.48,-9.48 6.99,-21.16 -0.57,-28.72 -4.31,-4.31 -5.17,4.31 -10.48,9.62 -22.83,22.83 12.35,57.44 34.75,35.04 15.87,-15.87 0.99,-28.93 7.89,-38.92l6.23 6.23c2.25,2.25 5.89,2.25 8.14,0l7.79 -7.79 28.54 -6.91 8.46 -15.25c2.11,6.56 3.25,13.56 3.25,20.82 0,37.54 -30.44,67.98 -67.98,67.98 -37.55,0 -67.98,-30.44 -67.98,-67.98 0,-37.55 30.44,-67.98 67.98,-67.98zm35.35 9.91c4.42,2.69 8.5,5.88 12.18,9.48l-42.05 0 1.74 -6.96 4.5 -2.52 23.64 0zm20.38 19.14c2.09,2.99 3.96,6.16 5.55,9.48l-60.6 0 2.37 -9.48 52.67 0zm-51.27 26.58l-0.24 -0.24c-1.36,-1.36 -1.89,-3.23 -1.61,-4.99l3.54 3.54c-0.56,0.56 -1.13,1.13 -1.69,1.69zm7.83 2.05l-9.48 -9.48 59.57 0 -5.31 9.48 -44.78 0zm0.21 5.99c0.59,-0.59 1.15,-1.15 1.69,-1.69l3.35 3.35c-1.76,0.28 -3.63,-0.25 -4.99,-1.61l-0.05 -0.05z"
+       fill="#FF9D33"
+       fill-rule="evenodd"
+       clip-rule="evenodd"
+       id="path12" />
+  </g>
+  <path
+     d="M1152 61H1168M1152 68H1168M1152 75H1168"
+     stroke="#57534B"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     id="path13" />
+  <!-- page -->
+  <rect
+     x="0"
+     y="92"
+     width="820"
+     height="484"
+     fill="#FFFFFF"
+     id="rect13" />
+  <rect
+     x="48"
+     y="112"
+     width="110"
+     height="16"
+     rx="3"
+     fill="#1D1B18"
+     id="rect14" />
+  <rect
+     x="520"
+     y="116"
+     width="60"
+     height="8"
+     rx="4"
+     fill="#CFC9BB"
+     id="rect15" />
+  <rect
+     x="596"
+     y="116"
+     width="60"
+     height="8"
+     rx="4"
+     fill="#CFC9BB"
+     id="rect16" />
+  <rect
+     x="672"
+     y="116"
+     width="60"
+     height="8"
+     rx="4"
+     fill="#CFC9BB"
+     id="rect17" />
+  <text
+     x="48"
+     y="216"
+     font-family="'Instrument Serif', Georgia, serif"
+     font-size="60"
+     fill="#1D1B18"
+     id="text17">A field guide</text>
+  <text
+     x="48"
+     y="278"
+     font-family="'Instrument Serif', Georgia, serif"
+     font-size="60"
+     fill="#1D1B18"
+     id="text18">to marble</text>
+  <rect
+     x="48"
+     y="306"
+     width="560"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect18" />
+  <rect
+     x="48"
+     y="326"
+     width="520"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect19" />
+  <rect
+     x="48"
+     y="346"
+     width="540"
+     height="9"
+     rx="4.5"
+     fill="#E6E2D7"
+     id="rect20" />
+  <rect
+     x="48"
+     y="378"
+     width="724"
+     height="178"
+     rx="12"
+     fill="#EEEAE0"
+     id="rect21" />
+  <circle
+     cx="220"
+     cy="470"
+     r="60"
+     fill="#E3DDCE"
+     id="circle21" />
+  <circle
+     cx="420"
+     cy="504"
+     r="40"
+     fill="#E3DDCE"
+     id="circle22" />
+  <circle
+     cx="650"
+     cy="430"
+     r="24"
+     fill="none"
+     stroke="#CFC9BB"
+     stroke-width="2"
+     id="circle23" />
+  <!-- sidebar -->
+  <rect
+     x="820"
+     y="92"
+     width="380"
+     height="484"
+     fill="#FBFAF7"
+     id="rect23" />
+  <g
+     id="Icons"
+     style="fill:#57534b;fill-opacity:1;stroke:none;stroke-opacity:1"
+     transform="matrix(0.85572642,0,0,0.85572642,817.21189,84.556475)">
+	<g
+   id="settings"
+   style="fill:#57534b;fill-opacity:1;stroke:none;stroke-opacity:1">
+		<path
+   id="gear"
+   style="clip-rule:evenodd;fill:#57534b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-opacity:1"
+   d="m 121.62658,96.415394 c 0.079,-0.482 0.131,-0.972 0.131,-1.476 0,-0.504 -0.052,-0.994 -0.131,-1.476 l -2.463,-0.259 c -0.149,-0.556 -0.367,-1.082 -0.648,-1.57 l 1.558,-1.924 c -0.576,-0.806 -1.281,-1.511 -2.087,-2.087 l -1.924,1.558 c -0.488,-0.281 -1.015,-0.499 -1.57,-0.648 l -0.259,-2.463 c -0.482,-0.079 -0.972,-0.131 -1.476,-0.131 -0.504,0 -0.994,0.052 -1.476,0.131 l -0.259,2.463 c -0.555,0.149 -1.081,0.367 -1.57,0.648 l -1.924,-1.557 c -0.805,0.576 -1.51,1.281 -2.086,2.086 l 1.558,1.924 c -0.281,0.488 -0.499,1.015 -0.648,1.57 l -2.463,0.259 c -0.08,0.482 -0.132,0.972 -0.132,1.476 0,0.504 0.052,0.994 0.131,1.476 l 2.463,0.259 c 0.149,0.556 0.367,1.082 0.648,1.57 l -1.558,1.923996 c 0.576,0.806 1.281,1.511 2.087,2.087 l 1.924,-1.558 c 0.488,0.281 1.015,0.499 1.57,0.648 l 0.259,2.463 c 0.482,0.079 0.972,0.131 1.476,0.131 0.504,0 0.994,-0.052 1.476,-0.131 l 0.259,-2.463 c 0.556,-0.149 1.082,-0.367 1.57,-0.648 l 1.924,1.558 c 0.806,-0.576 1.511,-1.281 2.087,-2.087 l -1.558,-1.923996 c 0.281,-0.488 0.499,-1.015 0.648,-1.57 z m -8.869,2.522 c -2.209,0 -3.998,-1.789 -3.998,-3.998 0,-2.209 1.789,-3.998 3.998,-3.998 2.209,0 3.998,1.789 3.998,3.998 0,2.209 -1.789,3.998 -3.998,3.998 z" />
+
+	</g>
+
+</g>
+  <path
+     d="M820 92V576"
+     stroke="#E3DFD5"
+     id="path23" />
+  <g
+     transform="translate(840 105) scale(0.16181)"
+     id="g24">
+    <path
+       d="M67.98 0c7.17,0 14.08,1.11 20.57,3.17l-15.14 8.4 -6.97 28.8 -7.63 7.63c-2.25,2.25 -2.25,5.89 0,8.14l6.57 6.57c-5.36,5.54 -9.4,11.16 -7.24,20.33 2.68,11.39 -8.14,18.86 -16.18,10.82 -9.48,-9.48 6.99,-21.16 -0.57,-28.72 -4.31,-4.31 -5.17,4.31 -10.48,9.62 -22.83,22.83 12.35,57.44 34.75,35.04 15.87,-15.87 0.99,-28.93 7.89,-38.92l6.23 6.23c2.25,2.25 5.89,2.25 8.14,0l7.79 -7.79 28.54 -6.91 8.46 -15.25c2.11,6.56 3.25,13.56 3.25,20.82 0,37.54 -30.44,67.98 -67.98,67.98 -37.55,0 -67.98,-30.44 -67.98,-67.98 0,-37.55 30.44,-67.98 67.98,-67.98zm35.35 9.91c4.42,2.69 8.5,5.88 12.18,9.48l-42.05 0 1.74 -6.96 4.5 -2.52 23.64 0zm20.38 19.14c2.09,2.99 3.96,6.16 5.55,9.48l-60.6 0 2.37 -9.48 52.67 0zm-51.27 26.58l-0.24 -0.24c-1.36,-1.36 -1.89,-3.23 -1.61,-4.99l3.54 3.54c-0.56,0.56 -1.13,1.13 -1.69,1.69zm7.83 2.05l-9.48 -9.48 59.57 0 -5.31 9.48 -44.78 0zm0.21 5.99c0.59,-0.59 1.15,-1.15 1.69,-1.69l3.35 3.35c-1.76,0.28 -3.63,-0.25 -4.99,-1.61l-0.05 -0.05z"
+       fill="#FF9D33"
+       fill-rule="evenodd"
+       clip-rule="evenodd"
+       id="path24" />
+  </g>
+  <text
+     x="872"
+     y="122"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="15"
+     font-weight="600"
+     fill="#1D1B18"
+     id="text24">Scrapyard</text>
+  <path
+     d="M946 113L950 118L954 113"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path25" />
+  <path
+     d="M1169 109L1183 123M1183 109L1169 123"
+     stroke="#57534B"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     id="path26" />
+  <g
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.6"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="g31">
+    <path
+       d="M855 166a7 7 0 1 1-2-5M855 158V163H850"
+       id="path27" />
+    <circle
+       cx="881"
+       cy="165"
+       r="5.5"
+       id="circle27" />
+    <path
+       d="M885 169L890 174"
+       id="path28" />
+    <circle
+       cx="950"
+       cy="166"
+       r="8"
+       id="circle30" />
+    <path
+       d="M1010 158V174M1017 158V174M1023 160L1027 173"
+       stroke-width="2"
+       id="path30" />
+    <path
+       d="M1164 160H1180M1164 166H1180M1164 172H1180"
+       stroke="#1D1B18"
+       stroke-width="1.8"
+       id="path31" />
+  </g>
+  <text
+     x="947"
+     y="170.5"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="11"
+     font-weight="600"
+     fill="#57534B"
+     id="text31">?</text>
+  <rect
+     x="1036"
+     y="152"
+     width="106"
+     height="28"
+     rx="8"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect31" />
+  <text
+     x="1048"
+     y="171"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13"
+     fill="#1D1B18"
+     id="text32">default</text>
+  <path
+     d="M1125 164L1129 168L1133 164"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path32" />
+  <rect
+     x="836"
+     y="192"
+     width="310"
+     height="32"
+     rx="10"
+     fill="#FFFFFF"
+     stroke="#DAD5C9"
+     id="rect32" />
+  <circle
+     cx="853"
+     cy="207"
+     r="5"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     id="circle32" />
+  <path
+     d="M857 211L861 215"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     id="path33" />
+  <text
+     x="872"
+     y="212"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13"
+     fill="#6F6A60"
+     id="text33">Search titles and page text</text>
+  <polygon
+     points="1172,200 1174.4,205.6 1180.5,206.1 1175.9,210.1 1177.3,216 1172,212.9 1166.7,216 1168.1,210.1 1163.5,206.1 1169.6,205.6"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.4"
+     stroke-linejoin="round"
+     id="polygon33" />
+  <path
+     d="M834 254 L839 259 L844 254"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path34" />
+  <path
+     transform="translate(852 248)"
+     d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+     fill="none"
+     stroke="#57534B"
+     stroke-width="1.3"
+     stroke-linejoin="round"
+     id="path35" />
+  <text
+     x="876"
+     y="261"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     fill="#1D1B18"
+     id="text35">art</text>
+  <rect
+     x="876"
+     y="281"
+     width="14"
+     height="14"
+     rx="4"
+     fill="#D6D0C2"
+     id="rect35" />
+  <text
+     x="898"
+     y="293"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text36">How bronze is cast</text>
+  <rect
+     x="876"
+     y="313"
+     width="14"
+     height="14"
+     rx="4"
+     fill="#9A9488"
+     id="rect36" />
+  <text
+     x="898"
+     y="325"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="13.5"
+     fill="#1D1B18"
+     id="text37">The sculptor's studio</text>
+  <g
+     id="g42">
+    <animateTransform
+       attributeName="transform"
+       type="translate"
+       values="0 0;0 0;0 32;0 32;0 0;0 0"
+       keyTimes="0;0.704613;0.73866;0.96591;0.999955;1"
+       dur="8.8s"
+       repeatCount="indefinite" />
+    <path
+       d="M835 347 L840 352 L835 357"
+       fill="none"
+       stroke="#57534B"
+       stroke-width="1.5"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path37" />
+    <path
+       transform="translate(852 344)"
+       d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+       fill="none"
+       stroke="#57534B"
+       stroke-width="1.3"
+       stroke-linejoin="round"
+       id="path38" />
+    <text
+       x="876"
+       y="357"
+       font-family="'Instrument Sans', system-ui, sans-serif"
+       font-size="14"
+       fill="#1D1B18"
+       id="text38">music</text>
+    <path
+       d="M835 379 L840 384 L835 389"
+       fill="none"
+       stroke="#57534B"
+       stroke-width="1.5"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path39" />
+    <path
+       transform="translate(852 376)"
+       d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+       fill="none"
+       stroke="#57534B"
+       stroke-width="1.3"
+       stroke-linejoin="round"
+       id="path40" />
+    <text
+       x="876"
+       y="389"
+       font-family="'Instrument Sans', system-ui, sans-serif"
+       font-size="14"
+       fill="#1D1B18"
+       id="text40">recipes</text>
+    <path
+       d="M835 411 L840 416 L835 421"
+       fill="none"
+       stroke="#57534B"
+       stroke-width="1.5"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path41" />
+    <path
+       transform="translate(852 408)"
+       d="M2 4.5A1.5 1.5 0 0 1 3.5 3H6L7.5 4.5H12.5A1.5 1.5 0 0 1 14 6V11.5A1.5 1.5 0 0 1 12.5 13H3.5A1.5 1.5 0 0 1 2 11.5Z"
+       fill="none"
+       stroke="#57534B"
+       stroke-width="1.3"
+       stroke-linejoin="round"
+       id="path42" />
+    <text
+       x="876"
+       y="421"
+       font-family="'Instrument Sans', system-ui, sans-serif"
+       font-size="14"
+       fill="#1D1B18"
+       id="text42">travel</text>
+  </g>
+  <g
+     opacity="0"
+     id="g43">
+    <animate
+       attributeName="opacity"
+       values="0;0;1;1;0;0"
+       keyTimes="0;0.704613;0.73866;0.96591;0.999955;1"
+       dur="8.8s"
+       repeatCount="indefinite" />
+    <rect
+       x="856"
+       y="336"
+       width="324"
+       height="32"
+       rx="8"
+       fill="#FFEFDE"
+       id="rect42" />
+    <rect
+       x="876"
+       y="345"
+       width="14"
+       height="14"
+       rx="4"
+       fill="#FF9D33"
+       stroke="#1D1B18"
+       stroke-width="1"
+       id="rect43" />
+    <text
+       x="898"
+       y="357"
+       font-family="'Instrument Sans', system-ui, sans-serif"
+       font-size="13.5"
+       fill="#1D1B18"
+       id="text43">A field guide to marble</text>
+  </g>
+  <!-- iShell popup -->
+  <g
+     opacity="0"
+     id="g76">
+    <animate
+       attributeName="opacity"
+       values="0;0;1;1;0;0"
+       keyTimes="0;0.11359;0.159092;0.636363;0.67041;1"
+       dur="8.8s"
+       repeatCount="indefinite" />
+    <animateTransform
+       attributeName="transform"
+       type="translate"
+       values="0 -10;0 -10;0 0;0 0;0 -6;0 -6"
+       keyTimes="0;0.11359;0.159092;0.636363;0.67041;1"
+       dur="8.8s"
+       repeatCount="indefinite" />
+    <rect
+       x="24"
+       y="122"
+       width="660"
+       height="320"
+       rx="16"
+       fill="#1D1B18"
+       opacity="0.14"
+       id="rect44" />
+    <g
+       clip-path="url(#ishClip)"
+       id="g61">
+      <rect
+         x="24"
+         y="110"
+         width="660"
+         height="56"
+         fill="#F3F1EB"
+         id="rect45" />
+      <rect
+         x="24"
+         y="166"
+         width="210"
+         height="264"
+         fill="#E3DFD5"
+         id="rect46" />
+      <rect
+         x="234"
+         y="166"
+         width="450"
+         height="264"
+         fill="#1D1B18"
+         id="rect47" />
+      <g
+         opacity="0"
+         id="g49">
+        <animate
+           attributeName="opacity"
+           values="0;0;1;1"
+           keyTimes="0;0.209046;0.215886;1"
+           dur="8.8s"
+           repeatCount="indefinite" />
+        <rect
+           x="24"
+           y="166"
+           width="210"
+           height="52"
+           fill="#CFC9BB"
+           id="rect48" />
+        <circle
+           cx="42"
+           cy="192"
+           r="5"
+           fill="#FF9D33"
+           stroke="#1D1B18"
+           stroke-width="1"
+           id="circle48" />
+        <text
+           x="56"
+           y="190"
+           font-family="'Instrument Sans', system-ui, sans-serif"
+           font-size="15"
+           font-weight="600"
+           fill="#1D1B18"
+           id="text48">bookmark</text>
+        <text
+           x="56"
+           y="207"
+           font-family="'DM Mono', ui-monospace, monospace"
+           font-size="12"
+           fill="#57534B"
+           id="text49">(title) (to path)</text>
+      </g>
+      <g
+         opacity="0"
+         id="g52">
+        <animate
+           attributeName="opacity"
+           values="0;0;1;1;0;0"
+           keyTimes="0;0.209046;0.215886;0.261386;0.295432;1"
+           dur="8.8s"
+           repeatCount="indefinite" />
+        <circle
+           cx="42"
+           cy="240"
+           r="5"
+           fill="#9A9488"
+           id="circle49" />
+        <text
+           x="56"
+           y="245"
+           font-family="'Instrument Sans', system-ui, sans-serif"
+           font-size="14"
+           fill="#1D1B18"
+           id="text50">base64decode</text>
+        <circle
+           cx="42"
+           cy="284"
+           r="5"
+           fill="#9A9488"
+           id="circle50" />
+        <text
+           x="56"
+           y="289"
+           font-family="'Instrument Sans', system-ui, sans-serif"
+           font-size="14"
+           fill="#1D1B18"
+           id="text51">base64encode</text>
+        <circle
+           cx="42"
+           cy="328"
+           r="5"
+           fill="#9A9488"
+           id="circle51" />
+        <text
+           x="56"
+           y="333"
+           font-family="'Instrument Sans', system-ui, sans-serif"
+           font-size="14"
+           fill="#1D1B18"
+           id="text52">tab-group</text>
+      </g>
+      <g
+         id="g58">
+        <animate
+           attributeName="opacity"
+           values="1;1;0;0"
+           keyTimes="0;0.209046;0.215886;1"
+           dur="8.8s"
+           repeatCount="indefinite" />
+        <text
+           x="254"
+           y="196"
+           font-family="'Instrument Sans', system-ui, sans-serif"
+           font-size="14"
+           fill="#FBFAF7"
+           id="text53">Type the name of a command and press Enter to execute it.</text>
+        <text
+           x="254"
+           y="218"
+           font-family="'Instrument Sans', system-ui, sans-serif"
+           font-size="14"
+           fill="#FBFAF7"
+           id="text54">Use the help command for assistance.</text>
+        <text
+           x="254"
+           y="256"
+           font-family="'Instrument Sans', system-ui, sans-serif"
+           font-size="14"
+           font-weight="600"
+           fill="#FBFAF7"
+           id="text55">Keyboard shortcuts</text>
+        <rect
+           x="254"
+           y="274"
+           width="330"
+           height="6"
+           rx="3"
+           fill="#57534B"
+           id="rect55" />
+        <rect
+           x="254"
+           y="292"
+           width="290"
+           height="6"
+           rx="3"
+           fill="#57534B"
+           id="rect56" />
+        <rect
+           x="254"
+           y="310"
+           width="360"
+           height="6"
+           rx="3"
+           fill="#57534B"
+           id="rect57" />
+        <rect
+           x="254"
+           y="328"
+           width="250"
+           height="6"
+           rx="3"
+           fill="#57534B"
+           id="rect58" />
+      </g>
+      <g
+         opacity="0"
+         id="g59">
+        <animate
+           attributeName="opacity"
+           values="0;0;1;1"
+           keyTimes="0;0.209046;0.215886;1"
+           dur="8.8s"
+           repeatCount="indefinite" />
+        <text
+           x="254"
+           y="200"
+           font-family="'Instrument Sans', system-ui, sans-serif"
+           font-size="15"
+           font-weight="600"
+           fill="#FBFAF7"
+           id="text58">Bookmark title: <tspan
+   font-weight="400"
+   fill="#FF9D33"
+   id="tspan58">A field guide to marble</tspan></text>
+      </g>
+      <g
+         opacity="0"
+         id="g60">
+        <animate
+           attributeName="opacity"
+           values="0;0;1;1"
+           keyTimes="0;0.468205;0.475045;1"
+           dur="8.8s"
+           repeatCount="indefinite" />
+        <text
+           x="254"
+           y="232"
+           font-family="'Instrument Sans', system-ui, sans-serif"
+           font-size="15"
+           font-weight="600"
+           fill="#FBFAF7"
+           id="text59">Path: <tspan
+   font-weight="400"
+   fill="#FF9D33"
+   id="tspan59">art</tspan></text>
+      </g>
+    </g>
+    <text
+       x="44.0"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text61"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.215886"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />b</text>
+    <text
+       x="58.4"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text62"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.237523"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />o</text>
+    <text
+       x="72.8"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text63"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.25916"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />o</text>
+    <text
+       x="87.2"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text64"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.280637"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />k</text>
+    <text
+       x="101.6"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text65"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.302272"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />m</text>
+    <text
+       x="116.0"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text66"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.323909"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />a</text>
+    <text
+       x="130.4"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text67"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.345387"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />r</text>
+    <text
+       x="144.8"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text68"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.367023"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />k</text>
+    <text
+       x="173.6"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text69"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.410296"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />t</text>
+    <text
+       x="188.0"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text70"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.431772"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />o</text>
+    <text
+       x="216.8"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text71"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.475045"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />a</text>
+    <text
+       x="231.2"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text72"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.496524"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />r</text>
+    <text
+       x="245.6"
+       y="146"
+       font-family="'DM Mono', ui-monospace, monospace"
+       font-size="24"
+       fill="#1D1B18"
+       opacity="0"
+       id="text73"><animate
+   attributeName="opacity"
+   values="0;1"
+   keyTimes="0;0.518159"
+   dur="8.8s"
+   repeatCount="indefinite"
+   calcMode="discrete" />t</text>
+    <rect
+       x="44"
+       y="124"
+       width="2"
+       height="30"
+       fill="#1D1B18"
+       id="rect73">
+      <animate
+         attributeName="x"
+         values="44;58.4;72.8;87.2;101.6;116.0;130.4;144.8;159.2;173.6;188.0;202.4;216.8;231.2;245.6;260.0;260.0"
+         keyTimes="0;0.215886;0.237523;0.25916;0.280637;0.302272;0.323909;0.345387;0.367023;0.388659;0.410296;0.431772;0.453409;0.475045;0.496524;0.518159;1"
+         dur="8.8s"
+         repeatCount="indefinite"
+         calcMode="discrete" />
+      <animate
+         attributeName="opacity"
+         values="1;1;0;0"
+         keyTimes="0;0.5;0.5;1"
+         dur="1s"
+         repeatCount="indefinite" />
+    </rect>
+    <g
+       opacity="0"
+       id="g75">
+      <animate
+         attributeName="opacity"
+         values="0;0;1;1;0;0"
+         keyTimes="0;0.539796;0.551091;0.636363;0.647659;1"
+         dur="8.8s"
+         repeatCount="indefinite" />
+      <rect
+         x="598"
+         y="122"
+         width="72"
+         height="32"
+         rx="8"
+         fill="#FFFFFF"
+         stroke="#CFC9BB"
+         stroke-width="1.5"
+         id="rect74" />
+      <rect
+         x="598"
+         y="122"
+         width="72"
+         height="32"
+         rx="8"
+         fill="#FF9D33"
+         stroke="#1D1B18"
+         stroke-width="1.2"
+         opacity="0"
+         id="rect75">
+        <animate
+           attributeName="opacity"
+           values="0;0;1;1;0;0"
+           keyTimes="0;0.590864;0.595477;0.619341;0.625069;1"
+           dur="8.8s"
+           repeatCount="indefinite" />
+      </rect>
+      <text
+         x="634"
+         y="143"
+         text-anchor="middle"
+         font-family="'DM Mono', ui-monospace, monospace"
+         font-size="13"
+         fill="#1D1B18"
+         id="text75">Enter</text>
+    </g>
+  </g>
+  <!-- steps -->
+  <rect
+     x="0"
+     y="576"
+     width="1200"
+     height="64"
+     fill="#F3F1EB"
+     id="rect76" />
+  <path
+     d="M0 576H1200"
+     stroke="#E3DFD5"
+     id="path76" />
+  <rect
+     x="270"
+     y="592"
+     width="200"
+     height="32"
+     rx="16"
+     fill="#FFFFFF"
+     stroke="#D9D4C8"
+     id="rect77" />
+  <text
+     x="370"
+     y="613"
+     text-anchor="middle"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     font-weight="600"
+     fill="#57534B"
+     id="text77">1 · Summon the prompt</text>
+  <g
+     opacity="0"
+     id="g78">
+    <animate
+       attributeName="opacity"
+       values="0;0;1;1;0;0"
+       keyTimes="0;0.11359;0.122658;0.204591;0.213658;1"
+       dur="8.8s"
+       repeatCount="indefinite" />
+    <rect
+       x="270"
+       y="592"
+       width="200"
+       height="32"
+       rx="16"
+       fill="#FF9D33"
+       stroke="#1D1B18"
+       stroke-width="1.2"
+       id="rect78" />
+    <text
+       x="370"
+       y="613"
+       text-anchor="middle"
+       font-family="'Instrument Sans', system-ui, sans-serif"
+       font-size="14"
+       font-weight="600"
+       fill="#1D1B18"
+       id="text78">1 · Summon the prompt</text>
+  </g>
+  <rect
+     x="510"
+     y="592"
+     width="220"
+     height="32"
+     rx="16"
+     fill="#FFFFFF"
+     stroke="#D9D4C8"
+     id="rect79" />
+  <text
+     x="620"
+     y="613"
+     text-anchor="middle"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     font-weight="600"
+     fill="#57534B"
+     id="text79">2 · Type what you mean</text>
+  <g
+     opacity="0"
+     id="g80">
+    <animate
+       attributeName="opacity"
+       values="0;0;1;1;0;0"
+       keyTimes="0;0.204591;0.213658;0.602317;0.611385;1"
+       dur="8.8s"
+       repeatCount="indefinite" />
+    <rect
+       x="510"
+       y="592"
+       width="220"
+       height="32"
+       rx="16"
+       fill="#FF9D33"
+       stroke="#1D1B18"
+       stroke-width="1.2"
+       id="rect80" />
+    <text
+       x="620"
+       y="613"
+       text-anchor="middle"
+       font-family="'Instrument Sans', system-ui, sans-serif"
+       font-size="14"
+       font-weight="600"
+       fill="#1D1B18"
+       id="text80">2 · Type what you mean</text>
+  </g>
+  <rect
+     x="770"
+     y="592"
+     width="160"
+     height="32"
+     rx="16"
+     fill="#FFFFFF"
+     stroke="#D9D4C8"
+     id="rect81" />
+  <text
+     x="850"
+     y="613"
+     text-anchor="middle"
+     font-family="'Instrument Sans', system-ui, sans-serif"
+     font-size="14"
+     font-weight="600"
+     fill="#57534B"
+     id="text81">3 · Press Enter</text>
+  <g
+     opacity="0"
+     id="g82">
+    <animate
+       attributeName="opacity"
+       values="0;0;1;1;0;0"
+       keyTimes="0;0.602317;0.611385;0.96591;0.999955;1"
+       dur="8.8s"
+       repeatCount="indefinite" />
+    <rect
+       x="770"
+       y="592"
+       width="160"
+       height="32"
+       rx="16"
+       fill="#FF9D33"
+       stroke="#1D1B18"
+       stroke-width="1.2"
+       id="rect82" />
+    <text
+       x="850"
+       y="613"
+       text-anchor="middle"
+       font-family="'Instrument Sans', system-ui, sans-serif"
+       font-size="14"
+       font-weight="600"
+       fill="#1D1B18"
+       id="text82">3 · Press Enter</text>
+  </g>
+  <path
+     d="M490 603L495 608L490 613"
+     fill="none"
+     stroke="#9A9488"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path82" />
+  <path
+     d="M750 603L755 608L750 613"
+     fill="none"
+     stroke="#9A9488"
+     stroke-width="1.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path83" />
+</svg>

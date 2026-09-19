@@ -1,0 +1,394 @@
+/* Scrapyard landing page
+   Values are taken 1:1 from the design mockup. The accent colour is the only
+   themable value: change --accent and the tints below follow. (The SVG files in
+   img/ are standalone documents and carry the default accent, #FF9D33, baked in.) */
+
+/* ---------- tokens ---------- */
+
+:root {
+  --accent: #FF9D33;
+  --accent-tint: color-mix(in srgb, var(--accent) 42%, transparent);
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, #FFFFFF);
+  --accent-ink: #A35200;
+
+  --ink: #1D1B18;
+  --ink-2: #57534B;
+  --ink-3: #6F6A60;
+  --bg: #FBFAF7;
+  --bg-alt: #F3F1EB;
+  --surface: #FFFFFF;
+  --line: #E3DFD5;
+  --line-strong: #D9D4C8;
+
+  --font-sans: 'Instrument Sans', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono: 'DM Mono', ui-monospace, monospace;
+
+  /* horizontal page gutter: 24px minimum, content column capped at 1200px */
+  --gutter: clamp(24px, calc((100% - 1200px) / 2), 400px);
+}
+
+/* ---------- base ---------- */
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1, h2, h3, p, figure { margin: 0; }
+
+/* ---------- shared type ---------- */
+
+/* small uppercase monospace label */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* "01  Section name" */
+.eyebrow { display: flex; gap: 12px; }
+.eyebrow__num { color: var(--accent-ink); }
+
+.display {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -.02em;
+}
+.display__line { display: block; }
+.display__line--em { font-style: italic; color: var(--ink-2); }
+
+.section-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: -.015em;
+}
+
+.title-md { font-family: var(--font-serif); font-weight: 400; font-size: 34px; line-height: 1.1; }
+.title-sm { font-family: var(--font-serif); font-weight: 400; font-size: 32px; line-height: 1.1; }
+
+.lede { font-size: 20px; line-height: 1.5; color: var(--ink-2); }
+
+/* ---------- layout ---------- */
+
+.section {
+  box-sizing: border-box;
+  padding: 104px var(--gutter) 112px;
+}
+.section--rule-top { border-top: 1px solid var(--line); }
+.section--ruled { border-block: 1px solid var(--line); }
+.section--alt { background: var(--bg-alt); border-block: 1px solid var(--line); }
+
+.section-head { display: flex; flex-direction: column; gap: 20px; }
+.section-head--narrow { max-width: 760px; }
+.section-head--wide { max-width: 800px; }
+
+/* 12-column grid: a narrow aside and a wide main column */
+.split {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 24px;
+}
+.split__aside { grid-column: 1 / span 3; }
+.split__main { grid-column: 4 / span 9; }
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 22px;
+  box-sizing: border-box;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn:hover { text-decoration: none; }
+.btn--lg { min-height: 52px; padding: 0 28px; font-size: 17px; }
+.btn--xl { min-height: 56px; padding: 0 34px; font-size: 18px; gap: 12px; }
+.btn__icon { flex: none; }
+
+/* ---------- header / footer ---------- */
+
+.site-header {
+  height: 88px;
+  box-sizing: border-box;
+  padding-inline: var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand__name { font-family: var(--font-serif); font-size: 30px; line-height: 1; }
+
+.site-nav { display: flex; align-items: center; gap: 36px; font-size: 16px; }
+
+.site-footer {
+  height: 112px;
+  box-sizing: border-box;
+  padding-inline: var(--gutter);
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.site-footer .brand { gap: 10px; color: var(--ink); }
+.site-footer .brand__name { font-size: 24px; }
+.site-footer .site-nav { gap: 32px; font-size: inherit; }
+
+/* ---------- hero ---------- */
+
+.hero {
+  box-sizing: border-box;
+  padding: 56px var(--gutter) 96px;
+}
+
+.hero__title { font-size: 128px; line-height: .94; }
+.hero__highlight {
+  background: linear-gradient(transparent 58%, var(--accent-tint) 58%);
+  padding: 0 .06em;
+}
+
+.hero__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  margin-top: 44px;
+}
+.hero__lede {
+  max-width: 600px;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.hero__actions { display: flex; align-items: center; gap: 28px; }
+
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.hero__figure {
+  margin-top: 64px;
+  padding: 32px;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+
+/* ---------- SVG graphics (loaded via <object> so they can use the web fonts) ---------- */
+
+.diagram { display: block; width: 100%; height: auto; }
+.diagram--hero { aspect-ratio: 1120 / 440; }
+.diagram--interface { aspect-ratio: 1200 / 700; }
+.diagram--ishell { aspect-ratio: 1200 / 640; }
+
+.screenshot {
+  margin-top: 56px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  box-shadow: 0 40px 70px -40px rgba(29, 27, 24, .35);
+  line-height: 0;
+}
+
+/* ---------- what it is ---------- */
+
+.intro__aside { padding-top: 14px; }
+.intro__statement {
+  font-family: var(--font-serif);
+  font-size: 46px;
+  line-height: 1.18;
+  letter-spacing: -.005em;
+  text-wrap: pretty;
+}
+.intro__statement-rest { color: var(--ink-2); }
+.intro__note {
+  margin-top: 32px;
+  max-width: 640px;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ---------- cards (features, use cases) ---------- */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 56px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 264px;
+  padding: 32px;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+.card__top { display: flex; align-items: center; justify-content: space-between; }
+.card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+}
+.card__num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--ink-3);
+}
+.card__text { max-width: 480px; font-size: 17.5px; line-height: 1.55; color: var(--ink-2); }
+
+/* ---------- features: ruled sub-blocks ---------- */
+
+.subsection {
+  margin-top: 56px;
+  padding-top: 56px;
+  border-top: 1px solid var(--line-strong);
+}
+.subsection--first { margin-top: 72px; }
+
+.storage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.storage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 24px;
+  border-left: 1px solid var(--line-strong);
+}
+.storage-item__label { display: flex; align-items: center; gap: 10px; }
+.storage-item__text { font-size: 16px; line-height: 1.55; color: var(--ink-2); }
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 12px;
+  letter-spacing: .04em;
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+.chip {
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  font-size: 16px;
+}
+
+/* ---------- captions under the screenshots ---------- */
+
+.captions { display: grid; gap: 40px; margin-top: 40px; }
+.captions--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.captions--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.caption { display: flex; flex-direction: column; gap: 10px; }
+.caption__text { font-size: 17px; line-height: 1.55; color: var(--ink-2); }
+.captions--2 .caption__text { max-width: 520px; }
+.captions--3 .caption__text { max-width: 340px; }
+
+/* ---------- final call to action ---------- */
+
+.cta {
+  box-sizing: border-box;
+  padding: 128px var(--gutter) 136px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  text-align: center;
+}
+.cta__title { font-size: 104px; line-height: .96; }
+.cta__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+
+/* ---------- responsive ----------
+   The mockup is a 1440px desktop design. The rules below only kick in below
+   1024px and were not part of it: they stack the grids and scale the largest type. */
+
+@media (max-width: 1024px) {
+  .hero__title { font-size: 88px; }
+  .cta__title { font-size: 76px; }
+  .section-title { font-size: 52px; }
+  .intro__statement { font-size: 36px; }
+
+  .hero__row { flex-direction: column; align-items: flex-start; gap: 32px; }
+
+  .split { grid-template-columns: minmax(0, 1fr); row-gap: 24px; }
+  .split__aside, .split__main { grid-column: 1; }
+  .intro__aside { padding-top: 0; }
+
+  .captions--3 { grid-template-columns: minmax(0, 1fr); }
+  .captions--3 .caption__text { max-width: 520px; }
+}
+
+@media (max-width: 720px) {
+  body { font-size: 17px; }
+
+  .site-nav { gap: 16px; }
+  .site-nav a:not(.btn) { display: none; }
+
+  .section { padding-block: 72px 80px; }
+  .hero { padding-block: 32px 64px; }
+  .hero__title { font-size: 56px; }
+  .hero__lede { font-size: 18px; }
+  .hero__actions { flex-wrap: wrap; gap: 16px 24px; }
+  .hero__figure { margin-top: 40px; padding: 12px; border-radius: 14px; }
+
+  .section-title { font-size: 40px; }
+  .title-md { font-size: 30px; }
+  .lede, .intro__note { font-size: 18px; }
+  .intro__statement { font-size: 28px; }
+
+  .card-grid, .captions--2, .storage-grid { grid-template-columns: minmax(0, 1fr); }
+  .card { min-height: 0; padding: 24px; }
+  .subsection { padding-top: 40px; }
+
+  .cta { padding-block: 88px 96px; }
+  .cta__title { font-size: 52px; }
+
+  .site-footer { height: auto; padding-block: 32px; flex-direction: column; gap: 20px; text-align: center; }
+  .site-footer .site-nav { flex-wrap: wrap; justify-content: center; gap: 12px 24px; }
+}
