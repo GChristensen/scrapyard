@@ -72,6 +72,8 @@ input:focus {
 
 #treeview {
     overflow: hidden;
+    /* long titles fade out at the edge instead of being cut mid-letter */
+    mask-image: linear-gradient(to right, black calc(100% - 7px), transparent);
 }
 
 .box {
@@ -244,13 +246,26 @@ input:focus {
 .tool-button {
     cursor:pointer;
     vertical-align:middle;
-    border-radius:11px;
     width:22px;
     height:22px;
 }
-.tool-button:hover {
-    background:#0003;
-    color:#fff;
+
+/* the hover/focus ring is an inset outline: it takes no space and passes through .midnight-filter with the icon */
+.tool-button {
+    border-radius:50%;
+    outline:1px solid transparent;
+    outline-offset:-1px;
+}
+.tool-button:hover,
+.tool-button:focus-visible {
+    outline-color:#333;
+}
+#btnHelperWarning:hover, #btnServerWarning:hover,
+#btnHelperWarning:focus-visible, #btnServerWarning:focus-visible {
+    outline-color:#e31e24;
+}
+.tool-button:active {
+    background:#0000000d;
 }
 
 .blue-button, .black-button {
@@ -490,8 +505,26 @@ select {
     height: 18px;
     width: 100%;
     font-size: 12px;
-    border: 1px solid black;
+    border: 1px solid #999;
     padding-left: 16px;
+}
+
+#search-input:hover {
+    border-color: black;
+}
+
+#search-input:focus {
+    border-color: #007799;
+}
+
+/* frames rest quietly and darken on hover/focus; the dark theme sets its own borders */
+#scrapyard-sidebar .selectric {
+    border-color: #999;
+}
+
+#scrapyard-sidebar .selectric:hover,
+#scrapyard-sidebar .selectric-focus .selectric {
+    border-color: black;
 }
 
 #busy-indicator {
@@ -530,13 +563,15 @@ a#set-default-icon, a#copy-reference-url {
     padding-top: 4px;
     padding-left: 4px;
     justify-self: start;
-    font-weight: bold;
+    font-size: 12px;
+    opacity: 0.85;
 }
 
 #footer-buttons {
     grid-column: 2 / 2;
     grid-row: 1 / 1;
     justify-self: end;
+    margin-right: 2px;
 }
 
 #footer-close-btn, #footer-reload-btn, #footer-find-btn {
@@ -554,6 +589,25 @@ a#set-default-icon, a#copy-reference-url {
 #footer-reload-btn, #footer-find-btn {
     font-size: 85%;
     padding-right: 0;
+}
+
+/* same 22px ring buttons as the toolbar; these are glyphs, so the ring follows the text color */
+#footer-close-btn, #footer-reload-btn, #footer-find-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    line-height: 1;
+    border-radius: 50%;
+    outline: 1px solid transparent;
+    outline-offset: -1px;
+}
+
+#footer-close-btn:hover, #footer-reload-btn:hover, #footer-find-btn:hover,
+#footer-close-btn:focus-visible, #footer-reload-btn:focus-visible, #footer-find-btn:focus-visible {
+    outline-color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
 #footer-content {

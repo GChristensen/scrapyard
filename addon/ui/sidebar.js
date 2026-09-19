@@ -106,6 +106,16 @@ async function init() {
     $("#btnServerWarning").on("click", () => send.helperAppProbe({verbose: true}));
     $("#btnBatchWarning").on("click", () => cancelBatchMode());
 
+    // the toolbar icons are not native buttons; make them reachable and operable from the keyboard
+    const iconButtons = $(".tool-button, #footer-buttons i");
+    iconButtons.attr({tabindex: 0, role: "button"});
+    iconButtons.on("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.currentTarget.click();
+        }
+    });
+
     $("#shelf-menu-button").click(async () => {
         $("#search-mode-menu").hide();
 

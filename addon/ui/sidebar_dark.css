@@ -224,6 +224,10 @@ input[type=text], .selectric, .selectric .button, .selectric-items, .selectric-s
     background-color: var(--in-content-box-background) !important;
 }
 
+#search-input:focus {
+    border-color: var(--tone-3) !important;
+}
+
 .midnight-filter, .midnight-filter-menu {
     filter: invert(80%) sepia(7%) saturate(52%) hue-rotate(201deg) brightness(90%) contrast(87%);
 }
