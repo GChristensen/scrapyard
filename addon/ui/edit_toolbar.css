@@ -6,160 +6,332 @@
     bottom: 0 !important;
     z-index: 2147483647 !important;
     width: 100% !important;
-    height: 42px !important;
+    height: 44px !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
 #scrapyard-edit-bar {
-    background: #aaa;
-    border-top: 1px solid #999;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
     width: 100%;
-    height: 26px;
+    height: 44px;
+    padding: 0 12px;
+    background: rgba(26, 29, 36, .9);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border-top: 1px solid rgba(255, 255, 255, .12);
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, .22);
+    color: #e9ecf2;
     white-space: nowrap;
     text-align: left;
+    font: normal 12.5px/1 system-ui, "Segoe UI", sans-serif;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+#scrapyard-edit-bar > * {
+    flex: none;
+}
+
+#scrapyard-edit-bar svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.scrapyard-brand {
     display: flex;
-    padding-top: 8px;
-    padding-bottom: 8px;
-    line-height: 26px;
-    font-weight: normal;
-    letter-spacing: normal;
     align-items: center;
-}
-
-#scrapyard-edit-bar * {
-    flex: 0 1 auto;
-}
-
-#scrapyard-original-url-label {
-    margin-left: 8px;
-    display: inline-block;
-    color: black;
-}
-
-#scrapyard-original-url-text {
-    margin: 0;
-    margin-left: 4px;
+    gap: 8px;
     margin-right: 4px;
-    height: 16px;
-    /*margin-top: 2px;*/
-    padding: 0;
-    letter-spacing: normal;
-    border: 1px solid #777;
-    flex-grow: 1;
-    flex-shrink: 0;
+    font-size: 13px;
+    letter-spacing: .01em;
 }
 
 #scrapyard-icon {
-    vertical-Align: middle;
-    margin-Left: 10px;
-    margin-top: 4px;
     width: 20px;
     height: 20px;
 }
 
 #scrapyard-brand {
-    margin-top: 2px;
-    margin-left: 5px;
-    margin-right: 5px;
-    color: black;
-    font-weight: bold;
+    color: inherit;
+    font-weight: 700;
+}
+
+#scrapyard-edit-bar .scrapyard-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    margin: 0;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .08);
+    color: #e9ecf2;
+    font: inherit;
     letter-spacing: normal;
-}
-
-#scrapyard-edit-doc-button {
-    width: 81px;
-}
-
-#scrapyard-edit-bar, #scrapyard-edit-bar *, #scrapyard-edit-bar input[type=button].blue-button,
-#scrapyard-edit-bar input[type=button].yellow-button, #scrapyard-edit-bar input[type=text].original-url-text {
-    font-family: "Arial", "Helvetica", sans-serif;
-    font-size: 12px;
-    box-sizing: content-box;
-}
-
-#scrapyard-edit-bar input[type=button].blue-button,
-#scrapyard-edit-bar input[type=button].yellow-button,
-#scrapyard-edit-bar input[type=button].black-button {
-    background: #09c;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 5px;
-    padding: 3px 15px;
-    border: none;
-    line-height: 20px;
-    margin-left: 5px;
     text-transform: none;
+    cursor: pointer;
+}
+
+#scrapyard-edit-bar .scrapyard-btn:hover {
+    background: rgba(255, 255, 255, .16);
+}
+
+#scrapyard-edit-bar .scrapyard-btn:focus-visible,
+#scrapyard-edit-bar .scrapyard-menu-item-wrapper:focus-visible {
+    outline: 2px solid #5cc8ee;
+    outline-offset: 2px;
+}
+
+#scrapyard-edit-bar .scrapyard-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+#scrapyard-edit-bar .scrapyard-btn.scrapyard-primary {
+    background: #ff8a2a;
+    border-color: #ff8a2a;
+    color: #1b1207;
+    font-weight: 600;
+}
+
+#scrapyard-edit-bar .scrapyard-btn.scrapyard-primary:hover {
+    background: #ff9b47;
+}
+
+#scrapyard-edit-bar .scrapyard-btn.scrapyard-on {
+    background: rgba(31, 182, 232, .2);
+    border-color: #1fb6e8;
+    color: #8fdcf8;
+}
+
+#scrapyard-edit-bar .scrapyard-btn.scrapyard-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: #c4c9d6;
+}
+
+#scrapyard-edit-bar .scrapyard-btn.scrapyard-ghost:hover {
+    background: rgba(255, 255, 255, .12);
+    color: #fff;
+}
+
+#scrapyard-edit-bar .scrapyard-btn.scrapyard-icon-btn {
+    width: 28px;
+    padding: 0;
+    justify-content: center;
+}
+
+#scrapyard-edit-bar .scrapyard-btn:disabled {
+    opacity: .4;
+    cursor: default;
+    background: rgba(255, 255, 255, .06);
+}
+
+.scrapyard-sep {
+    width: 1px;
+    height: 20px;
+    margin: 0 4px;
+    background: rgba(255, 255, 255, .16);
+}
+
+#scrapyard-original-url-label {
+    margin-left: 2px;
+    color: #a3a9b8;
+}
+
+#scrapyard-edit-bar > .scrapyard-url {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, .08);
+    background: rgba(0, 0, 0, .34);
+    color: #d6dae4;
+}
+
+.scrapyard-url svg {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    stroke: #8b92a3;
+}
+
+#scrapyard-original-url-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: all;
+}
+
+#scrapyard-original-url-link {
+    display: none;
+}
+
+.scrapyard-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    color: #c4c9d6;
     font-weight: normal;
     letter-spacing: normal;
-}
-
-#scrapyard-edit-bar input[type=button].yellow-button {
-    background: #f70;
-}
-
-#scrapyard-edit-bar input[type=button].black-button {
-    background: #000;
-}
-
-#scrapyard-edit-bar input[type=button]:disabled {
-    background: #555;
-}
-
-.scrapyard-menu-item-wrapper {
-    height: 14px;
-    color: #333;
     cursor: pointer;
-    border-bottom: 1px solid #999;
-    padding: 8px 20px;
-    vertical-align: middle;
 }
 
-.scrapyard-menu-item {
-    text-align: center;
-    height: 14px;
-    line-height: 14px;
-    min-width: 200px;
+.scrapyard-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
 }
 
-#scrapyard-hide-button {
-    margin-right: 8px;
+.scrapyard-switch i {
+    position: relative;
+    width: 26px;
+    height: 15px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .18);
+    transition: background .15s;
 }
 
-#scrapyard-go-button {
-    margin-left: 0;
+.scrapyard-switch i:after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform .15s;
+}
+
+.scrapyard-switch input:checked + i {
+    background: #1fb6e8;
+}
+
+.scrapyard-switch input:checked + i:after {
+    transform: translateX(11px);
+}
+
+.scrapyard-switch input:focus-visible + i {
+    outline: 2px solid #5cc8ee;
+    outline-offset: 2px;
+}
+
+.scrapyard-rel {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.scrapyard-pop {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    z-index: 2147483646;
+    background: #262a33;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+    color: #e9ecf2;
+    text-align: left;
+}
+
+.scrapyard-tip {
+    display: none;
+    padding: 9px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.scrapyard-tip b {
+    color: #a3a9b8;
+    font-weight: 600;
+}
+
+.scrapyard-tip-left {
+    left: 0;
+}
+
+.scrapyard-tip-right {
+    right: 0;
+}
+
+.scrapyard-rel:hover > .scrapyard-tip,
+.scrapyard-rel:focus-within > .scrapyard-tip {
+    display: block;
 }
 
 #scrapyard-marker-menu {
-    position: absolute;
-    z-index: 2147483646;
-    border: 1px solid #999;
-    background: #fff;
     display: none;
-    box-shadow: 5px 5px 5px #888888;
-    border-width: 1px 1px 0px 1px;
+    left: 0;
+    width: 236px;
+    padding: 6px;
+    box-sizing: border-box;
 }
 
-#scrapyard-marker-cleaner {
-
+#scrapyard-marker-menu hr {
+    height: 1px;
+    margin: 3px 4px;
+    border: 0;
+    background: rgba(255, 255, 255, .12);
 }
 
-#scrapyard-auto-open-check {
-    margin-left: 5px;
+.scrapyard-menu-item-wrapper {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    margin-bottom: 2px;
+    padding: 0 6px;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
-#scrapyard-auto-open-check ~ label {
-    margin: 0;
-    padding: 0;
-    padding-left: 2px;
-    padding-top: 2px;
-    color: black;
-    font-weight: normal;
-    letter-spacing: normal;
+.scrapyard-menu-item-wrapper:hover {
+    background: rgba(255, 255, 255, .1);
+}
+
+.scrapyard-menu-clear {
+    gap: 8px;
+    padding: 0 10px;
+    height: 30px;
+    color: #a3a9b8;
+}
+
+.scrapyard-menu-clear svg {
+    width: 14px;
+    height: 14px;
+}
+
+.scrapyard-menu-item {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 5px;
+    background: #fff;
+    color: #222;
+    font-size: 12px;
+    line-height: 1;
 }
 
 .scrapyard-marker-1 {
-    background: #f2cfff;;
+    background: #f2cfff;
 }
 
 .scrapyard-marker-2 {
@@ -232,49 +404,4 @@
     animation-duration: 1s;
     animation-timing-function: linear;
     animation-iteration-count: 1;
-}
-
-.scrapyard-icon-container {
-    position: relative;
-    height: 16px;
-    display: flex;
-    align-content: center;
-    align-items: center;
-}
-
-.scrapyard-help-mark, .scrapyard-i-mark {
-    width: 16px;
-    height: 16px;
-    margin-left: 4px;
-    /*background-image: url(../icons/help-mark.svg);*/
-    background-size: 16px 16px;
-    background-repeat: no-repeat;
-    vertical-align: middle;
-    display: inline-block;
-}
-
-.scrapyard-i-mark {
-    /*background-image: url(../icons/page-info.svg);*/
-    width: 18px;
-    height: 18px;
-    background-size: 18px 18px;
-    margin-left: 16px;
-    margin-right: 10px;
-    margin-top: -2px;
-}
-
-.scrapyard-tips {
-    border-radius: 5px;
-    border: 1px solid #555;
-    background: #d2d2d2;
-    padding: 5px;
-    margin-bottom: 5px;
-    text-align: left;
-    z-index: 2147483647;
-    color: black;
-}
-
-.scrapyard-tips.scrapyard-hide {
-    display: none;
-    position: absolute;
 }
