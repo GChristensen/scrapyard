@@ -225,6 +225,10 @@ kbd {
 .diagram--hero { aspect-ratio: 1120 / 440; }
 .diagram--interface { aspect-ratio: 1200 / 700; }
 .diagram--ishell { aspect-ratio: 1200 / 640; }
+.diagram--shelves { aspect-ratio: 1320 / 850; }
+
+/* the isometric scene carries its own shadows: no frame, it sits on the page */
+.shelves-figure { margin: 56px 0 0; }
 
 .screenshot {
   margin-top: 56px;
