@@ -1,6 +1,6 @@
 import {settings} from "../../settings.js";
 import {setSaveCheckHandler} from "../options.js";
-import {CAPTURE_SETTINGS_KEY, loadCaptureSettings as loadStoredCaptureSettings} from "../../capture_options.js";
+import {loadCaptureSettings as loadStoredCaptureSettings, saveCaptureSettings} from "../../capture_options.js";
 
 async function loadCaptureSettings() {
     const object = await loadStoredCaptureSettings();
@@ -91,12 +91,7 @@ async function storeCaptureSettings(e) {
         "options-lazyloadtype": lazyLoadType
     };
 
-    let settings = await browser.storage.local.get(CAPTURE_SETTINGS_KEY);
-    settings = settings[CAPTURE_SETTINGS_KEY] || {};
-
-    Object.assign(settings, newSettings);
-
-    await browser.storage.local.set({[CAPTURE_SETTINGS_KEY]: settings});
+    await saveCaptureSettings(newSettings);
 }
 
 async function loadSaveSettings() {

@@ -17,12 +17,14 @@ import {send} from "../proxy.js";
 import {openSidePanel, toggleSidebarWindow} from "../utils_sidebar.js";
 import {isSpecialPage} from "../bookmarking.js";
 import {settings} from "../settings.js";
+import {loadCaptureSettings, saveCaptureSettings} from "../capture_options.js";
 
 let tree;
 let bookmarkFolderSelect;
 let folderHistory;
 let crawlerMode;
 let windowId;
+let saveScripts;
 
 $(init);
 
@@ -47,8 +49,11 @@ async function init() {
     if (_SIDE_PANEL)
         windowId = (await browser.windows.getCurrent()).id;
 
+    await initSaveScripts();
+
     $("#new-shelf").on("click", () => createNewFolder(NODE_TYPE_SHELF));
     $("#new-folder").on("click", () => createNewFolder(NODE_TYPE_FOLDER));
+    $("#save-scripts").on("click", toggleSaveScripts);
     $("#crawler-check").on("click", switchCrawlerMode);
     $("#treeview").on("select_node.jstree", onTreeFolderSelected);
     $("#sidebar-toggle").on("click", toggleSidebar);
@@ -131,6 +136,31 @@ async function createNewFolder(type) {
         bookmarkFolderSelect.val(folder.id);
         selectricRefresh(bookmarkFolderSelect)
     }
+}
+
+async function initSaveScripts() {
+    const captureSettings = await loadCaptureSettings();
+    saveScripts = !!captureSettings["options-savescripts"];
+    updateSaveScriptsUI(saveScripts);
+}
+
+function updateSaveScriptsUI(enabled) {
+    if (enabled) {
+        $("#save-scripts").removeClass("save-scripts-no")
+            .addClass("save-scripts-yes")
+            .attr("title", "Save scripts");
+    }
+    else {
+        $("#save-scripts").removeClass("save-scripts-yes")
+            .addClass("save-scripts-no")
+            .attr("title", "Do not save scripts");
+    }
+}
+
+async function toggleSaveScripts() {
+    saveScripts = !saveScripts;
+    updateSaveScriptsUI(saveScripts);
+    await saveCaptureSettings({"options-savescripts": saveScripts});
 }
 
 function switchCrawlerMode(e) {

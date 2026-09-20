@@ -93,7 +93,7 @@ input:focus {
 	width: 100%;
 }
 
-#new-folder, #new-shelf {
+#new-folder, #new-shelf, #save-scripts {
 	margin-left: 4px;
 	flex: 0 1 auto;
     min-width: 22px;
@@ -108,6 +108,14 @@ input:focus {
 
 #new-shelf {
     background-image: url("/icons/new-shelf.svg");
+}
+
+.save-scripts-yes {
+    background-image: url("/icons/save-scripts-yes.svg");
+}
+
+.save-scripts-no {
+    background-image: url("/icons/save-scripts-no.svg");
 }
 
 #buttons {

@@ -41,6 +41,16 @@ export async function loadCaptureSettings() {
     return {...CAPTURE_SETTINGS_DEFAULTS, ...stored};
 }
 
+/**
+ * @param {object} newSettings
+ * @returns {Promise<void>}
+ */
+export async function saveCaptureSettings(newSettings) {
+    const stored = (await browser.storage.local.get(CAPTURE_SETTINGS_KEY))?.[CAPTURE_SETTINGS_KEY] || {};
+    Object.assign(stored, newSettings);
+    await browser.storage.local.set({[CAPTURE_SETTINGS_KEY]: stored});
+}
+
 const REFERER = {0: "strict", 1: "origin", 2: "origin-path"};
 const LAZY_LOAD = {"0": "none", "1": "scroll", "2": "shrink"};
 
