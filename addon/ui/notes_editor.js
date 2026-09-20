@@ -287,6 +287,18 @@ export class PlainTextEditor extends Editor {
         return this.getContent();
     }
 
+    setSaveHandler(handler) {
+        super.setSaveHandler(handler);
+
+        // the namespace keeps the handlers of the recreated editors from accumulating
+        $("#editor").off("keydown.save").on("keydown.save", e => {
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "s") {
+                e.preventDefault();
+                handler();
+            }
+        });
+    }
+
     setBlurHandler(handler) {
         $("#editor").on("blur", handler);
     }

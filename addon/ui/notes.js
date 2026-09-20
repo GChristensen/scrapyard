@@ -59,6 +59,11 @@ async function init() {
 
         NODE_ID = node.id;
 
+        // the content date of an attached notes node also reflects its other content, so only the standalone
+        // notes show the stored date, the attached ones show the time of the saves made in this page
+        if (node.type === NODE_TYPE_NOTES && node.content_modified)
+            showSaveTime(node.content_modified);
+
         if (node.type === NODE_TYPE_NOTES) {
             sourceURL.removeClass("source-url");
             sourceURL.addClass("notes-title");
@@ -158,10 +163,13 @@ async function init() {
             formatNotes(editor.renderContent(), format);
             $("#format-selector").hide();
             $("#align-selector").show();
+            $("#save-hint").hide();
         }
         else if (e.target.id === "edit-button") {
             $("#format-selector").show();
             $("#align-selector").hide();
+            // "show" would restore the inline display of the span, which ignores the width and height
+            $("#save-hint").css("display", "inline-block");
             editor.focus();
         }
     });
@@ -382,6 +390,8 @@ async function saveNotes() {
     try {
         await send.storeNotes({options});
 
+        showSaveTime(new Date());
+
         if (sequence === saveSequence)
             hideNotesError();
 
@@ -397,6 +407,10 @@ async function saveNotes() {
             retrySaveNotes();
         }
     }
+}
+
+function showSaveTime(date) {
+    $("#save-time").text("Saved: " + new Date(date).toLocaleString());
 }
 
 function retrySaveNotes() {

@@ -6,6 +6,13 @@ input, textarea {
     outline: none !important;
 }
 
+/* An unstyled textarea is drawn by the native theme with its own border and inner padding. The focus rule below
+   switches the theme off, which changes the padding, so the box is defined explicitly for both states. */
+textarea {
+    border: 1px solid #999;
+    padding: 2px;
+}
+
 textarea:focus {
     border: 1px solid #007799;
 }
@@ -125,6 +132,7 @@ a#notes-button.focus, a#edit-button.focus {
 }
 
 #editor {
+    box-sizing: border-box;
     width: calc(100% - 4px);
     height: calc(100% - 4px);
     font-size: 12pt;
@@ -149,6 +157,29 @@ a#notes-button.focus, a#edit-button.focus {
 
 #inserts {
     display: none;
+}
+
+#save-info {
+    white-space: nowrap;
+    opacity: 0.8;
+}
+
+#save-hint {
+    display: none;
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+    line-height: 14px;
+    padding: 0;
+    margin-right: 6px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    vertical-align: 1px;
+    cursor: help;
+    user-select: none;
 }
 
 #close-button {
