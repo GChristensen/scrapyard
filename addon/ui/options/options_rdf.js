@@ -2,7 +2,6 @@ import {send} from "../../proxy.js";
 import {isBuiltInShelf} from "../../storage.js";
 import {showNotification} from "../../utils_browser.js";
 import {Query} from "../../storage_query.js";
-import {ensureSidebarHost} from "../../utils_sidebar.js";
 import {selectricRefresh, simpleSelectric} from "../shelf_list.js";
 import {settings} from "../../settings.js";
 
@@ -91,19 +90,21 @@ async function onStartRDFImport(e) {
 
     browser.runtime.onMessage.addListener(importListener);
 
-    let hostWindowId;
-    if (!_BACKGROUND_PAGE)
-        hostWindowId = await ensureSidebarHost(1000);
-
-    send.importFile({
-        hostWindowId,
+    // the RDF import is performed in the background, it does not need the sidebar
+    send.importRdfFile({
         file: path,
         file_name: shelf,
         file_ext: "RDF",
         threads: RDF_IMPORT_THREADS,
         quick: openMode,
         createIndex: $("#rdf-import-create-search-index").is(":checked")
-    }).then(finalize)
+    }).then(response => {
+          // a message that no context has handled resolves with no acknowledgement
+          if (!response?.imported)
+              showNotification({message: "The import was not performed: the request was not handled."});
+
+          finalize();
+      })
       .catch(e => {
           showNotification({message: e.message});
           finalize();

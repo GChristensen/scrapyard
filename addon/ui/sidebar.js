@@ -666,7 +666,13 @@ async function performSearch() {
 
 // "File" is non-serializable on Chrome, hence imported files could not be processed in the background
 if (!_BACKGROUND_PAGE)
-    import("../core_import.js");
+    import("../core_import.js")
+        // the import handler lives only here on Chrome, so a failure to load it would
+        // silently leave every import request unhandled
+        .catch(e => {
+            console.error("Scrapyard: the import module could not be loaded", e);
+            showNotification("The import module could not be loaded, importing is not available.");
+        });
 
 async function performImport(file, file_name, file_ext) {
     startProcessingIndication(true);

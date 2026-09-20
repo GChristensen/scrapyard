@@ -42,10 +42,14 @@ receive.importFile = async message => {
 
         let invalidationState = ishellConnector.isInvalidationEnabled();
         ishellConnector.enableInvalidation(false);
-        return Import.transaction(importer).finally(() => {
-            ishellConnector.enableInvalidation(invalidationState);
-            ishellConnector.invalidateCompletion();
-        });
+        // the acknowledgement lets the sender tell a finished import from a message that no context
+        // has handled: on Chrome the handler lives in the sidebar and is addressed by window
+        return Import.transaction(importer)
+            .then(() => ({imported: true}))
+            .finally(() => {
+                ishellConnector.enableInvalidation(invalidationState);
+                ishellConnector.invalidateCompletion();
+            });
     }
 };
 

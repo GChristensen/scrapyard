@@ -120,7 +120,10 @@ class RDFImporter {
 
     async #startThreads(threadf, maxThreads) {
         const bookmarks = [...this.#bookmarks];
-        this.#threadCount = Math.min(maxThreads, this.#bookmarks.length);
+        // as many threads are counted as are started: counting the items instead left the counter
+        // at zero when there was nothing to import, so it never reached zero and the import
+        // was never finished
+        this.#threadCount = maxThreads;
 
         const promises = [];
         for (let i = 0; i < maxThreads; ++i)

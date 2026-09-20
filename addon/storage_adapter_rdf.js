@@ -54,9 +54,32 @@ export class StorageAdapterRDF {
         }
     }
 
-    // an unpacked ScrapBook archive is its directory, the page of which is the archive content
+    // An unpacked archive is carried as a zip of its directory, which is what persistArchive expects
+    // of an item that contains files; returning its page alone would both lose the resource files
+    // and make the receiving storage fail to unpack it.
     async fetchArchiveContent(params) {
-        return this.fetchArchiveFile({...params, node: undefined, file: RDF_INDEX_FILE});
+        delete params.node;
+
+        try {
+            const response = await helperApp.postJSON(`/rdf/fetch_archive_content`, params);
+
+            if (response.ok)
+                return response.arrayBuffer();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Stores an archive copied into the RDF shelf. An unpacked one arrives as a zip of its
+    // directory and is extracted into the item directory; a packed one becomes its page.
+    async persistArchive(params) {
+        const fields = {
+            content: new Blob([params.content]),
+            contains: params.contains,
+            rdf_archive_path: params.rdf_archive_path
+        };
+
+        return this._write(`/rdf/persist_archive_content`, fields, true);
     }
 
     async saveArchiveFile(params) {

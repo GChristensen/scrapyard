@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import threading
+import zipfile
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -217,6 +218,51 @@ def fetch_archive_file(params):
             file_content = archive_file.read()
 
     return file_content
+
+
+def persist_archive_content(params, files):
+    """Stores an archive that is copied into an RDF shelf.
+
+    An unpacked archive arrives as a zip of its directory (see fetch_archive_content) and is
+    extracted into the item directory; a packed one becomes the page of the item. Which of the two
+    it is follows from the payload rather than from the declared type of the item, as an item copied
+    into an RDF shelf is a directory there whatever shape it had in the storage it came from. The
+    directory is not replaced wholesale, so the ScrapBook metadata beside the page is kept.
+    """
+    archive_directory_path = resolve_client_path(params["rdf_archive_path"], for_write=True)
+    os.makedirs(archive_directory_path, exist_ok=True)
+
+    content = files["content"]
+    stream = content.stream
+
+    stream.seek(0)
+    packed = not zipfile.is_zipfile(stream)
+    stream.seek(0)
+
+    with path_lock(archive_directory_path).write_locked():
+        if packed:
+            index_file_path = os.path.join(archive_directory_path, "index.html")
+
+            with atomic_file(index_file_path) as index_file:
+                content.save(index_file)
+        else:
+            with zipfile.ZipFile(stream, "r") as zip_file:
+                zip_file.extractall(archive_directory_path)
+
+
+def fetch_archive_content(params):
+    """Returns the data directory of an item as a zip.
+
+    An unpacked archive is carried between the storages in that form: the whole directory is
+    transferred rather than its page alone, so its resource files travel with it.
+    """
+    archive_directory_path = os.path.normpath(resolve_client_path(params["rdf_archive_path"]))
+
+    if not os.path.isdir(archive_directory_path):
+        return None
+
+    with path_lock(archive_directory_path).read_locked():
+        return server.storage_manager.fetch_unpacked_archive(archive_directory_path)
 
 
 def save_archive_file(params, files, compute_index=False):

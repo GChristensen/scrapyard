@@ -20,6 +20,9 @@ import "./core_sync.js";
 import "./core_transition.js";
 import "./capture/background/service.js"; // registers the capture port server and the frame relay
 import {filesShelf} from "./plugin_files_shelf.js";
+// the RDF import needs no DOM, so it is handled in the background rather than by the sidebar;
+// the import is static because dynamic import() is not allowed in a service worker
+import "./core_import_rdf.js";
 
 if (_BACKGROUND_PAGE)
     import("./core_import.js");

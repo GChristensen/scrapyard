@@ -87,7 +87,9 @@ export class ArchiveProxy extends StorageProxy {
             uuid: node.uuid,
             archive_json: JSON.stringify(archive),
             content: content,
-            contains: node.contains
+            contains: node.contains,
+            // an adapter that stores the archive by its location rather than by uuid needs its path
+            ...await adapter.getParams(node)
         };
 
         await adapter.persistArchive(params);

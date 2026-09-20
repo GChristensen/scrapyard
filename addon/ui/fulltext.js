@@ -93,9 +93,11 @@ function displayDocument(doc, node) {
 }
 
 async function previewUnpackedResult(query, node) {
+    // the trailing slash is a part of the route: without it the request is redirected, and the
+    // redirect drops the signature of the URL, so the archive is served as unauthorized
     let url = node.external === RDF_EXTERNAL_TYPE
-        ? `/rdf/browse/${node.uuid}`
-        : `/browse/${node.uuid}`;
+        ? `/rdf/browse/${node.uuid}/`
+        : `/browse/${node.uuid}/`;
 
     url += `?highlight=${encodeURIComponent(query)}`;
 

@@ -163,10 +163,6 @@ class RDFIndex {
 }
 
 export class RDFShelfPlugin {
-    // the item a copy originates from, by the id assigned to the copy: the field that carries it
-    // on the new node is not a stored node property, so it does not survive being read back
-    #copySources = new Map();
-
     constructor() {
     }
 
@@ -268,21 +264,16 @@ export class RDFShelfPlugin {
             await Bookmark.traverse(node, async (parent, child) => {
                 items.push(await itemOf(child, parent || dest));
 
-                const sourceId = this.#copySources.get(child.external_id);
-                this.#copySources.delete(child.external_id);
-
-                if (child.type === NODE_TYPE_ARCHIVE && sourceId)
-                    archives.push([child, sourceId]);
+                if (child.type === NODE_TYPE_ARCHIVE)
+                    archives.push(child);
             });
 
             await RDFIndex.createItems(dest, items);
 
-            for (const [archive, sourceId] of archives) {
-                const source = await Node.get(sourceId);
-
-                if (source)
-                    await this.#transferArchiveFiles(source, archive);
-            }
+            // the content of the copies has been written by the storage layer, the ScrapBook
+            // metadata that accompanies it in the item directory has not
+            for (const archive of archives)
+                await this.storeBookmarkData(archive);
         }
     }
 
@@ -297,9 +288,6 @@ export class RDFShelfPlugin {
 
             if (node.type === NODE_TYPE_ARCHIVE)
                 node.contains = ARCHIVE_TYPE_FILES;
-
-            if (node.source_node_id)
-                this.#copySources.set(node.external_id, node.source_node_id);
         }
         else if (node.external === RDF_EXTERNAL_TYPE) {
             if (dest.external)
@@ -365,55 +353,67 @@ export class RDFShelfPlugin {
 
         node.external = RDF_EXTERNAL_TYPE;
         node.external_id = nextItemId();
-        // the node is reparented here already, as the location of its files is derived
-        // from the path of the shelf it belongs to
+        // the node is reparented before anything is stored, as the location of its files
+        // is derived from the path of the shelf it belongs to
         node.parent_id = parent.id;
 
         if (node.type === NODE_TYPE_ARCHIVE)
             node.contains = ARCHIVE_TYPE_FILES;
 
         await RDFIndex.createItems(parent, [await itemOf(node, parent)]);
+        await Node.update(node, false, true);
 
         if (source.type === NODE_TYPE_ARCHIVE)
-            await this.#transferArchiveFiles(source, node);
+            await this.#transferArchiveFiles(source, node, parent);
 
         await Bookmark.copyContent(source, node);
-        await Node.update(node, false, true);
         await Node.unpersist(source);
     }
 
     // Moves a node of the RDF shelf into another shelf.
     async #release(destination, node) {
+        // the path of an item no longer leads to the RDF shelf once it has been reparented,
+        // so the node the RDF locations are resolved against is captured beforehand
+        const anchor = {...node};
+
         if (isContainerNode(node))
-            await Bookmark.traverse(node, async (parent, child) => this.#releaseNode(destination, child));
+            await Bookmark.traverse(node, async (parent, child) =>
+                this.#releaseNode(parent || destination, child, anchor));
         else
-            await this.#releaseNode(destination, node);
+            await this.#releaseNode(destination, node, anchor);
     }
 
-    async #releaseNode(destination, node) {
+    async #releaseNode(parent, node, anchor) {
         const source = {...node};
 
-        node.external = destination.external;
+        node.external = parent.external;
         node.external_id = undefined;
+        // the item is reparented and stored before its content is copied into it: the backend
+        // rejects an item whose parent is absent from the index, and the folders of an RDF
+        // shelf are never stored there
+        node.parent_id = parent.id;
 
-        if (source.type === NODE_TYPE_ARCHIVE)
-            await this.#transferArchiveFiles(source, node);
-
-        await Bookmark.copyContent(source, node);
         await Node.update(node, false, true);
 
+        if (source.type === NODE_TYPE_ARCHIVE)
+            await this.#transferArchiveFiles(source, node, anchor);
+
+        await Bookmark.copyContent(source, node);
+
         // the item is removed from the RDF only after its content has been transferred
-        await RDFIndex.deleteItems(source, [source.external_id]);
+        await RDFIndex.deleteItems(anchor, [source.external_id]);
 
         if (source.type === NODE_TYPE_ARCHIVE)
-            await this.#deleteArchiveDirectory(source);
+            await this.#deleteArchiveDirectory(source, anchor);
     }
 
     // The files of an unpacked archive are copied directly between the directories: the storage
     // layer carries the page alone, which would leave the resources of the archive behind.
-    async #transferArchiveFiles(source, destination) {
+    async #transferArchiveFiles(source, destination, rdfAnchor) {
+        // only one side of a transfer is an RDF item, and it may already have been reparented,
+        // so its directory is resolved against the anchor when the caller supplies one
         const location = async node => node.external === RDF_EXTERNAL_TYPE
-            ? {kind: "rdf", path: await this.getRDFArchiveDir(node)}
+            ? {kind: "rdf", path: await this.getRDFArchiveDir(node, rdfAnchor || node)}
             : {kind: "scrapyard", uuid: node.uuid};
 
         const dataPath = helperApp.dataPath();
@@ -435,10 +435,10 @@ export class RDFShelfPlugin {
         }
     }
 
-    async #deleteArchiveDirectory(node) {
+    async #deleteArchiveDirectory(node, anchor = node) {
         try {
             await helperApp.post(`/rdf/delete_item/${node.uuid}`,
-                {rdf_archive_directory: await this.getRDFArchiveDir(node)});
+                {rdf_archive_directory: await this.getRDFArchiveDir(node, anchor)});
         }
         catch (e) {
             console.error(e);

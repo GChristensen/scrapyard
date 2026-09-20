@@ -18,7 +18,7 @@ from .request_queue import RequestQueue
 from .rdf_index import RDFIndexError
 from . import rdf_index
 from .storage_rdf import import_rdf_archive, import_rdf_archive_index, fetch_archive_file, save_archive_file, \
-    persist_comments, persist_archive, transfer_archive
+    persist_comments, persist_archive, transfer_archive, fetch_archive_content, persist_archive_content
 from .server import app, requires_auth
 
 # Scrapbook RDF support
@@ -83,6 +83,24 @@ def rdf_persist_archive():
 @requires_auth
 def rdf_fetch_archive_file():
     result = fetch_archive_file(request.json)
+
+    if result:
+        return result
+    else:
+        return "", 404
+
+
+@app.route("/rdf/persist_archive_content", methods=['POST'])
+@requires_auth
+def rdf_persist_archive_content():
+    persist_archive_content(request.form, request.files)
+    return "", 204
+
+
+@app.route("/rdf/fetch_archive_content", methods=['POST'])
+@requires_auth
+def rdf_fetch_archive_content():
+    result = fetch_archive_content(request.json)
 
     if result:
         return result
