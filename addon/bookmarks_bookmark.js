@@ -341,6 +341,10 @@ export class BookmarkManager extends EntityManager {
         let newNodes = [];
         let contentErrors = 0;
 
+        // the copies are created one by one, so a plugin that can not accept some of them has to say so
+        // before the first one is created, or the ones already created would be left half copied
+        await this.plugins.validateCopy(dest, sourceNodes);
+
         for (let newNode of sourceNodes) {
             const sourceNode = {...newNode};
             const sourceNodeId = newNode.source_node_id = newNode.id;

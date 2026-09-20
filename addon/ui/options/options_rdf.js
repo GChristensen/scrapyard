@@ -31,7 +31,7 @@ async function onStartRDFImport(e) {
     }
 
     if (settings.storage_mode_internal() && !openMode) {
-        showNotification({message: "Only \"Open RDF for editing\" mode is available when content is stored internally."});
+        showNotification({message: "Only \"Open RDF\" mode is available when content is stored internally."});
         return;
     }
 

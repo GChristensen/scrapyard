@@ -621,14 +621,15 @@
         <li><b>Import RDF to Scrapyard</b>. In this mode, the archived files are transferred into the
             scrapyard storage directory.
         </li>
-        <li><b>Open RDF for editing</b>. Import in this mode only recreates the RDF directory
+        <li><b>Open RDF</b>. Import in this mode only recreates the RDF directory
             structure in the Scrapyard internal browser storage.
             The archived ScrapBook files are served from their original RDF folder.
             Shelves imported in the editing mode are marked with a tape reel icon.
+            They vanish when the browser internal storage is reset, so they need to be reopened.
         </li>
     </ul>
 
-    <p>A shelf opened for editing is writable: archived pages, folders and separators may be created,
+    <p>An opened RDF archive is writable: archived pages, folders and separators may be created,
         renamed, reordered, moved, copied and deleted in it, and the changes are stored in the original
         <code>scrapbook.rdf</code> file and its data directory, so the archive remains readable by the
         legacy ScrapBook add-on. Items may also be moved or copied between such a shelf and the other
@@ -638,11 +639,11 @@
     <p>It is possible to edit the path of the imported RDF file through the "RDF Directory..." context
         menu item of a reel shelf.</p>
 
-    <p><b>Note:</b> when Scrapyard is connected to a server, the RDF directory is read by the server, so
+    <p><b>Note:</b> when Scrapyard is connected to a server, the RDF directory is read by the server backend, so
         a path on the server machine located inside the data directory (<code>DATA_PATH</code>)
         should be specified.
         A relative path is resolved against the data directory, and paths outside of it are rejected.
-        Copy the RDF archive into the data directory on the server before importing it.</p>
+        Copy the RDF Scrapbook folder into the data directory on the server before importing it.</p>
 
     <p style="text-align: center">
         <img src="images/quick-imported-rdf.png">
