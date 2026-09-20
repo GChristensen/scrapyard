@@ -22,11 +22,11 @@ async function openReference(tab) {
 
         if (node) {
             if (!prefix)
-                send.browseNode({node: node, tab: tab});
+                send.browseNode({node: node, tab: tab, closeTab: true});
             else
                 switch (prefix) {
                     case "notes":
-                        send.browseNotes({uuid: node.uuid, tab: tab});
+                        send.browseNotes({uuid: node.uuid, tab: tab, closeTab: true});
                         break;
                     case "gallery":
                         await updateTabURL(tab, browser.runtime.getURL("ui/gallery.html#" + node.uuid), false);

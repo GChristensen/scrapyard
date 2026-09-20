@@ -9,7 +9,7 @@ import {
     UNDO_DELETE,
     UNDO_REORDER
 } from "./storage.js";
-import {askCSRPermission, getActiveTab, gettingStarted, showNotification, updateTabURL} from "./utils_browser.js";
+import {askCSRPermission, getActiveTab, gettingStarted, showNotification} from "./utils_browser.js";
 import {HELPER_APP_v2_IS_REQUIRED, helperApp} from "./helper_app.js";
 import {settings} from "./settings.js";
 import {
@@ -30,7 +30,7 @@ import {Shelf} from "./bookmarks_shelf.js";
 import {Bookmark} from "./bookmarks_bookmark.js";
 import {Archive, Node} from "./storage_entities.js";
 import {undoManager} from "./bookmarks_undo.js";
-import {browseNodeBackground} from "./browse.js";
+import {browseNodeBackground, browseNotes} from "./browse.js";
 import UUID from "./uuid.js";
 import {ensureSidebarHost} from "./utils_sidebar.js";
 import {getFaviconFromContent, getFaviconFromTab} from "./favicon.js";
@@ -372,9 +372,7 @@ receive.browseNode = async message => {
 };
 
 receive.browseNotes = message => {
-    (message.tab
-        ? updateTabURL(message.tab, "ui/notes.html#" + message.uuid, false)
-        : browser.tabs.create({"url": "ui/notes.html#" + message.uuid}));
+    return browseNotes(message.uuid, message);
 };
 
 receive.browseOrgReference = message => {

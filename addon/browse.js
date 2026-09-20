@@ -91,6 +91,50 @@ function openURL(url, options, newtabf = openPage) {
     return newtabf(url, options?.container);
 }
 
+const NOTES_PAGE = "ui/notes.html";
+
+// tabs are matched in script, match patterns are unreliable for extension pages and ignore the fragment
+async function findNotesTab(uuid) {
+    const base = browser.runtime.getURL(NOTES_PAGE);
+    const tabs = await browser.tabs.query({});
+
+    return tabs.find(t => {
+        const url = t.url || t.pendingUrl;
+        if (!url?.startsWith(base))
+            return false;
+
+        try {
+            const {pathname, hash} = new URL(url);
+            return pathname.endsWith("/" + NOTES_PAGE) && hash === "#" + uuid;
+        } catch (e) {
+            return false;
+        }
+    });
+}
+
+// notes are opened in a single tab: an already open tab is focused instead of being navigated,
+// so the pending changes in its editor are not interrupted
+export async function browseNotes(uuid, options) {
+    const existing = await findNotesTab(uuid);
+
+    if (existing) {
+        await browser.tabs.update(existing.id, {active: true});
+        await browser.windows.update(existing.windowId, {focused: true});
+
+        if (options?.edit)
+            browser.tabs.sendMessage(existing.id, {type: "SCRAPYARD_NOTES_EDIT"}).catch(() => {});
+
+        // a redirecting reference page has no use once the notes are shown
+        if (options?.closeTab && options.tab && options.tab.id !== existing.id)
+            await browser.tabs.remove(options.tab.id);
+
+        return existing;
+    }
+
+    const edit = options?.edit? "?edit": "";
+    return openURL(`${NOTES_PAGE}${edit}#${uuid}`, options);
+}
+
 function browseBookmark(node, options) {
     let url = node.uri;
     if (url) {
@@ -304,10 +348,8 @@ export async function browseNodeBackground(node, options) {
             else
                 return browseArchiveHelper(node, options);
 
-        case NODE_TYPE_NOTES: {
-            const edit = options?.edit? "?edit": "";
-            return openURL(`ui/notes.html${edit}#` + node.uuid, options);
-        }
+        case NODE_TYPE_NOTES:
+            return browseNotes(node.uuid, options);
 
         case NODE_TYPE_FOLDER:
             return browseFolder(node, options);

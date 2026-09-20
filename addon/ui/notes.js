@@ -313,6 +313,12 @@ async function init() {
         $("#tabbar a#edit-button").click();
 }
 
+// an already open notes tab is focused instead of being reopened, see browseNotes in browse.js
+browser.runtime.onMessage.addListener(message => {
+    if (message?.type === "SCRAPYARD_NOTES_EDIT" && !location.search.startsWith("?i"))
+        $("#tabbar a#edit-button").click();
+});
+
 window.onbeforeunload = function() {
     if (editorChanged)
         return true;
