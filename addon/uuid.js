@@ -16,9 +16,7 @@ export default class UUID {
         return uuid.toUpperCase();
     }
 
-    static date() {
-        const dt = new Date();
-
+    static date(dt = new Date()) {
         return dt.getFullYear()
             + ("0" + (dt.getMonth() + 1)).slice(-2)
             + ("0" + dt.getDate()).slice(-2)

@@ -5,7 +5,7 @@ import os
 from . import server, browser
 from .browser import native_channel
 
-VERSION = "2.2.0"
+VERSION = "2.3.0"
 
 
 def main():

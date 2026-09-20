@@ -36,11 +36,6 @@ async function onStartRDFImport(e) {
         return;
     }
 
-    if (settings.platform.chrome && $("#rdf-import-type").val() === "rdf-open") {
-        showNotification({message: "RDF editing is only available on firefox."});
-        return;
-    }
-
     if (!shelf || !path) {
         showNotification({message: "Please, specify all import parameters."});
         return;

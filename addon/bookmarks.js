@@ -50,24 +50,20 @@ export class PluginContainer {
         proto[methodName] = handler;
     }
 
+    // A node of a regular shelf carries the property with an undefined value, as it is assigned from
+    // its parent. Such a node must not end the search: the backend of the items is looked up in the
+    // remaining arguments, which is how moving items out of an external shelf reaches its plugin.
     _findExternal(args) {
-        let external;
         for (const arg of args) {
             if (Array.isArray(arg)) {
                 const node = arg.find(n => n.hasOwnProperty("external"));
-                if (node) {
-                    external = node.external;
-                    break;
-                }
+
+                if (node)
+                    return node.external;
             }
-            else {
-                if (arg?.hasOwnProperty("external")) {
-                    external = arg.external;
-                    break;
-                }
-            }
+            else if (arg?.external)
+                return arg.external;
         }
-        return external;
     }
 }
 

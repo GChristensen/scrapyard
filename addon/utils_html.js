@@ -418,22 +418,3 @@ export async function isHTMLLink(url, timeout = 10000) {
         return !!(contentType && contentType.toLowerCase().startsWith("text/html"));
     }
 }
-
-export class RDFNamespaces {
-    //NS_NC;
-    NS_RDF;
-    NS_SCRAPBOOK;
-
-    resolver;
-
-    constructor(doc) {
-        const rootAttrs = Object.values(doc.documentElement.attributes);
-        const namespaces = rootAttrs.map(a => [a.localName, a.prefix === "xmlns"? a.value: null]);
-        const namespaceMap = new Map(namespaces);
-        this.resolver = ns => namespaceMap.get(ns);
-
-        //this.NS_NC = this.resolver("NC");
-        this.NS_RDF = this.resolver("RDF");
-        this.NS_SCRAPBOOK = namespaces.find(ns => (/NS\d+/i).test(ns[0]))[1];
-    }
-}

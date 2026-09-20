@@ -12,7 +12,7 @@ import {Folder} from "./bookmarks_folder.js";
 import {Bookmark} from "./bookmarks_bookmark.js";
 import {Archive, Comments, Node} from "./storage_entities.js";
 import {StreamImporterBuilder} from "./import_drivers.js";
-import {RDFNamespaces} from "./utils_html.js";
+import {BACKEND_REQUIRED_MESSAGE, RDF_BACKEND_VERSION} from "./plugin_rdf_shelf.js";
 import {settings} from "./settings.js";
 
 class RDFImporter {
@@ -45,95 +45,57 @@ class RDFImporter {
         const helper = await helperApp.probe(true);
 
         if (helper) {
-            const path = this.#options.stream.replace(/\\/g, "/");
-            const rdfFile = path.split("/").at(-1);
-            const rdfDirectory = path.substring(0, path.lastIndexOf("/"));
-            const xml = await this.#getRDFXML(rdfFile, rdfDirectory);
+            // the tree is read by the backend, an older one would only answer with a 404
+            // that would be reported as a missing RDF file
+            if (!await helperApp.hasVersion(RDF_BACKEND_VERSION, BACKEND_REQUIRED_MESSAGE))
+                return Promise.reject(new Error(BACKEND_REQUIRED_MESSAGE));
 
-            if (!xml)
+            const path = this.#options.stream.replace(/\\/g, "/");
+            const rdfDirectory = path.substring(0, path.lastIndexOf("/"));
+            const tree = await this.#getRDFTree(path, rdfDirectory);
+
+            if (!tree)
                 return Promise.reject(new Error("RDF file not found."));
 
-            await this.#buildBookmarkTree(path, xml);
+            await this.#buildBookmarkTree(path, tree);
             await this.#importArchives(rdfDirectory);
         }
     }
 
-    #traverseRDFTree(doc, visitor, data) {
-        const namespaces = new RDFNamespaces(doc);
-        const seqs = this.#mapURNToNodes("//RDF:Seq", doc, namespaces, false);
-        const separators = this.#mapURNToNodes("//NC:BookmarkSeparator", doc, namespaces)
-        const descriptions = this.#mapURNToNodes("//RDF:Description", doc, namespaces);
-        const leaves = new Map([...separators, ...descriptions]);
+    // the tree is resolved by the backend, which also keeps the importer free of XML parsing
+    // that is unavailable in a MV3 service worker
+    #traverseRDFTree(tree, visitor, data) {
+        async function doTraverse(parent, children) {
+            for (const node of children) {
+                await visitor(parent, node, data);
 
-        async function doTraverse(parent, current, visitor) {
-            let seq = seqs.get(current? current.__sb_about: "urn:scrapbook:root");
-            let children = seq.children;
-
-            if (children && children.length) {
-                for (let i = 0; i < children.length; ++i) {
-                    if (children[i].localName === "li") {
-                        let resource = children[i].getAttributeNS(namespaces.NS_RDF, "resource");
-                        let node = leaves.get(resource);
-
-                        if (node) {
-                            await visitor(current, node, data);
-                            if (node.__sb_type === "folder")
-                                await doTraverse(current, node, visitor);
-                        }
-                    }
-                }
+                if (node.children)
+                    await doTraverse(node, node.children);
             }
         }
 
-        return doTraverse(null, null, visitor);
+        return doTraverse(null, tree.children || []);
     }
 
-    #mapURNToNodes(xpath, doc, namespaces, collectAttributes = true) {
-        const result = new Map();
-        const nodes = doc.evaluate(xpath, doc, namespaces.resolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-        let node;
-
-        while (node = nodes.iterateNext()) {
-            if (collectAttributes) {
-                node.__sb_about = node.getAttributeNS(namespaces.NS_RDF, "about");
-                node.__sb_id = node.getAttributeNS(namespaces.NS_SCRAPBOOK, "id");
-                node.__sb_type = node.getAttributeNS(namespaces.NS_SCRAPBOOK, "type");
-                node.__sb_title = node.getAttributeNS(namespaces.NS_SCRAPBOOK, "title");
-                node.__sb_source = node.getAttributeNS(namespaces.NS_SCRAPBOOK, "source");
-                node.__sb_icon = node.getAttributeNS(namespaces.NS_SCRAPBOOK, "icon");
-                node.__sb_comment = node.getAttributeNS(namespaces.NS_SCRAPBOOK, "comment");
-
-                if (node.__sb_comment)
-                    node.__sb_comment = node.__sb_comment.replace(/ __BR__ /g, "\n");
-            }
-
-            result.set(node.getAttributeNS(namespaces.NS_RDF, "about"), node);
-        }
-
-        return result;
-    }
-
-    async #getRDFXML(rdfFile, rdfDirectory) {
-        let xml = null;
-
+    async #getRDFTree(rdfFile, rdfDirectory) {
         try {
-            let form = new FormData();
-            form.append("rdf_file", rdfFile);
-            form.append("rdf_directory", rdfDirectory);
+            // the directory is passed along, as the icons of the items are fetched from it afterwards
+            const response = await helperApp.postJSON("/rdf/index/read",
+                {rdf_file: rdfFile, rdf_directory: rdfDirectory});
 
-            xml = await helperApp.fetchText(`/rdf/import/${rdfFile}`, {method: "POST", body: form});
+            if (response.ok)
+                return response.json();
+
+            console.error(await helperApp.errorFromResponse(response));
         } catch (e) {
             console.error(e);
         }
-
-        return xml;
     }
 
-    async #buildBookmarkTree(path, xml) {
+    async #buildBookmarkTree(path, tree) {
         this.#shelf = await this.#createShelf(path);
-        const rdfDoc = new DOMParser().parseFromString(xml, 'application/xml');
 
-        await this.#traverseRDFTree(rdfDoc, this.#createBookmark.bind(this), {pos: 0});
+        await this.#traverseRDFTree(tree, this.#createBookmark.bind(this), {pos: 0});
     }
 
     async #importArchives(path) {

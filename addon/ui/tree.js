@@ -23,7 +23,8 @@ import {
     BROWSER_EXTERNAL_TYPE,
     FILES_EXTERNAL_TYPE,
     FILES_EXTERNAL_ROOT_PREFIX,
-    NODE_TYPE_FILE, CHROME_BOOKMARK_UNFILED, CHROME_BOOKMARK_TOOLBAR
+    NODE_TYPE_FILE, CHROME_BOOKMARK_UNFILED, CHROME_BOOKMARK_TOOLBAR,
+    isRDFStorableNode
 } from "../storage.js";
 import {isElementInViewport} from "../utils_html.js";
 import {getActiveTabFromSidebar, showNotification} from "../utils_browser.js";
@@ -733,9 +734,9 @@ class BookmarkTree {
                     || jparent.id == BROWSER_SHELF_ID || jnode.parent == BROWSER_SHELF_ID)
                 return false;
 
-            if (o(jnode)?.external !== RDF_EXTERNAL_TYPE && o(jparent)?.external === RDF_EXTERNAL_TYPE
-                    || o(jnode)?.external === RDF_EXTERNAL_TYPE
-                        && more.ref && jnode.parent !== "#" && o(more.ref)?.external !== RDF_EXTERNAL_TYPE)
+            // items may cross the boundary of an RDF shelf, but a ScrapBook archive holds
+            // only archived pages, folders and separators
+            if (o(jparent)?.external === RDF_EXTERNAL_TYPE && !isRDFStorableNode(o(jnode)))
                 return false;
 
             if (o(jnode)?.external !== FILES_EXTERNAL_TYPE && o(jparent)?.external === FILES_EXTERNAL_TYPE

@@ -1012,11 +1012,6 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                 delete items.newItem.submenu.newLabeledSeparatorItem;
                 delete items.newItem.submenu.newSiblingFolderItem;
             }
-            if (ctxNode.external === RDF_EXTERNAL_TYPE) {
-                delete items.cutItem;
-                delete items.copyItem;
-                delete items.pasteItem;
-            }
             break;
         case NODE_TYPE_NOTES:
         case NODE_TYPE_FILE:
@@ -1036,10 +1031,6 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
             delete items.uploadItem;
             delete items.exportItem;
             if (ctxNode.external === RDF_EXTERNAL_TYPE) {
-                delete items.cutItem;
-                delete items.copyItem;
-                delete items.pasteItem;
-                delete items.shareItem.submenu.cloudItem;
                 delete items.shareItem.submenu.dropboxItem;
                 delete items.shareItem.submenu.oneDriveItem;
             }

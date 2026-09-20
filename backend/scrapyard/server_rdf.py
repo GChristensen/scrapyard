@@ -14,15 +14,20 @@ from .server_paths import resolve_client_path
 from .browse import highlight_words_in_index
 from .cache_dict import CacheDict
 from .rwlock import path_lock
-from .utils_fs import atomic_write
+from .request_queue import RequestQueue
+from .rdf_index import RDFIndexError
+from . import rdf_index
 from .storage_rdf import import_rdf_archive, import_rdf_archive_index, fetch_archive_file, save_archive_file, \
-    persist_comments, persist_archive
+    persist_comments, persist_archive, transfer_archive
 from .server import app, requires_auth
 
 # Scrapbook RDF support
 
 
 rdf_import_directory = None
+
+# mutations of the RDF index are serialized, as every one of them rewrites the whole file
+rdf_request_queue = RequestQueue()
 
 
 @app.route("/rdf/import/<file>", methods=['POST'])
@@ -88,7 +93,8 @@ def rdf_fetch_archive_file():
 @app.route("/rdf/save_archive_file", methods=['POST'])
 @requires_auth
 def rdf_save_archive_file():
-    result = save_archive_file(request.form, request.files)
+    compute_index = not not request.form.get("compute_index", None)
+    result = save_archive_file(request.form, request.files, compute_index)
 
     if result:
         return result
@@ -158,18 +164,61 @@ def rdf_xml(uuid):
     return flask.send_file(io.BytesIO(content), mimetype=mime_type)
 
 
-# Save Scrapbook rdf file for the given node uuid
+# Read and modify the Scrapbook RDF index.
+#
+# The index is mutated here rather than in the browser: the operations are expressed semantically,
+# so the add-on needs no XML support (unavailable in a MV3 service worker), and each one reads,
+# modifies and writes the file under a single lock, which rules out lost updates.
 
-@app.route("/rdf/xml/save/<uuid>", methods=['POST'])
+RDF_INDEX_OPERATIONS = {
+    "create_items": rdf_index.create_items,
+    "update_item": rdf_index.update_item,
+    "delete_items": rdf_index.delete_items,
+    "move_items": rdf_index.move_items,
+    "reorder_items": rdf_index.reorder_items
+}
+
+
+@app.route("/rdf/index/read", methods=['POST'])
 @requires_auth
-def rdf_xml_save(uuid):
-    rdf_file = resolve_client_path(request.form["rdf_file"], for_write=True)
+def rdf_index_read():
+    params = request.json
 
-    # an interrupted write should not damage the whole RDF tree
-    with path_lock(rdf_file).write_locked():
-        atomic_write(rdf_file, request.form["rdf_content"])
+    # the importer fetches the icons of the items from the same directory afterwards
+    if params.get("rdf_directory", None):
+        global rdf_import_directory
+        rdf_import_directory = resolve_client_path(params["rdf_directory"])
+
+    try:
+        return rdf_index.read_tree(params)
+    except RDFIndexError as e:
+        return str(e), 400
+    except FileNotFoundError:
+        return "The RDF file does not exist.", 404
+
+
+@app.route("/rdf/index/<operation>", methods=['POST'])
+@requires_auth
+def rdf_index_modify(operation):
+    handler = RDF_INDEX_OPERATIONS.get(operation)
+
+    if not handler:
+        return "", 404
+
+    try:
+        rdf_request_queue.run(handler, request.json)
+    except RDFIndexError as e:
+        return str(e), 400
+    except FileNotFoundError:
+        return "The RDF file does not exist.", 404
 
     return "", 204
+
+
+@app.route("/rdf/transfer_archive", methods=['POST'])
+@requires_auth
+def rdf_transfer_archive():
+    return transfer_archive(request.json)
 
 
 @app.route("/rdf/delete_item/<uuid>", methods=['POST'])

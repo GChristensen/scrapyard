@@ -1,5 +1,5 @@
 import {helperApp} from "./helper_app.js";
-import {ARCHIVE_TYPE_TEXT} from "./storage.js";
+import {ARCHIVE_TYPE_TEXT, FILES_EXTERNAL_TYPE} from "./storage.js";
 
 export class StorageAdapterFiles {
     async _postJSON(path, fields) {
@@ -35,7 +35,7 @@ export class StorageAdapterFiles {
     }
 
     accepts(node) {
-        return node && node.external === RDF_EXTERNAL_TYPE;
+        return node && node.external === FILES_EXTERNAL_TYPE;
     }
 
     async getParams(node) {

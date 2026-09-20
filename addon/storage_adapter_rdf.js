@@ -1,26 +1,30 @@
 import {helperApp} from "./helper_app.js";
 import {rdfShelf} from "./plugin_rdf_shelf.js";
+import {RDF_EXTERNAL_TYPE} from "./storage.js";
+
+// the page of an unpacked ScrapBook archive
+const RDF_INDEX_FILE = "index.html";
 
 export class StorageAdapterRDF {
-    async _postJSON(path, fields) {
+    // Performs a modification of the RDF directory. Throws if the request has failed, so a
+    // captured page that could not be written is reported instead of being silently lost.
+    async _write(path, fields, form = false) {
+        let response;
+
         try {
-            return helperApp.postJSON(path, fields);
+            response = form
+                ? await helperApp.post(path, fields)
+                : await helperApp.postJSON(path, fields);
         }
         catch (e) {
-            console.error(e);
+            const backend = helperApp.isServerMode()? "server": "backend application";
+            throw new Error(`Can not connect to the ${backend}: ${e.message}`);
         }
-    }
 
-    async _fetchJSON(path, fields) {
-        try {
-            const response = await helperApp.postJSON(path, fields);
+        if (!response.ok)
+            throw await helperApp.errorFromResponse(response);
 
-            if (response.ok)
-                return response.json();
-        }
-        catch (e) {
-            console.error(e);
-        }
+        return response;
     }
 
     accepts(node) {
@@ -34,6 +38,9 @@ export class StorageAdapterRDF {
     }
 
     async fetchArchiveFile(params) {
+        // the node is only used to select the adapter, it does not belong in the request
+        delete params.node;
+
         try {
             const response = await helperApp.postJSON(`/rdf/fetch_archive_file`, params);
 
@@ -47,20 +54,25 @@ export class StorageAdapterRDF {
         }
     }
 
+    // an unpacked ScrapBook archive is its directory, the page of which is the archive content
+    async fetchArchiveContent(params) {
+        return this.fetchArchiveFile({...params, node: undefined, file: RDF_INDEX_FILE});
+    }
+
     async saveArchiveFile(params) {
         params.content = new Blob([params.content]);
 
-        try {
-            const response = await helperApp.post(`/rdf/save_archive_file`, params);
+        // building the word index parses every page of the archive, so it is requested once the
+        // capture has written its page, not for each of the resource files it saves beforehand
+        if (params.file === RDF_INDEX_FILE)
+            params.compute_index = true;
 
-            if (response.ok)
-                return response.json()
-        } catch (e) {
-            console.error(e);
-        }
+        const response = await this._write(`/rdf/save_archive_file`, params, true);
+
+        return response.json();
     }
 
     async persistComments(params) {
-        return this._postJSON("/rdf/persist_comments", params);
+        return this._write("/rdf/persist_comments", params);
     }
 }

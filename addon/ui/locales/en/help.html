@@ -625,9 +625,15 @@
             structure in the Scrapyard internal browser storage.
             The archived ScrapBook files are served from their original RDF folder.
             Shelves imported in the editing mode are marked with a tape reel icon.
-            This mode is available on Firefox only.
         </li>
     </ul>
+
+    <p>A shelf opened for editing is writable: archived pages, folders and separators may be created,
+        renamed, reordered, moved, copied and deleted in it, and the changes are stored in the original
+        <code>scrapbook.rdf</code> file and its data directory, so the archive remains readable by the
+        legacy ScrapBook add-on. Items may also be moved or copied between such a shelf and the other
+        shelves. Notes, plain bookmarks and the TODO state are not a part of the ScrapBook format and
+        are not stored in an RDF archive.</p>
 
     <p>It is possible to edit the path of the imported RDF file through the "RDF Directory..." context
         menu item of a reel shelf.</p>

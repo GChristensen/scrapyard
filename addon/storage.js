@@ -146,6 +146,12 @@ export function isContentNode(node) {
     return node && CONTENT_NODE_TYPES.some(t => t == node.type);
 }
 
+// a ScrapBook archive stores archived pages, folders and separators, so the other kinds of items
+// can neither be created in an RDF shelf nor moved or copied into one
+export function isRDFStorableNode(node) {
+    return node && [NODE_TYPE_ARCHIVE, NODE_TYPE_FOLDER, NODE_TYPE_SEPARATOR].some(t => t === node.type);
+}
+
 export function nodeHasSomeContent(node) {
     return node.type === NODE_TYPE_ARCHIVE || node.stored_icon || node.has_notes || node.has_comments;
 }
