@@ -6,6 +6,7 @@ import {
     isRDFStorableNode,
     NODE_TYPE_ARCHIVE,
     NODE_TYPE_FOLDER,
+    NODE_TYPE_NAMES,
     NODE_TYPE_SEPARATOR,
     RDF_EXTERNAL_TYPE
 } from "./storage.js";
@@ -23,6 +24,15 @@ export const BACKEND_REQUIRED_MESSAGE =
 
 const UNSUPPORTED_ITEM_MESSAGE =
     "Only archived pages, folders and separators could be stored in an RDF archive.";
+
+// names the items that stopped an operation, as a folder may hold thousands of items
+function unsupportedItemsError(items) {
+    const named = items.slice(0, 3)
+        .map(n => `"${n.name || n.uri || "untitled"}" (${NODE_TYPE_NAMES[n.type] || "item"})`);
+    const more = items.length > named.length? ` and ${items.length - named.length} more`: "";
+
+    return rdfError(`${UNSUPPORTED_ITEM_MESSAGE} Not supported: ${named.join(", ")}${more}.`);
+}
 
 const SCRAPBOOK_FOLDER_TYPE = "folder";
 const SCRAPBOOK_SEPARATOR_TYPE = "separator";
@@ -236,8 +246,7 @@ export class RDFShelfPlugin {
         if (dest.external === RDF_EXTERNAL_TYPE) {
             // the whole selection is checked before anything is moved, so an item that can not
             // be stored in a ScrapBook archive does not leave the operation half performed
-            for (const node of foreignNodes)
-                await this.#checkStorable(node);
+            await this.#checkStorable(foreignNodes);
 
             if (rdfNodes.length)
                 await RDFIndex.moveItems(dest, rdfNodes.map(n => n.external_id), dest.external_id);
@@ -275,6 +284,19 @@ export class RDFShelfPlugin {
             for (const archive of archives)
                 await this.storeBookmarkData(archive);
         }
+    }
+
+    // Called with the whole selection before the first copy is created. The copies are created one by one, so
+    // rejecting an item halfway would leave the copies made so far in the tree and the storage, but absent
+    // from the RDF file.
+    async validateCopy(dest, nodes) {
+        if (dest.external !== RDF_EXTERNAL_TYPE)
+            return;
+
+        const unsupported = nodes.filter(n => !isRDFStorableNode(n));
+
+        if (unsupported.length)
+            throw unsupportedItemsError(unsupported);
     }
 
     async beforeBookmarkCopied(dest, node) {
@@ -327,16 +349,21 @@ export class RDFShelfPlugin {
         return `${path[0].uri}/data/${node.external_id}/`;
     }
 
-    async #checkStorable(node) {
-        const check = n => {
-            if (!isRDFStorableNode(n))
-                throw rdfError(UNSUPPORTED_ITEM_MESSAGE);
-        };
+    async #checkStorable(nodes) {
+        const unsupported = [];
 
-        if (isContainerNode(node))
-            await Bookmark.traverse(node, (parent, child) => check(child));
-        else
-            check(node);
+        for (const node of nodes) {
+            if (isContainerNode(node))
+                await Bookmark.traverse(node, (parent, child) => {
+                    if (!isRDFStorableNode(child))
+                        unsupported.push(child);
+                });
+            else if (!isRDFStorableNode(node))
+                unsupported.push(node);
+        }
+
+        if (unsupported.length)
+            throw unsupportedItemsError(unsupported);
     }
 
     // Moves a node of another shelf into the RDF shelf. The content is transferred before the node
