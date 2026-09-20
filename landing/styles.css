@@ -80,6 +80,21 @@ h1, h2, h3, p, figure { margin: 0; }
 
 .lede { font-size: 20px; line-height: 1.5; color: var(--ink-2); }
 
+/* key caps */
+kbd {
+  display: inline-block;
+  padding: 1px 8px 0;
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: .8em;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
 /* ---------- layout ---------- */
 
 .section {
@@ -140,6 +155,7 @@ h1, h2, h3, p, figure { margin: 0; }
 .brand__name { font-family: var(--font-serif); font-size: 30px; line-height: 1; }
 
 .site-nav { display: flex; align-items: center; gap: 36px; font-size: 16px; }
+.site-nav__cta { display: none; }   /* phones only: the hero buttons are off screen by then */
 
 .site-footer {
   height: 112px;
@@ -231,6 +247,10 @@ h1, h2, h3, p, figure { margin: 0; }
   text-wrap: pretty;
 }
 .intro__statement-rest { color: var(--ink-2); }
+.intro__figure { grid-column: 1 / -1; margin-top: 56px; }
+.intro__kinds-head { margin-top: 48px; }
+.intro__kinds { margin-top: 20px; }
+.storage-grid.intro__kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .intro__note {
   margin-top: 32px;
   max-width: 640px;
@@ -368,7 +388,8 @@ h1, h2, h3, p, figure { margin: 0; }
   body { font-size: 17px; }
 
   .site-nav { gap: 16px; }
-  .site-nav a:not(.btn) { display: none; }
+  .site-header .site-nav a:not(.btn) { display: none; }
+  .site-nav__cta { display: inline-flex; }
 
   .section { padding-block: 72px 80px; }
   .hero { padding-block: 32px 64px; }
@@ -382,7 +403,7 @@ h1, h2, h3, p, figure { margin: 0; }
   .lede, .intro__note { font-size: 18px; }
   .intro__statement { font-size: 28px; }
 
-  .card-grid, .captions--2, .storage-grid { grid-template-columns: minmax(0, 1fr); }
+  .card-grid, .captions--2, .storage-grid, .storage-grid.intro__kinds { grid-template-columns: minmax(0, 1fr); }
   .card { min-height: 0; padding: 24px; }
   .subsection { padding-top: 40px; }
 

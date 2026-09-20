@@ -7,9 +7,9 @@
 <text x="980" y="22" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">3 · MONTHS LATER</text>
 
 <!-- row labels -->
-<text x="0" y="118" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">BOOKMARK</text>
-<text x="0" y="146" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="22" fill="#1D1B18">keeps an address</text>
-<text x="0" y="328" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">SCRAPYARD</text>
+<text x="0" y="118" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">BOOKMARKS</text>
+<text x="0" y="146" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="22" fill="#1D1B18">keep an address</text>
+<text x="0" y="328" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">ARCHIVES</text>
 <text x="0" y="356" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="22" fill="#1D1B18">keeps the page</text>
 
 <!-- row divider -->
