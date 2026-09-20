@@ -83,3 +83,6 @@ backend-cli:
     cd backend && rm -r -f ./cli-installer/scrapyard_backend/scrapyard
     cd backend && rm -r -f ./cli-installer/scrapyard_backend/manifests
     cd backend && rm -r -f ./cli-installer/scrapyard_backend/server
+
+landing:
+    cd landing && npm run build
