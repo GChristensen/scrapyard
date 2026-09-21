@@ -21,6 +21,7 @@
   <nav class="site-nav">
     <a href="#features">Features</a>
     <a href="#shelves">Shelves</a>
+    <a href="#notes">Notes</a>
     <a href="#text-interface">Text interface</a>
     <a href="#use-cases">Use cases</a>
     <a class="btn site-nav__cta" href="#install">Add to browser</a>
@@ -87,6 +88,21 @@
       <p class="storage-item__text">Save a copy of the page as you saw it, layout and images included. Or only a selected fragment, or a PDF. It opens offline, and after the original is gone.</p>
     </div>
   </div>
+  <p class="split__main mono-label intro__kinds-head" id="storage">Choose where archives live</p>
+  <div class="split__main storage-grid intro__storage">
+    <div class="storage-item">
+      <span class="mono-label">Filesystem</span>
+      <p class="storage-item__text">Kept in a folder you choose. Needs the Scrapyard backend app on your computer.</p>
+    </div>
+    <div class="storage-item">
+      <span class="mono-label">Server</span>
+      <p class="storage-item__text">Kept on a server you host, on your LAN or online. A VPN is advised when self-hosting online.</p>
+    </div>
+    <div class="storage-item">
+      <span class="mono-label">Browser storage</span>
+      <p class="storage-item__text">Kept inside the browser profile. No backend app needed, but only for simple use cases.</p>
+    </div>
+  </div>
   <p class="split__main intro__note">Either way, the page goes into a tree of folders in the sidebar. Scrapyard lets you create any number of trees, called shelves, so you can keep each subject on its own.</p>
   <p class="split__main intro__note">Coming from the legacy ScrapBook add-on? Scrapyard can copy its RDF folders into its own storage, or open them in place and keep editing them.</p>
 </section>
@@ -136,30 +152,11 @@
     </article>
   </div>
 
-  <div class="subsection subsection--first split" id="storage">
-    <h3 class="title-md split__aside">Choose where archives live.</h3>
-    <div class="split__main storage-grid">
-      <div class="storage-item">
-        <span class="mono-label">Filesystem</span>
-        <p class="storage-item__text">Kept in a folder you choose. Needs the Scrapyard backend app on your computer.</p>
-      </div>
-      <div class="storage-item">
-        <span class="mono-label storage-item__label">Server</span>
-        <p class="storage-item__text">Kept on a server you host, on your LAN or online. A VPN is advised when self-hosting online.</p>
-      </div>
-        <div class="storage-item">
-            <span class="mono-label">Browser storage</span>
-            <p class="storage-item__text">Kept inside the browser profile. No backend app needed, but only for simple use cases.</p>
-        </div>
-    </div>
-  </div>
-
-  <div class="subsection split">
+  <div class="subsection subsection--first split">
     <h3 class="title-md split__aside">And the rest of the toolkit.</h3>
     <div class="split__main chips">
-      <span class="chip">Rich text notes on any bookmark or archived page</span>
       <span class="chip">Editing of the saved pages</span>
-      <span class="chip">Firefox bookmark integration</span>
+      <span class="chip">Browser bookmark integration</span>
       <span class="chip">Cloud bookmarking</span>
       <span class="chip">Bookmark TODO states</span>
       <span class="chip">Full-text search</span>
@@ -181,10 +178,42 @@
   </figure>
 </section>
 
+<!-- NOTES -->
+<section class="section section--alt" id="notes">
+  <div class="section-head section-head--narrow">
+    <div class="mono-label eyebrow"><span class="eyebrow__num">04</span><span>Notes</span></div>
+    <h2 class="section-title">Notes, attached or on their own.</h2>
+    <p class="lede">Attach a rich text note to any bookmark or archive, or keep it as a note in its own right. Notes can hold images and tables; Markdown and Org are first-class formats, not an afterthought.</p>
+  </div>
+
+  <figure class="screenshot">
+    <object class="diagram diagram--notes" type="image/svg+xml" data="img/notes.svg" role="img"
+            aria-label="The Scrapyard note editor in a browser tab. A format panel on the left lists Rich text, selected, then Markdown, Org and Plain text. The editor has a formatting toolbar above a note that holds a heading, paragraphs, a picture and a table. View and Edit tabs sit at the top right, and the footer shows text size buttons and the time of the last save."></object>
+  </figure>
+
+  <div class="captions captions--3">
+    <div class="caption">
+      <span class="mono-label">On a bookmark</span>
+      <h3 class="title-sm">Attached to anything</h3>
+      <p class="caption__text">Add a note to any bookmark or archive — items that have one are underlined in the tree. Or start a note-only item with no page behind it.</p>
+    </div>
+    <div class="caption">
+      <span class="mono-label">Rich text</span>
+      <h3 class="title-sm">Images and tables included</h3>
+      <p class="caption__text">A visual editor with a formatting toolbar for headings, lists, links, pictures and tables. Notes are saved as you type.</p>
+    </div>
+    <div class="caption">
+      <span class="mono-label">Markdown and Org</span>
+      <h3 class="title-sm">Plain-text formats, first class</h3>
+      <p class="caption__text">Switch a note to Markdown or Org from the format panel. Upload .md and .org files from your disk into the tree, and they open in the same editor.</p>
+    </div>
+  </div>
+</section>
+
 <!-- TEXT INTERFACE (iShell) -->
-<section class="section section--alt" id="text-interface">
+<section class="section" id="text-interface">
   <div class="section-head section-head--wide">
-    <div class="mono-label eyebrow"><span class="eyebrow__num">04</span><span>Text interface</span></div>
+    <div class="mono-label eyebrow"><span class="eyebrow__num">05</span><span>Text interface</span></div>
     <h2 class="section-title">Bookmark with a sentence.</h2>
     <p class="lede">Scrapyard also works with <a href="https://gchristensen.github.io/ishell/"><u>iShell</u></a>, a keyboard-first command prompt.
         It follows the interface principles of Jef Raskin, author of <em>The Humane Interface</em>, to cut the bookmarking down to three steps: summon the prompt with <kbd>Ctrl</kbd>+<kbd>Space</kbd>,
@@ -219,7 +248,7 @@
 <!-- USE CASES -->
 <section class="section section--ruled" id="use-cases">
   <div class="section-head section-head--narrow">
-    <div class="mono-label eyebrow"><span class="eyebrow__num">05</span><span>Use cases</span></div>
+    <div class="mono-label eyebrow"><span class="eyebrow__num">06</span><span>Use cases</span></div>
     <h2 class="section-title">Four ways to use it.</h2>
     <p class="lede">Small situations where a plain bookmark falls short.</p>
   </div>
@@ -286,6 +315,7 @@
   <nav class="site-nav">
     <a href="#features">Features</a>
     <a href="#shelves">Shelves</a>
+    <a href="#notes">Notes</a>
     <a href="#text-interface">Text interface</a>
     <a href="#use-cases">Use cases</a>
     <a href="https://gchristensen.github.io/scrapyard/addon/ui/locales/en/help.html">Online help</a>

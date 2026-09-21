@@ -226,6 +226,7 @@ kbd {
 .diagram--interface { aspect-ratio: 1200 / 700; }
 .diagram--ishell { aspect-ratio: 1200 / 640; }
 .diagram--shelves { aspect-ratio: 1320 / 850; }
+.diagram--notes { aspect-ratio: 1200 / 700; }
 
 /* the isometric scene carries its own shadows: no frame, it sits on the page */
 .shelves-figure { margin: 56px 0 0; }
@@ -255,6 +256,7 @@ kbd {
 .intro__kinds-head { margin-top: 48px; }
 .intro__kinds { margin-top: 20px; }
 .storage-grid.intro__kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.intro__storage { margin-top: 20px; }
 .intro__note {
   margin-top: 32px;
   max-width: 640px;
