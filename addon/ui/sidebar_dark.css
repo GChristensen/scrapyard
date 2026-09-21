@@ -323,7 +323,7 @@ span.task-status.done {
     color: #0074D9 !important;
 }
 
-select#link-scope, select#option-export-format, select#notes-format {
+select#link-scope, select#option-export-format {
     color: black !important;
 }
 

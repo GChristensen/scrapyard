@@ -28,7 +28,24 @@
                 <div id="space-right"></div>
             </div>
             <div id="edit-button-content" class="content">
-                <div class="content-filler"></div>
+                <div class="content-filler">
+                    <nav id="format-rail" aria-label="Note format">
+                        <div id="format-rail-title">Format</div>
+                        <button type="button" class="format-button" data-format="delta" aria-pressed="true">
+                            <span class="format-glyph">Aa</span>Rich text</button>
+                        <button type="button" class="format-button" data-format="markdown" aria-pressed="false">
+                            <span class="format-glyph">M&darr;</span>Markdown</button>
+                        <button type="button" class="format-button" data-format="org" aria-pressed="false">
+                            <span class="format-glyph">*</span>Org</button>
+                        <button type="button" class="format-button" data-format="text" aria-pressed="false">
+                            <span class="format-glyph">T</span>Plain text</button>
+                        <div id="inserts">
+                            <div class="format-rail-separator"></div>
+                            <a href="#" id="insert-example">Example markup</a> <!--
+                                |&nbsp;<a href="#" id="insert-style">EXAMPLE STYLE</a> -->
+                        </div>
+                    </nav>
+                </div>
                 <div id="editor-container">
                     <div id="wysiwyg-editor"></div>
                     <textarea id="editor"></textarea>
@@ -61,18 +78,7 @@
                     <b id="font-size-larger" class="font-button"></b>
                 </div>
             </div>
-            <div id="format-selector">
-                Format:
-                <select id="notes-format">
-                    <option value="delta" selected>Rich text</option>
-                    <option value="markdown">Markdown</option>
-                    <option value="org">Org</option>
-                    <option value="text">Plain text</option>
-                </select>
-                <span id="inserts">
-                    <a href="#" id="insert-example">EXAMPLE MARKUP</a> <!--
-                        |&nbsp;<a href="#" id="insert-style">EXAMPLE STYLE</a> -->
-                </span>
+            <div id="editor-controls">
                 <div id="editor-font-sizes">
                     <b id="editor-font-size-smaller" class="font-button"></b>
                     <b id="editor-font-size-default" class="font-button"></b>

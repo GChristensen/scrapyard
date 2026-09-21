@@ -658,7 +658,8 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                 const file = picked.file;
                 const isOrg = /\.org$/i.test(file.name);
                 const isMarkdown = /\.md$/i.test(file.name);
-                const content = isOrg || isMarkdown ? await file.text() : await file.arrayBuffer();
+                const isText = /\.txt$/i.test(file.name);
+                const content = isOrg || isMarkdown || isText ? await file.text() : await file.arrayBuffer();
 
                 send.uploadFiles({parent_id: ctxNode.id, file_name: file.name, content, content_type: file.type});
             }

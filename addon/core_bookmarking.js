@@ -301,13 +301,14 @@ receive.uploadFiles = async message => {
         if (message.content !== undefined) {
             const isOrg = /\.org$/i.test(message.file_name);
             const isMarkdown = /\.md$/i.test(message.file_name);
+            const isText = /\.txt$/i.test(message.file_name);
 
             let bookmark = {uri: "", parent_id: message.parent_id, name: message.file_name};
 
             try {
-                if (isOrg || isMarkdown) {
+                if (isOrg || isMarkdown || isText) {
                     bookmark = await Bookmark.addNotes(message.parent_id, bookmark.name);
-                    await Bookmark.storeNotes({node_id: bookmark.id, format: isOrg ? "org" : "markdown",
+                    await Bookmark.storeNotes({node_id: bookmark.id, format: isOrg ? "org" : isMarkdown ? "markdown" : "text",
                                                 content: message.content});
                 }
                 else {

@@ -95,9 +95,9 @@ async function init() {
 
         if (notes) {
             format = notes.format || "org";
-            $("#notes-format").val(format === "html"? "delta": format);
+            showFormat(format === "html"? "delta": format);
             if (notes.__file_as_notes)
-                $("#notes-format").prop("disabled", true);
+                $(".format-button").prop("disabled", true);
 
             editor = createEditor(format);
             editor.setContent(notes.content);
@@ -133,14 +133,10 @@ async function init() {
                     $("#notes").css("width", width);
                 }
             }
-
-            if (format !== "delta" && format !== "text")
-                $("#inserts").show();
-            else
-                $("#inserts").hide();
         }
         else if (!loadFailed) {
             editor = createEditor();
+            showFormat("delta");
         }
     }
     catch (e) {
@@ -161,12 +157,12 @@ async function init() {
 
         if (e.target.id === "notes-button") {
             formatNotes(editor.renderContent(), format);
-            $("#format-selector").hide();
+            $("#editor-controls").hide();
             $("#align-selector").show();
             $("#save-hint").hide();
         }
         else if (e.target.id === "edit-button") {
-            $("#format-selector").show();
+            $("#editor-controls").show();
             $("#align-selector").hide();
             // "show" would restore the inline display of the span, which ignores the width and height
             $("#save-hint").css("display", "inline-block");
@@ -194,12 +190,18 @@ async function init() {
         edit.trigger("input");
     });
 
-    $("#notes-format").on("change", e => {
+    $(".format-button").on("click", e => {
+        const newFormat = $(e.currentTarget).data("format");
+
+        if (newFormat === format)
+            return;
+
         // old format
         if (format === "delta" && !editor.isEmpty())
             $("#editor").val(editor.getContent());
 
-        format = $("#notes-format").val();
+        format = newFormat;
+        showFormat(format);
 
         editor.uninstall();
         editor = createEditor(format);
@@ -207,16 +209,6 @@ async function init() {
         // new format
         if (format === "delta")
             editor.setContent($("#editor").val());
-
-        if (format !== "delta" && format !== "text") {
-            $("#inserts").show();
-            $("#editor-font-sizes").hide();
-        }
-        else {
-            $("#inserts").hide();
-            if (format === "delta")
-                $("#editor-font-sizes").show();
-        }
 
         storeNotesProperties({format});
     });
@@ -273,16 +265,18 @@ async function init() {
     });
 
     $("#editor-font-size-larger").on("click", e => {
-        changeFontSize("editor-font-size", ".ql-container", (a, b) => a + b);
+        changeFontSize("editor-font-size", null, (a, b) => a + b);
+        applyEditorFontSize();
     });
 
     $("#editor-font-size-smaller").on("click", e => {
-        changeFontSize("editor-font-size", ".ql-container", (a, b) => a - b);
+        changeFontSize("editor-font-size", null, (a, b) => a - b);
+        applyEditorFontSize();
     });
 
     $("#editor-font-size-default").on("click", e => {
         localStorage.setItem("editor-font-size", DEFAULT_FONT_SIZE);
-        $(".ql-container").css("font-size", DEFAULT_FONT_SIZE + "%");
+        applyEditorFontSize();
     });
 
     let fontSize = parseInt(localStorage.getItem("notes-font-size") || DEFAULT_FONT_SIZE);
@@ -343,6 +337,15 @@ window.addEventListener("pagehide", () => {
     }
 });
 
+function showFormat(format) {
+    $(".format-button").each(function () {
+        $(this).attr("aria-pressed", $(this).data("format") === format);
+    });
+
+    // example markup exists only for the markup formats
+    $("#inserts").toggle(format !== "delta" && format !== "text");
+}
+
 function createEditor(format = "delta") {
     let editor;
 
@@ -350,8 +353,10 @@ function createEditor(format = "delta") {
         const fontSize = parseInt(localStorage.getItem("editor-font-size") || DEFAULT_FONT_SIZE);
         editor = new WYSIWYGEditor(format, fontSize);
     }
-    else
+    else {
         editor = new PlainTextEditor(format);
+        applyEditorFontSize();
+    }
 
     editor.setChangeHandler(() => {
         editorChanged = true;
@@ -523,5 +528,13 @@ function changeFontSize(setting, target, op) {
     let size = parseInt(localStorage.getItem(setting) || DEFAULT_FONT_SIZE);
     size = op(size, 5);
     localStorage.setItem(setting, size);
-    $(target).css("font-size", size + "%");
+    if (target)
+        $(target).css("font-size", size + "%");
+}
+
+// the rich text editor and the markup textarea share the size setting, the textarea keeps its own base size
+function applyEditorFontSize() {
+    const size = parseInt(localStorage.getItem("editor-font-size") || DEFAULT_FONT_SIZE);
+    $(".ql-container").css("font-size", size + "%");
+    $("#editor").css("font-size", (size / DEFAULT_FONT_SIZE * 100) + "%");
 }

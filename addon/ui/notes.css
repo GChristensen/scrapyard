@@ -133,7 +133,7 @@ a#notes-button.focus, a#edit-button.focus {
 
 #editor {
     box-sizing: border-box;
-    width: calc(100% - 4px);
+    width: 100%;
     height: calc(100% - 4px);
     font-size: 12pt;
     font-family: "Lucida Console", "Courier New", monospace;
@@ -157,6 +157,88 @@ a#notes-button.focus, a#edit-button.focus {
 
 #inserts {
     display: none;
+}
+
+#format-rail {
+    width: 132px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    user-select: none;
+}
+
+#format-rail-title {
+    padding: 0 10px 6px;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #555;
+}
+
+.format-button {
+    width: 100%;
+    height: 38px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    border: none;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: #222;
+    font-size: 14px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.format-button:hover {
+    background: #e9edef;
+}
+
+.format-button[aria-pressed="true"] {
+    background: #e6f2f5;
+    color: #00566d;
+    font-weight: bold;
+    box-shadow: inset 3px 0 0 #007799;
+}
+
+.format-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.format-button:disabled:hover {
+    background: transparent;
+}
+
+.format-button[aria-pressed="true"]:disabled:hover {
+    background: #e6f2f5;
+}
+
+.format-glyph {
+    flex: 0 0 auto;
+    width: 22px;
+    text-align: center;
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.format-rail-separator {
+    height: 1px;
+    margin: 8px 10px;
+    background: #ddd;
+}
+
+#inserts a {
+    display: block;
+    padding: 0 10px;
+    font-size: 12px;
+    line-height: 16px;
 }
 
 #save-info {
@@ -206,7 +288,7 @@ span.task-status.done {
     color: white !important;
 }
 
-#format-selector {
+#editor-controls {
     display: none;
 }
 
@@ -299,15 +381,19 @@ pre.plaintext {
     min-height: 0;
     height: auto;
     width: 100%;
+    border-color: #ccc; /* same as the .ql-toolbar.ql-snow border, also when focused */
     border-top: none;
 }
 
 #markup-toolbar .markup-heading-btn {
-    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
     font-weight: 700;
     font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
     color: #444;
-    line-height: 24px;
+    line-height: 1;
 }
 
 #markup-toolbar .markup-heading-btn:hover {

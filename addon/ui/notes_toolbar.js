@@ -135,6 +135,8 @@ const MARKDOWN_BUTTONS = [
     [
         {id: "bold",   title: "Bold",          icon: ICONS.bold,   action: ta => wrapSelection(ta, "**", "**")},
         {id: "italic", title: "Italic",        icon: ICONS.italic, action: ta => wrapSelection(ta, "*", "*")},
+        // markdown has no underline syntax, the inline HTML is passed through by the renderer
+        {id: "underline", title: "Underline", icon: ICONS.underline, action: ta => wrapSelection(ta, "<u>", "</u>")},
         {id: "strike", title: "Strikethrough",  icon: ICONS.strike, action: ta => wrapSelection(ta, "~~", "~~")},
         {id: "code",   title: "Inline code",   icon: ICONS.code,   action: ta => wrapSelection(ta, "`", "`")},
     ],
