@@ -289,6 +289,31 @@ pre.plaintext {
     display: none;
 }
 
+/* Markup toolbar for markdown/org modes */
+#markup-toolbar {
+    flex: 0 0 auto;
+}
+
+#editor-container:has(#markup-toolbar) #editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    width: 100%;
+    border-top: none;
+}
+
+#markup-toolbar .markup-heading-btn {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+    color: #444;
+    line-height: 24px;
+}
+
+#markup-toolbar .markup-heading-btn:hover {
+    color: #06c;
+}
+
 .ql-toolbar.ql-snow .ql-formats {
     margin-right: 4px;
 }

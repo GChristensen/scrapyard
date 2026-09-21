@@ -1,4 +1,5 @@
 import {applyInlineStyles} from "../utils_html.js";
+import {NotesToolbar} from "./notes_toolbar.js";
 
 class Editor {
     setBlurHandler(handler) {
@@ -262,9 +263,16 @@ export class PlainTextEditor extends Editor {
     install() {
         $(WYSIWYGEditor.ELEMENT_ID).hide();
         $(PlainTextEditor.ELEMENT_ID).show();
+
+        if (this.format === "markdown" || this.format === "org")
+            this.toolbar = new NotesToolbar(this.format);
     }
 
     uninstall() {
+        if (this.toolbar) {
+            this.toolbar.uninstall();
+            this.toolbar = null;
+        }
         $(WYSIWYGEditor.ELEMENT_ID).show();
         $(PlainTextEditor.ELEMENT_ID).hide();
     }

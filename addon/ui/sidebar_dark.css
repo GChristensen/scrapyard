@@ -228,7 +228,10 @@ input[type=text], .selectric, .selectric .button, .selectric-items, .selectric-s
     border-color: var(--tone-3) !important;
 }
 
+/* the background must be reset: .dlg * paints one on every descendant, and the filter
+   below would invert it into a light block behind the icon */
 .midnight-filter, .midnight-filter-menu {
+    background-color: transparent !important;
     filter: invert(80%) sepia(7%) saturate(52%) hue-rotate(201deg) brightness(90%) contrast(87%);
 }
 

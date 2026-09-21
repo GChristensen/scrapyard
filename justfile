@@ -47,6 +47,7 @@ chrome-mv3:
 
 backend-clean:
     cd backend && rm -r -f python-dist
+    cd backend &&  rm -r -f scrapyard_backend.egg-info
 
 # to create .local/python-dist
 # 1. download embeddable Python zip
