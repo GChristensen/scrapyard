@@ -74,7 +74,7 @@ Phase 6 (host switch-over)
 | media.html | the WAV as a data URI (only the current `<source>`), `<track>` as a `text/vtt` data URI, the poster inlined, the blob video with a PNG poster |
 | scripts.html | (scripts off) `type="text/plain"` and `data-scrapyard-src` on external scripts; (scripts on) data URIs |
 | cssinjs.html | the rules inserted with `insertRule` present in the captured `<style>` (from `data-scrapyard-sheetrules`) |
-| lazy.html | (scroll or shrink method) the images far below the fold are loaded and inlined |
+| lazy.html | (scroll or shrink method) the images far below the fold are loaded and inlined. The scroll method advances at most `options-lazyloadscrollscreens` viewports (default 5) and then jumps to the bottom once, so a finite page is still covered; the cap is what makes an infinite-scroll page terminate |
 | csp.html | captures; the meta CSP is emptied with `data-scrapyard-content` |
 | mixed.html | (served on https or with an https referrer) the http image fails with `mixed` unless passive mixed content is allowed |
 | cookie.html | the gated image loads through the background fallback (`credentials: include`) |
@@ -105,3 +105,13 @@ it and need the extension:
       a second time after the sink already wrote it.)
 - [ ] **A15 injection** — Chrome, cold tab with frames: capture still succeeds; the polyfill is no longer
       injected into frame 0 twice.
+
+## Capture options (version 2.3.3)
+
+- [ ] **Concurrency** — the "Resources loaded simultaneously" input in *Limits* shows its stored value, survives
+      a reload of the options page, and reaches the engine: capture a resource-heavy page with `debug` on and
+      count the in-flight `[scrapyard capture] fetch` lines (12 by default, 6 before).
+- [ ] **Screens** — the input sits on the same line as "Scroll down page to force lazy loads", is greyed out
+      while that checkbox is off, and the row does not wrap at the default options-window width.
+- [ ] **The bound bites** — a real infinite-scroll page (a social feed) with "Scroll down page" enabled now
+      finishes instead of scrolling until aborted. This is the reason for the change.

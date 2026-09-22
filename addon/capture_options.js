@@ -28,9 +28,11 @@ export const CAPTURE_SETTINGS_DEFAULTS = Object.freeze({
     "options-crossorigin": 0,
     "options-lazyloadtype": "0",
     "options-lazyloadscrolltime": 0.2,
+    "options-lazyloadscrollscreens": 5,
     "options-lazyloadshrinktime": 0.5,
     "options-loadlazyimages": true,
-    "options-savedelaytime": 0
+    "options-savedelaytime": 0,
+    "options-concurrency": 12
 });
 
 /**
@@ -85,9 +87,11 @@ export function mapCaptureSettings(stored) {
         referer: REFERER[+s["options-crossorigin"]] || defaults.referer,
         lazyLoad: LAZY_LOAD[String(s["options-lazyloadtype"])] || "none",
         lazyLoadScrollTime: +s["options-lazyloadscrolltime"],
+        lazyLoadScrollScreens: +s["options-lazyloadscrollscreens"],
         lazyLoadShrinkTime: +s["options-lazyloadshrinktime"],
         lazyImages: !!s["options-loadlazyimages"],
-        startDelay: +s["options-savedelaytime"]
+        startDelay: +s["options-savedelaytime"],
+        concurrency: +s["options-concurrency"]
     };
 }
 

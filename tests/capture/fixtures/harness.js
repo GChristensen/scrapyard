@@ -210,6 +210,7 @@ async function run() {
         shadowDom: params.has("shadow"),
         scripts: params.has("scripts"),
         lazyLoad: params.get("lazy") || "none",
+        lazyLoadScrollScreens: +(params.get("screens") || 5),
         shadowLoaderSource: params.has("shadow")? await (await fetch("/engine/page/shadow_loader.js")).text(): ""
     });
 

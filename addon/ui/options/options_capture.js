@@ -38,6 +38,7 @@ async function loadCaptureSettings() {
     loadValue("options-maxframedepth");
     loadValue("options-maxresourcesize");
     loadValue("options-maxresourcetime");
+    loadValue("options-concurrency");
     loadCheck("options-allowpassive");
 
     $(`#options-refererheader input[name="header"]`, "").val([object["options-crossorigin"]]);
@@ -46,6 +47,17 @@ async function loadCaptureSettings() {
         loadCheck("options-lazyloadtype-1", true);
     else if (object["options-lazyloadtype"] === "2")
         loadCheck("options-lazyloadtype-2", true);
+
+    loadValue("options-lazyloadscrollscreens");
+    enableScrollScreens();
+}
+
+/** The screen count only applies to the scroll method, so it follows that checkbox. */
+function enableScrollScreens() {
+    const enabled = $("#options-lazyloadtype-1").is(":checked");
+
+    $("#options-lazyloadscrollscreens").prop("disabled", !enabled);
+    $("label[for='options-lazyloadscrollscreens']").css("color", enabled? "": "grey");
 }
 
 async function storeCaptureSettings(e) {
@@ -60,6 +72,8 @@ async function storeCaptureSettings(e) {
         lazyLoadType = "1";
     else if ($("#options-lazyloadtype-2").is(":checked"))
         lazyLoadType = "2";
+
+    enableScrollScreens();
 
     // option "options-savedelaytime" is currently not represented in UI, 0 by default
 
@@ -85,10 +99,12 @@ async function storeCaptureSettings(e) {
         "options-maxframedepth": +$("#options-maxframedepth").val(),
         "options-maxresourcesize": +$("#options-maxresourcesize").val(),
         "options-maxresourcetime": +$("#options-maxresourcetime").val(),
+        "options-concurrency": +$("#options-concurrency").val(),
         "options-allowpassive": $("#options-allowpassive").is(":checked"),
         "options-crossorigin": +$(`#options-refererheader input[name="header"]:checked`).val(),
         "options-removeelements": $("#options-removeelements").is(":checked"),
-        "options-lazyloadtype": lazyLoadType
+        "options-lazyloadtype": lazyLoadType,
+        "options-lazyloadscrollscreens": +$("#options-lazyloadscrollscreens").val()
     };
 
     await saveCaptureSettings(newSettings);

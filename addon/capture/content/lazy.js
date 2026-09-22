@@ -21,7 +21,7 @@ import {log} from "../shared/log.js";
  */
 export async function forceLazyContent(win, options, signal) {
     if (options.lazyLoad === "scroll") {
-        await scrollPage(win, options.lazyLoadScrollTime * 1000, signal);
+        await scrollPage(win, options.lazyLoadScrollTime * 1000, options.lazyLoadScrollScreens, signal);
         return null;
     }
 
@@ -31,7 +31,7 @@ export async function forceLazyContent(win, options, signal) {
     return null;
 }
 
-async function scrollPage(win, stepTime, signal) {
+async function scrollPage(win, stepTime, screens, signal) {
     const doc = win.document;
     const start = performance.now();
     const originalScrollY = win.scrollY;
@@ -41,11 +41,19 @@ async function scrollPage(win, stepTime, signal) {
 
     await delay(stepTime, signal);   /* allow time for first lazy loads to complete */
 
-    while (scrollY < doc.documentElement.scrollHeight) {
+    // the step count is capped: scrollHeight is what the scrolling makes grow, so a condition that only
+    // compares against it never ends on an infinite-scroll page
+    let screen = 0;
+
+    while (screen < screens && scrollY < doc.documentElement.scrollHeight) {
         scrollY += win.innerHeight;
         win.scrollTo(0, scrollY);
+        screen++;
         await delay(stepTime, signal);   /* allow time for some more lazy loads to complete */
     }
+
+    if (screen === screens)
+        log("debug", "lazy load (scroll) stopped at the limit of", screens, "screens");
 
     win.scrollTo(0, doc.documentElement.scrollHeight - win.innerHeight - 10);
     win.scrollTo(0, doc.documentElement.scrollHeight);

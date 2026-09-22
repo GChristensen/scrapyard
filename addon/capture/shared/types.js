@@ -62,6 +62,7 @@
  * @property {number} concurrency
  * @property {"none"|"scroll"|"shrink"} lazyLoad
  * @property {number} lazyLoadScrollTime  seconds
+ * @property {number} lazyLoadScrollScreens  viewport heights the scroll method may advance at most
  * @property {number} lazyLoadShrinkTime  seconds
  * @property {boolean} lazyImages
  * @property {number} startDelay          seconds

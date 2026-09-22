@@ -33,7 +33,9 @@ const EXTRA = {
     "shadow.html": ["shadow", "shadow&pretty"],
     "scripts.html": ["scripts"],
     "selection.html": ["selection=p%3Anth-of-type(2)"],
-    "lazy.html": ["lazy=scroll"]
+    // the bounded scroll and the unbounded one; lazy=shrink is deliberately absent, its growth loop iterates a
+    // timing-dependent number of times and does not produce a reproducible digest
+    "lazy.html": ["lazy=scroll", "lazy=scroll&screens=50"]
 };
 
 function fixtures() {
@@ -133,7 +135,10 @@ async function main() {
     }
 
     const baseline = new Map(readFileSync(BASELINE, "utf8").split("\n")
-        .filter(Boolean).map(line => [line.slice(65), line.slice(0, 64)]));
+        .filter(Boolean).map(line => {
+            const space = line.indexOf(" ");
+            return [line.slice(space + 1), line.slice(0, space)];
+        }));
 
     let differences = 0;
 

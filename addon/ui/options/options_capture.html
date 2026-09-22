@@ -88,6 +88,11 @@
                                        value="30"/><label for="options-maxresourcetime">Maximum time for loading
                                 a resource (secs)</label>
                             </div>
+                            <div>
+                                <input id="options-concurrency" type="number" min="1" max="32"
+                                       value="12"/><label for="options-concurrency">Resources loaded
+                                simultaneously</label>
+                            </div>
                         </fieldset>
                     </form>
 
@@ -128,7 +133,9 @@
                             <legend>&nbsp;Lazy Loading&nbsp;</legend>
                             <div>
                                 <input id="options-lazyloadtype-1" type="checkbox"/><label
-                                for="options-lazyloadtype-1">Scroll down page to force lazy loads before saving</label>
+                                for="options-lazyloadtype-1">Scroll down page to force lazy loads</label><input
+                                id="options-lazyloadscrollscreens" type="number" min="1" max="100"
+                                value="5"/><label for="options-lazyloadscrollscreens">screens</label>
                             </div>
                             <div>
                                 <input id="options-lazyloadtype-2" type="checkbox"/><label

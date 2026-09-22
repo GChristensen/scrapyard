@@ -3,6 +3,25 @@ import {defaultOptions, normalizeOptions, publicOptions} from "../../../addon/ca
 import {parseContentType, isLoadAllowed} from "../../../addon/capture/shared/http.js";
 
 export const tests = {
+    "the lazy scroll bound is always a bound"() {
+        /* the loop must never be talked into running forever: 0 and "unlimited" both clamp to one screen */
+        assert.equal(normalizeOptions({lazyLoadScrollScreens: 0}).lazyLoadScrollScreens, 1);
+        assert.equal(normalizeOptions({lazyLoadScrollScreens: -10}).lazyLoadScrollScreens, 1);
+        assert.equal(normalizeOptions({lazyLoadScrollScreens: 1000}).lazyLoadScrollScreens, 100);
+        assert.equal(normalizeOptions({lazyLoadScrollScreens: Infinity}).lazyLoadScrollScreens, 5);
+        assert.equal(normalizeOptions({lazyLoadScrollScreens: "nope"}).lazyLoadScrollScreens, 5);
+        assert.equal(normalizeOptions({lazyLoadScrollScreens: "7"}).lazyLoadScrollScreens, 7);
+        assert.equal(normalizeOptions({lazyLoadScrollScreens: 4.6}).lazyLoadScrollScreens, 5);
+        assert.equal(defaultOptions().lazyLoadScrollScreens, 5);
+    },
+
+    "concurrency default and range"() {
+        assert.equal(defaultOptions().concurrency, 12);
+        assert.equal(normalizeOptions({concurrency: 200}).concurrency, 64);
+        assert.equal(normalizeOptions({concurrency: "16"}).concurrency, 16);
+        assert.equal(normalizeOptions({}).concurrency, 12);
+    },
+
     "normalizeOptions fills defaults and rejects invalid values"() {
         const o = normalizeOptions({images: "displayed", fonts: "nope", maxFrameDepth: "3", concurrency: 0,
             scripts: true, executeScripts: "yes", version: "2.3", lazyLoad: "shrink"});
