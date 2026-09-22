@@ -241,6 +241,28 @@ kbd {
   line-height: 0;
 }
 
+/* ---------- demo video ---------- */
+
+.demo__video {
+  width: fit-content;
+  margin: 56px auto 0;
+  padding: 12px;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  box-shadow: 0 40px 70px -40px rgba(29, 27, 24, .35);
+  line-height: 0;
+}
+.demo__video-el {
+  display: block;
+  width: 100%;
+  max-width: 620px;
+  max-height: 392px;
+  height: auto;
+  border-radius: 8px;
+}
+
 /* ---------- what it is ---------- */
 
 .intro__aside { padding-top: 14px; }

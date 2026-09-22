@@ -115,6 +115,8 @@ if (plain) {
   }
   const written = new Set();
   html = mapUrls(html, (url, attr) => {
+    // non-svg local assets (e.g. the demo video) aren't inlined: just rebase the path like --plain does
+    if (!/\.svg$/i.test(url)) return "landing/" + url;
     const svg = svgs.get(url);
     if (svg === undefined) throw new Error(`unhandled local asset: ${url}`);
     if (attr !== "data" && bytes(svg) <= INLINE_LIMIT)
