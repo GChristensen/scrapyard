@@ -8,50 +8,67 @@ import {MARK} from "../shared/constants.js";
  * @param {Document} doc
  */
 export function annotateLiveState(doc) {
-    doc.querySelectorAll("style").forEach(element => {
-        if (element.disabled)
-            return;
+    /* one traversal for all four element families; the branches are independent, so document order is fine */
+    doc.querySelectorAll("style, img, video, canvas").forEach(element => {
+        switch (element.localName) {
+            case "style":
+                annotateStyle(element);
+                break;
 
-        try {
-            const rules = divergentSheetRules(element);
+            case "img":
+                if (element.currentSrc.startsWith("blob:"))
+                    annotateBlob(element);
 
-            if (rules != null)
-                element.setAttribute(MARK.sheetRules, rules);
-        }
-        catch (e) {
-            /* cross-origin sheet or no sheet */
-        }
-    });
+                break;
 
-    doc.querySelectorAll("img").forEach(element => {
-        if (element.currentSrc.startsWith("blob:")) {
-            const dataUrl = createCanvasDataURL(element);
+            case "video":
+                if (!element.hasAttribute("poster") && element.currentSrc.startsWith("blob:"))
+                    annotateBlob(element);
 
-            if (dataUrl !== "")
-                element.setAttribute(MARK.blobDataUri, dataUrl);
-        }
-    });
+                break;
 
-    doc.querySelectorAll("video").forEach(element => {
-        if (!element.hasAttribute("poster") && element.currentSrc.startsWith("blob:")) {
-            const dataUrl = createCanvasDataURL(element);
+            case "canvas":
+                try {
+                    const dataUrl = element.toDataURL("image/png", "");
 
-            if (dataUrl !== "")
-                element.setAttribute(MARK.blobDataUri, dataUrl);
-        }
-    });
+                    if (dataUrl !== "")
+                        element.setAttribute(MARK.canvasDataUri, dataUrl);
+                }
+                catch (e) {
+                    /* tainted */
+                }
 
-    doc.querySelectorAll("canvas").forEach(element => {
-        try {
-            const dataUrl = element.toDataURL("image/png", "");
-
-            if (dataUrl !== "")
-                element.setAttribute(MARK.canvasDataUri, dataUrl);
-        }
-        catch (e) {
-            /* tainted */
+                break;
         }
     });
+}
+
+/**
+ * Records the divergent rules of a <style>, or marks it as checked-and-not-divergent. The negative result is
+ * worth recording too: without it both passes recompute it, and the computation is a full CSS re-parse plus a
+ * live insert and removal, i.e. two whole-document style invalidations (see divergentSheetRules).
+ * @param {HTMLStyleElement} element
+ */
+function annotateStyle(element) {
+    if (element.disabled)
+        return;
+
+    try {
+        const rules = divergentSheetRules(element);
+
+        element.setAttribute(rules != null? MARK.sheetRules: MARK.sheetChecked, rules != null? rules: "");
+    }
+    catch (e) {
+        /* cross-origin sheet or no sheet: the passes fall back to textContent, which is what "checked" means */
+        element.setAttribute(MARK.sheetChecked, "");
+    }
+}
+
+function annotateBlob(element) {
+    const dataUrl = createCanvasDataURL(element);
+
+    if (dataUrl !== "")
+        element.setAttribute(MARK.blobDataUri, dataUrl);
 }
 
 /**
@@ -62,6 +79,9 @@ export function annotateLiveState(doc) {
  * @returns {string|null}
  */
 export function divergentSheetRules(element) {
+    /* read the live rule count first: it throws for a cross-origin sheet, and the caller discards everything
+       this function does in that case, so there is no point building the duplicate before finding out */
+    const liveCount = element.sheet.cssRules.length;
     const doc = element.ownerDocument;
     const duplicate = doc.createElement("style");
     duplicate.textContent = element.textContent;
@@ -69,15 +89,16 @@ export function divergentSheetRules(element) {
     const duplicateSheet = duplicate.sheet;
     duplicate.remove();
 
-    if (duplicateSheet.cssRules.length === element.sheet.cssRules.length)
+    if (duplicateSheet.cssRules.length === liveCount)
         return null;
 
-    let css = "";
+    const rules = element.sheet.cssRules;
+    const parts = [];
 
-    for (let i = 0; i < element.sheet.cssRules.length; i++)
-        css += element.sheet.cssRules[i].cssText + "\n";
+    for (let i = 0; i < rules.length; i++)
+        parts.push(rules[i].cssText, "\n");
 
-    return css;
+    return parts.join("");
 }
 
 /**

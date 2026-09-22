@@ -90,10 +90,8 @@ export async function injectFrameScripts(tabId) {
  * @param {number} tabId
  */
 export async function injectCaptureScripts(tabId) {
-    if (!hasBackgroundPage()) {
-        await execute(tabId, POLYFILL, {frameId: 0});
+    if (!hasBackgroundPage())   /* covers frame 0 too: injecting it there separately parsed the polyfill twice */
         await executeInAllFrames(tabId, POLYFILL);
-    }
 
     await executeInAllFrames(tabId, FONTFACE);
     await executeInAllFrames(tabId, FRAME_STUB);

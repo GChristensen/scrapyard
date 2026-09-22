@@ -3,6 +3,8 @@
 
 import {BUILTIN_SHADOW, MARK} from "../shared/constants.js";
 
+const BUILTIN = new Set(BUILTIN_SHADOW);   /* checked for every element of the walk */
+
 /** @typedef {import("../shared/types.js").CaptureOptions} CaptureOptions */
 /** @typedef {import("../shared/types.js").FrameSnapshot} FrameSnapshot */
 
@@ -108,7 +110,7 @@ export class CaptureContext {
      * @returns {ShadowRoot|null} the open or closed shadow root, null for elements with built-in shadow DOM
      */
     shadowRootOf(el) {
-        if (BUILTIN_SHADOW.includes(el.localName))
+        if (BUILTIN.has(el.localName))
             return null;
 
         if (el.shadowRoot)

@@ -16,6 +16,7 @@ function isIconLink(el) {
 export const linkRules = [
     {
         name: "link-in-svg",
+        tags: ["link"],
         match: el => el.localName === "link" && insideSVG(el),
 
         serialize(el, ctx, tag) {
@@ -25,6 +26,7 @@ export const linkRules = [
     },
     {
         name: "link",
+        tags: ["link"],
         match: el => el.localName === "link" && isHTML(el) && !isStylesheetLink(el),
 
         discover(el, ctx) {
@@ -67,6 +69,7 @@ export const linkRules = [
     },
     {
         name: "anchor",
+        tags: ["a", "area"],
         match: el => (el.localName === "a" && isHTML(el)) || el.localName === "area",
 
         serialize(el, ctx, tag) {

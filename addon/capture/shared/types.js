@@ -135,6 +135,7 @@
 /**
  * @typedef {object} ElementRule
  * @property {string} name
+ * @property {ReadonlyArray<string>} tags  every localName match() can accept; indexed by rules/registry.js
  * @property {(el: Element) => boolean} match
  * @property {(el: Element, ctx: object) => void} [discoverStyles]  pass 1
  * @property {(el: Element, ctx: object) => void} [discover]        pass 2

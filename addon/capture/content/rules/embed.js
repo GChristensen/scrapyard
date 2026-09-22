@@ -7,6 +7,7 @@ import {isHTML, isReplaceable, substituteAttribute} from "./common.js";
 export const embedRules = [
     {
         name: "object",
+        tags: ["object"],
         match: el => el.localName === "object" && isHTML(el),
 
         discover(el, ctx) {
@@ -20,6 +21,7 @@ export const embedRules = [
     },
     {
         name: "embed",
+        tags: ["embed"],
         match: el => el.localName === "embed" && isHTML(el),
 
         discover(el, ctx) {

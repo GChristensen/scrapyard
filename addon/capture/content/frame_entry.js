@@ -3,7 +3,7 @@
 
 import {MESSAGE} from "../shared/constants.js";
 import {log} from "../shared/log.js";
-import {frameKeyOf, identifyFrames} from "./frame_keys.js";
+import {frameKeyOf, identifyFrames, reachableFromTop} from "./frame_keys.js";
 import {annotateLiveState, serializeDocument, loadedFontsOf} from "./snapshot.js";
 import {indexWords, collectLinks} from "./extras.js";
 
@@ -23,7 +23,9 @@ api.runtime.onMessage.addListener((message, sender) => {
             type: MESSAGE.framesReply,
             key: frameKeyOf(window),
             url: document.baseURI,
-            html: message.snapshot? serializeDocument(document): "",
+            // only a frame the top frame cannot reach live needs to ship its html: for the top frame itself
+            // and for same-origin subframes the capture walks the live document and this string is discarded
+            html: message.snapshot && !reachableFromTop(window)? serializeDocument(document): "",
             fonts: loadedFontsOf(document)
         };
 

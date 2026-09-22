@@ -73,6 +73,16 @@ the top frame for the duration of the run: requests `capture.frames.collect`, `c
 
 ## Tests
 
-`node tests/capture/node/run.mjs` (Node >= 22.12) runs the unit tests of `shared/` and `content/core/` plus the
-layering test. Browser checks are manual: `tests/capture/CHECKLIST.md` and the fixture pages in
-`tests/capture/fixtures/` (served by `python tests/capture/fixtures/serve.py`).
+`node tests/capture/node/run.mjs` (Node >= 22.12) runs the unit tests of `shared/`, `content/core/` and the rule
+registry, plus the layering test.
+
+`node tests/capture/digest.mjs` is the byte-identity gate: it drives the fixture harness headlessly over every
+fixture and option variant and compares a digest of the whole result (document, manifest, word index, links and,
+unpacked, every written file) against `tests/capture/baseline.txt`. A change that is meant to preserve the output
+must leave every digest untouched; `--write` records a new baseline, which is only correct on a tree whose output
+is deliberately different. It needs `python tests/capture/fixtures/serve.py` running and a Chrome binary
+(`CHROME=<path>` if it is not in the usual place).
+
+Other browser checks are manual: `tests/capture/CHECKLIST.md` and the fixture pages in `tests/capture/fixtures/`.
+The harness also takes `probe` (counts the expensive operations of a run: snapshot parses, base64 encodes and
+divergence tests) and serves `big.html?elements=&styles=&uses=&inline=`, a synthesized page for measurement.

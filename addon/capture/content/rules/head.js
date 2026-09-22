@@ -19,6 +19,7 @@ export function headPrefix(ctx) {
 export const headRules = [
     {
         name: "html",
+        tags: ["html"],
         match: el => el.localName === "html" && isHTML(el),
 
         serialize(el, ctx, tag) {
@@ -30,6 +31,7 @@ export const headRules = [
     },
     {
         name: "head",
+        tags: ["head"],
         match: el => el.localName === "head" && isHTML(el),
 
         serialize(el, ctx, tag) {

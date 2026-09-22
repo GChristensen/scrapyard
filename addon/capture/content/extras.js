@@ -11,19 +11,36 @@ export function indexWords(body) {
         return [];
 
     try {
-        const clone = body.cloneNode(true);
+        // A TreeWalker that rejects <style> and <script> collects the same text as cloning the whole body and
+        // removing those elements, without duplicating every node of the document first. The words then go
+        // straight into the Set instead of through three full-size intermediate arrays.
+        const doc = body.ownerDocument;
+        const walker = doc.createTreeWalker(body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+                if (node.nodeType === 1)
+                    return (node.localName === "style" || node.localName === "script")
+                        ? NodeFilter.FILTER_REJECT: NodeFilter.FILTER_SKIP;
 
-        clone.querySelectorAll("style, script").forEach(element => element.remove());
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
 
-        const text = clone.textContent
+        const parts = [];
+
+        while (walker.nextNode())
+            parts.push(walker.currentNode.data);
+
+        const text = parts.join("")
             .replace(/\n/g, " ")
             .replace(/(?:\p{Z}|[^\p{L}-])+/ug, " ");
 
-        const words = text.split(" ")
-            .filter(s => s && s.length > 2)
-            .map(s => s.toLocaleLowerCase());
+        const words = new Set();
 
-        return Array.from(new Set(words));
+        for (const word of text.split(" "))
+            if (word.length > 2)
+                words.add(word.toLocaleLowerCase());
+
+        return Array.from(words);
     }
     catch (e) {
         console.error(e);

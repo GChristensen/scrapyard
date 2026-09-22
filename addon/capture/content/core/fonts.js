@@ -3,10 +3,21 @@
 import {removeQuotes, isReplaceable} from "../../shared/url.js";
 import {RX_FONT_SRC, RX_FONT_URL, unescapeValue} from "./css.js";
 
-const WEIGHTS = ["normal", "bold", "bolder", "lighter", "100", "200", "300", "400", "500", "600", "700", "800", "900"];
-const STRETCHES = ["normal", "ultra-condensed", "extra-condensed", "condensed", "semi-condensed", "semi-expanded",
-    "expanded", "extra-expanded", "ultra-expanded"];
-const STYLES = ["normal", "italic", "oblique"];
+const WEIGHTS = new Set(["normal", "bold", "bolder", "lighter", "100", "200", "300", "400", "500", "600", "700",
+    "800", "900"]);
+const STRETCHES = new Set(["normal", "ultra-condensed", "extra-condensed", "condensed", "semi-condensed",
+    "semi-expanded", "expanded", "extra-expanded", "ultra-expanded"]);
+const STYLES = new Set(["normal", "italic", "oblique"]);
+
+/* one compiled regex per descriptor instead of one per @font-face block */
+const RX_DESCRIPTOR = {
+    "font-weight": /font-weight\s*:\s*([^\s;}]*)/i,
+    "font-style": /font-style\s*:\s*([^\s;}]*)/i,
+    "font-stretch": /font-stretch\s*:\s*([^\s;}]*)/i
+};
+
+/* the normalized form of a loadedFonts array, which is the same array for every face of a run */
+const NORMALIZED = new WeakMap();
 
 /**
  * @typedef {object} FontFaceDescriptor
@@ -33,14 +44,14 @@ export function parseFontFace(block) {
 }
 
 function descriptor(block, name, valid) {
-    const match = block.match(new RegExp(name + "\\s*:\\s*([^\\s;}]*)", "i"));
+    const match = block.match(RX_DESCRIPTOR[name]);
 
     if (!match)
         return "normal";
 
     const value = match[1].toLowerCase();
 
-    return valid.includes(value)? value: "normal";
+    return valid.has(value)? value: "normal";
 }
 
 /**
@@ -49,8 +60,23 @@ function descriptor(block, name, valid) {
  * @returns {boolean} some loaded font matches all four descriptors
  */
 export function matchesLoadedFont(face, loadedFonts) {
-    for (const font of loadedFonts || [])
-        if (removeQuotes(font.family).toLowerCase() === face.family && font.weight === face.weight
+    const fonts = loadedFonts || [];
+    let normalized = NORMALIZED.get(fonts);
+
+    if (!normalized) {
+        normalized = fonts.map(font => ({family: removeQuotes(font.family).toLowerCase(),
+            weight: font.weight, style: font.style, stretch: font.stretch}));
+
+        try {
+            NORMALIZED.set(fonts, normalized);
+        }
+        catch (e) {
+            /* not an object key (an empty default): recomputed, which costs nothing */
+        }
+    }
+
+    for (const font of normalized)
+        if (font.family === face.family && font.weight === face.weight
                 && font.style === face.style && font.stretch === face.stretch)
             return true;
 
@@ -76,7 +102,7 @@ export function fontFileType(url, format) {
     }
 
     if (url.includes(".woff2")) return "woff2";
-    if (url.includes(".woff") && !url.includes(".woff2")) return "woff";
+    if (url.includes(".woff")) return "woff";   /* .woff2 already returned above */
     if (url.includes(".ttf")) return "ttf";
     if (url.includes(".otf")) return "otf";
 
@@ -103,10 +129,11 @@ export function selectFontFiles(block, policy) {
     const satisfied = () => !includeAll && (woffFound || (!includeWoff && usedFound));
 
     const srcRegex = new RegExp(RX_FONT_SRC.source, RX_FONT_SRC.flags);
+    const urlRegex = new RegExp(RX_FONT_URL.source, RX_FONT_URL.flags);   /* hoisted out of the loop */
     let src;
 
     while ((src = srcRegex.exec(block)) != null) {
-        const urlRegex = new RegExp(RX_FONT_URL.source, RX_FONT_URL.flags);
+        urlRegex.lastIndex = 0;
         let m;
 
         while ((m = urlRegex.exec(src[1])) != null) {

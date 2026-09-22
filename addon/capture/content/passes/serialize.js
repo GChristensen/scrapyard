@@ -10,6 +10,11 @@ import {isStylesheetLink} from "../rules/style.js";
 import {emitFrameFallback, frameManifestEntry} from "../rules/frame.js";
 import {isSVG} from "../rules/common.js";
 
+/* the frozen arrays stay the vocabulary; these are the lookups on the per-element path */
+const METADATA = new Set(METADATA_ELEMENTS);
+const RETAIN = new Set(RETAIN_ELEMENTS);
+const HIDDEN = new Set(HIDDEN_BY_DEFAULT);
+
 /** @typedef {import("../context.js").CaptureContext} CaptureContext */
 
 /**
@@ -42,7 +47,7 @@ async function prepareTag(el, ctx, state, visitor) {
         tag.name = "span";
 
     /* a non-metadata element in <head> is moved to <body> when the saved page opens: keep it hidden */
-    if (parent != null && parent.localName === "head" && !METADATA_ELEMENTS.includes(tag.name)) {
+    if (parent != null && parent.localName === "head" && !METADATA.has(tag.name)) {
         tag.set(MARK.nonMetadata, "");
         tag.set("hidden", "");
     }
@@ -82,13 +87,13 @@ async function prepareTag(el, ctx, state, visitor) {
     if (!displayed) {
         /* elements collapsed by the page, page editors or content blockers */
         if (ctx.options.hiddenElements === "remove") {
-            if (!RETAIN_ELEMENTS.includes(el.localName) && !isSVG(el)) {
+            if (!RETAIN.has(el.localName) && !isSVG(el)) {
                 ctx.out.push(MARK.htmlRemove(el.localName));
                 return SKIP;
             }
         }
         else if (ctx.options.hiddenElements === "rehide") {
-            if (!HIDDEN_BY_DEFAULT.includes(el.localName))
+            if (!HIDDEN.has(el.localName))
                 tag.appendStyle(MARK.cssRehide + " display: none !important;");
         }
     }

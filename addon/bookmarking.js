@@ -165,7 +165,9 @@ async function runPageCapture(tab, bookmark, selection) {
 // Stores the result of a capture and finishes the UI choreography (formerly the storePageHtml message handler).
 async function storeCapturedPage(bookmark, result, tabId) {
     try {
-        await Bookmark.storeArchive(bookmark, result.html, "text/html", bookmark.__index);
+        // in unpacked mode UnpackedSink.finish already wrote index.html through the writer above
+        await Bookmark.storeArchive(bookmark, result.html, "text/html", bookmark.__index,
+            {indexFileWritten: result.mode === "unpacked"});
 
         if (!bookmark.__mute_ui) {
             if (tabId != null)

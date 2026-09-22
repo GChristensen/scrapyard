@@ -27,16 +27,33 @@ export function effectiveCss(el, ctx) {
     if (el.hasAttribute(MARK.sheetRules))
         return el.getAttribute(MARK.sheetRules);
 
-    if (!ctx.crossFrame) {
-        try {
-            const rules = divergentSheetRules(el);
+    /* annotateLiveState already established that this sheet does not diverge */
+    if (el.hasAttribute(MARK.sheetChecked))
+        return el.textContent;
 
-            if (rules != null)
-                return rules;
+    if (!ctx.crossFrame) {
+        // the frame was not annotated (the top-frame fallback in capture.js), so the answer is computed here.
+        // It is remembered for the run because pass 2 and pass 3 both ask, and computing it costs a full CSS
+        // re-parse plus a live insert and removal of a <style>.
+        const cache = ctx.run.sheetRules;
+        const cached = cache?.get(el);
+
+        if (cached !== undefined)
+            return cached ?? el.textContent;
+
+        let rules = null;
+
+        try {
+            rules = divergentSheetRules(el);
         }
         catch (e) {
             /* sheet.cssRules does not exist or cross-origin style sheet */
         }
+
+        cache?.set(el, rules);
+
+        if (rules != null)
+            return rules;
     }
 
     return el.textContent;
@@ -46,6 +63,7 @@ export function effectiveCss(el, ctx) {
 export const styleRules = [
     {
         name: "style",
+        tags: ["style"],
         match: el => el.localName === "style" && isHTML(el),
 
         discoverStyles(el, ctx) {
@@ -70,6 +88,7 @@ export const styleRules = [
                 return tag.drop();
 
             tag.remove(MARK.sheetRules);
+            tag.remove(MARK.sheetChecked);
 
             if (el.disabled) {
                 tag.set(MARK.disabled, "");
@@ -87,6 +106,7 @@ export const styleRules = [
     },
     {
         name: "link-stylesheet",
+        tags: ["link"],
         match: isStylesheetLink,
 
         discoverStyles(el, ctx) {

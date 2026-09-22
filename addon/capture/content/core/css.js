@@ -68,14 +68,16 @@ export function rewrite(css, fn) {
     });
 }
 
+// Which alternation of MASTER matched is already unambiguous from its value group: p2, p4 and p6 are
+// non-optional inside their branch, so each is undefined exactly when that branch did not participate (both
+// in exec() and in a replace() callback). Reading them beats re-inspecting the matched text, which for a
+// @font-face block or a long string meant copying the whole token just to look at its first ten characters.
 function classify(match, p1, p2, p3, p4, p5, p6, index) {
-    const head = match.trim().slice(0, 10).toLowerCase();
-
-    if (head.startsWith("@import"))
+    if (p2 !== undefined)
         return {type: "import", match, lead: p1 || "", value: p2, index};
-    if (head.startsWith("@font-face"))
+    if (p4 !== undefined)
         return {type: "fontface", match, lead: p3 || "", value: p4, index};
-    if (head.startsWith("url("))
+    if (p6 !== undefined)
         return {type: "url", match, lead: p5 || "", value: p6, index};
     if (match[0] === "/")
         return {type: "comment", match, lead: "", value: match, index};
@@ -155,14 +157,26 @@ export function unescapeValue(value) {
  * @param {string} css
  * @returns {string}
  */
-export function expandInset(css) {
-    // the delimiter before "inset" is kept
-    css = css.replace(/([{;]\s*)inset\s*:\s*([^\s]+)\s*;/gi, "$1top: $2; right: $2; bottom: $2; left: $2;");
-    css = css.replace(/([{;]\s*)inset\s*:\s*([^\s]+)\s+([^\s]+)\s*;/gi, "$1top: $2; right: $3; bottom: $2; left: $3;");
-    css = css.replace(/([{;]\s*)inset\s*:\s*([^\s]+)\s+([^\s]+)\s+([^\s]+)\s*;/gi, "$1top: $2; right: $3; bottom: $4; left: $3;");
-    css = css.replace(/([{;]\s*)inset\s*:\s*([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s*;/gi, "$1top: $2; right: $3; bottom: $4; left: $5;");
+const RX_INSET = /([{;]\s*)inset\s*:\s*([^\s;]+)(?:\s+([^\s;]+))?(?:\s+([^\s;]+))?(?:\s+([^\s;]+))?\s*;/gi;
 
-    return css;
+export function expandInset(css) {
+    if (css.indexOf("inset") < 0)   /* the overwhelmingly common case on a large sheet */
+        return css;
+
+    // one pass over the sheet instead of four. The delimiter before "inset" is kept; the four arms below are
+    // the one-, two-, three- and four-value forms of the shorthand, exactly as the four regexes expressed them.
+    return css.replace(RX_INSET, (match, lead, top, right, bottom, left) => {
+        if (right === undefined)
+            right = bottom = left = top;
+        else if (bottom === undefined) {
+            bottom = top;
+            left = right;
+        }
+        else if (left === undefined)
+            left = right;
+
+        return lead + "top: " + top + "; right: " + right + "; bottom: " + bottom + "; left: " + left + ";";
+    });
 }
 
 /**

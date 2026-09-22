@@ -154,12 +154,19 @@ passes.
 **What:** each rule is a plain object:
 
 ```js
-{ name, match(el), discoverStyles?(el, ctx), discover?(el, ctx), serialize?(el, ctx, tag) }
+{ name, tags, match(el), discoverStyles?(el, ctx), discover?(el, ctx), serialize?(el, ctx, tag) }
 ```
 
 The rules are data. No module registers itself on import. The order in `index.js` decides precedence, so specific
 rules come before general ones: `link-in-svg` before `link`, and `svg-use` before `svg-href`. `match` tests the
 namespace, not `instanceof`, because elements of same-origin subframes belong to another JavaScript realm.
+
+`tags` lists every `localName` the rule's `match` can accept. `registry.js` indexes the list by tag name once at
+module load, so an element only tests the rules of its own tag instead of all 27 predicates, three times per
+element per run. Order inside a bucket is inherited from `index.js`, so precedence is unchanged; a rule that
+declares no `tags` disables the index and everything falls back to the linear scan, so a forgotten `tags` is
+slow, never wrong. `tests/capture/node/rules.test.mjs` asserts that the index and the scan agree and that no
+rule matches a tag it did not declare.
 
 **Why:** a new element behavior is one object in one file. Discovery and serialization of the same element sit
 next to each other, so the URL collected in pass 2 and the URL substituted in pass 3 cannot drift apart. This is a
@@ -247,6 +254,12 @@ cross-origin snapshot. A context carries four kinds of state:
 `ctx.child(fields)` derives a subframe context and propagates depth, `crossFrame` and `noSrcFrame`. State shared by
 every context of a run, such as the selection root, the shrink state and the frame manifest, lives in one `run`
 object that all contexts reference.
+
+The `run` object also holds the per-run caches of work that the three passes would otherwise repeat verbatim:
+`sheetRules` (the CSS-in-JS divergence test, a full CSS re-parse plus a live `<style>` insertion),
+`frameDocs` (the parsed snapshot of each cross-origin frame) and `spriteDocs` (the parsed document behind an
+SVG `<use>`). They live on `run` rather than at module scope so two captures can never share them, and they are
+released with the run.
 
 **Why:** no module-level mutable state. The old engine had over 60 globals. Two captures can never share state, and
 functions take everything they need explicitly.
@@ -422,7 +435,8 @@ runs unchanged when the background is replaced by an in-page object implementing
 ## 7. Rules of thumb for extending the engine
 
 - **New element behavior:** add a rule object to the family file in `content/rules/` and place it in `rules/index.js`
-  before any more general rule it overlaps. Keep its discover and serialize hooks side by side.
+  before any more general rule it overlaps. Keep its discover and serialize hooks side by side, and declare every
+  `localName` its `match` accepts in `tags`.
 - **New output format:** add a sink implementing the sink interface. Do not branch on the mode inside rules or the
   CSS rewriter.
 - **New marker, message or option:** add it to `MARK`, `MESSAGE` or `defaultOptions()` plus `normalizeOptions()`.

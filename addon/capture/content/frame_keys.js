@@ -33,31 +33,57 @@ export function frameKeyOf(win) {
  * @param {Document} doc
  */
 export function identifyFrames(doc) {
-    stamp(doc.documentElement);
+    stamp(doc);
 }
 
-function stamp(element) {
-    if (!element)
+// querySelectorAll finds the frame elements of one document natively; it does not cross into a subdocument, so
+// the recursion is per document rather than per element. Like the element walk it replaces, this does not
+// descend into shadow roots.
+function stamp(doc) {
+    if (!doc || !doc.documentElement)   /* in case the page is not fully loaded */
         return;
 
-    if (element.localName === "iframe" || element.localName === "frame") {
+    for (const element of doc.querySelectorAll("iframe, frame")) {
         try {
             const win = element.contentWindow;
 
             if (win)
                 element.setAttribute(MARK.key, frameKeyOf(win));
 
-            if (element.contentDocument && element.contentDocument.documentElement)   /* may be loading */
-                stamp(element.contentDocument.documentElement);
+            stamp(element.contentDocument);
         }
         catch (e) {
             /* cross-origin */
         }
     }
-    else {
-        for (let i = 0; i < element.children.length; i++)
-            if (element.children[i] != null)   /* in case the page is not fully loaded */
-                stamp(element.children[i]);
+}
+
+/**
+ * Whether the top frame can reach this window's document directly, which is exactly when it walks the live
+ * document instead of a serialized snapshot (see resolveFrame in frames.js).
+ *
+ * Every ancestor is tested, not just window.top: in an A -> B(cross-origin) -> A nesting the innermost frame
+ * shares an origin with the top but the top cannot reach it through B, so it does need to send its html. Any
+ * failure answers false, so the fallback is always "the snapshot is needed".
+ *
+ * @param {Window} win
+ * @returns {boolean}
+ */
+export function reachableFromTop(win) {
+    try {
+        let current = win;
+
+        while (current !== current.top) {
+            if (!current.parent.document)   /* throws when the parent is of another origin */
+                return false;
+
+            current = current.parent;
+        }
+
+        return true;
+    }
+    catch (e) {
+        return false;
     }
 }
 

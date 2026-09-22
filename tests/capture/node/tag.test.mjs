@@ -3,6 +3,22 @@ import {Tag, escapeText} from "../../../addon/capture/content/core/tag.js";
 import {SKIP} from "../../../addon/capture/shared/constants.js";
 
 export const tests = {
+    "escapeText escapes only the three markup characters, and returns clean text unchanged"() {
+        const clean = 'plain text with \'quotes\' and "double quotes" and a backslash';
+        assert.equal(escapeText(clean), clean);
+        assert.equal(escapeText("a & b < c > d"), "a &amp; b &lt; c &gt; d");
+        assert.equal(escapeText("&&<<>>"), "&amp;&amp;&lt;&lt;&gt;&gt;");
+        assert.equal(escapeText(""), "");
+        /* the fast path must not be confused by a previous call (a shared global regex keeps lastIndex) */
+        assert.equal(escapeText("<a>"), "&lt;a&gt;");
+        assert.equal(escapeText("<a>"), "&lt;a&gt;");
+    },
+
+    "an attribute without a double quote is returned unchanged"() {
+        const tag = new Tag("div", [["data-x", "no quotes here"], ["data-y", 'has "one"']]);
+        assert.equal(tag.startTag(), '<div data-x="no quotes here" data-y="has &quot;one&quot;">');
+    },
+
     "attribute order and quoting"() {
         const tag = new Tag("img", [["src", "a.png"], ["alt", "say \"hi\""]]);
         assert.equal(tag.startTag(), "<img src=\"a.png\" alt=\"say &quot;hi&quot;\">");

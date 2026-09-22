@@ -4,6 +4,8 @@
 import {MARK, SKIP, SKIP_CHILDREN} from "../shared/constants.js";
 import {resolveFrame} from "./frames.js";
 
+const UI_PREFIX = MARK.prefix + "-";   /* rebuilt per element per pass otherwise */
+
 /** @typedef {import("./context.js").CaptureContext} CaptureContext */
 
 /**
@@ -32,7 +34,7 @@ export function isExcluded(el, ctx) {
     if (id === MARK.overlay)
         return true;
 
-    if (id.startsWith(MARK.prefix + "-") && id !== MARK.cssVariables)
+    if (id.startsWith(UI_PREFIX) && id !== MARK.cssVariables)
         return true;
 
     if (ctx.quirks && ctx.quirks.exclude(el))

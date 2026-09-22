@@ -13,6 +13,10 @@ export class ResourceStore {
         this._list = [];
         /** @type {Map<string, Resource>} */
         this._byUrl = new Map();
+        // key() is the hottest URL path of the run: discovery calls it per reference and pass 3 calls it again
+        // for every substitution, each time paying a new URL(). The result depends only on (baseURI, url).
+        /** @type {Map<string, string|null>} */
+        this._keys = new Map();
         this._documentURL = stripFragment(documentURL || "");
     }
 
@@ -83,6 +87,19 @@ export class ResourceStore {
         if (!isReplaceable(url) || baseURI == null)
             return null;
 
+        const memo = baseURI + "\n" + url;
+        const cached = this._keys.get(memo);
+
+        if (cached !== undefined)
+            return cached;
+
+        const key = this._resolveKey(url, baseURI);
+        this._keys.set(memo, key);
+
+        return key;
+    }
+
+    _resolveKey(url, baseURI) {
         const location = resolve(url, baseURI);
 
         if (location == null)

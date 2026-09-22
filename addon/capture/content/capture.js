@@ -57,7 +57,9 @@ export class PageCapture {
         const options = this.options;
 
         /** state shared by every context of the run */
-        const shared = {mode, selectionRoot: null, skipRestOfBody: false, shrink: null, frames: [], unkeyedFrames: 0};
+        const shared = {mode, selectionRoot: null, skipRestOfBody: false, shrink: null, frames: [], unkeyedFrames: 0,
+            /* per-run caches of work that is identical across the three passes */
+            sheetRules: new WeakMap(), frameDocs: new Map(), spriteDocs: new Map()};
 
         try {
             /* prepare */

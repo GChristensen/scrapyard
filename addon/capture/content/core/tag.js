@@ -3,12 +3,21 @@
 
 import {MARK, VOID_ELEMENTS, DROPPED_ATTRIBUTES, SKIP} from "../../shared/constants.js";
 
+const VOID = new Set(VOID_ELEMENTS);
+const DROPPED = new Set(DROPPED_ATTRIBUTES);
+
+const TEXT_ESCAPES = {"&": "&amp;", "<": "&lt;", ">": "&gt;"};
+const RX_TEXT = /[&<>]/g;
+const RX_HAS_TEXT = /[&<>]/;
+
 /**
  * @param {string} value
  * @returns {string} value with double quotes escaped for an attribute
  */
 export function escapeAttribute(value) {
-    return String(value).replace(/"/g, "&quot;");
+    const s = String(value);
+
+    return s.indexOf("\"") < 0? s: s.replace(/"/g, "&quot;");
 }
 
 /**
@@ -16,7 +25,9 @@ export function escapeAttribute(value) {
  * @returns {string} text with &, < and > escaped
  */
 export function escapeText(text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const s = String(text);
+
+    return RX_HAS_TEXT.test(s)? s.replace(RX_TEXT, c => TEXT_ESCAPES[c]): s;
 }
 
 export class Tag {
@@ -48,13 +59,13 @@ export class Tag {
      * @returns {Tag}
      */
     static from(element) {
-        const attributes = [];
+        const tag = new Tag(element.localName);
 
         for (const attribute of element.attributes)
-            if (!DROPPED_ATTRIBUTES.includes(attribute.name))
-                attributes.push([attribute.name, attribute.value]);
+            if (!DROPPED.has(attribute.name))
+                tag._attributes.push({name: attribute.name, value: attribute.value});
 
-        return new Tag(element.localName, attributes);
+        return tag;
     }
 
     /** @returns {boolean} */
@@ -188,7 +199,7 @@ export class Tag {
 
     /** @returns {boolean} */
     get isVoid() {
-        return VOID_ELEMENTS.includes(this.name);
+        return VOID.has(this.name);
     }
 
     /** @returns {string} "" when unwrapped */

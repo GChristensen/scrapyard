@@ -34,14 +34,20 @@ function discoverHref(el, ctx) {
 
     const adjusted = adjustOf(original, ctx);
 
-    if (adjusted[0] !== "#" && isReplaceable(baseHref(el)))
-        ctx.store.remember({url: baseHref(el), baseURI: ctx.baseURI, kind: "svg", expectedMime: MIME.svg, charset: ""});
+    if (adjusted[0] === "#")
+        return;
+
+    const href = baseHref(el);
+
+    if (isReplaceable(href))
+        ctx.store.remember({url: href, baseURI: ctx.baseURI, kind: "svg", expectedMime: MIME.svg, charset: ""});
 }
 
 /** @type {import("../../shared/types.js").ElementRule[]} */
 export const svgRules = [
     {
         name: "svg-a",
+        tags: ["a"],
         match: el => el.localName === "a" && isSVG(el),
 
         serialize(el, ctx, tag) {
@@ -58,6 +64,7 @@ export const svgRules = [
     },
     {
         name: "svg-use",
+        tags: ["use"],
         match: el => el.localName === "use" && isSVG(el),
 
         discover: discoverHref,
@@ -84,7 +91,20 @@ export const svgRules = [
 
             const resource = ctx.store.loaded(href, ctx.baseURI);
             const text = resource && resource.text != null? resource.text: "";
-            const doc = new DOMParser().parseFromString(text, "text/html");
+
+            if (text === "")   /* nothing to look up: the sprite did not load */
+                return;
+
+            // an icon sprite is referenced by every <use> on the page; parsing it once per element meant
+            // re-parsing the whole sprite document dozens or hundreds of times
+            const cache = ctx.run.spriteDocs;
+            let doc = cache?.get(resource.url);
+
+            if (!doc) {
+                doc = new DOMParser().parseFromString(text, "text/html");
+                cache?.set(resource.url, doc);
+            }
+
             let element;
             let value;
 
@@ -109,6 +129,7 @@ export const svgRules = [
     },
     {
         name: "svg-href",
+        tags: HREF_SVG_ELEMENTS,
         match: el => isSVG(el) && HREF_SVG_ELEMENTS.includes(el.localName),
 
         discover: discoverHref,

@@ -13,10 +13,13 @@ Routes on both origins (default 8080 and 8081):
     /csp.html               served with "Content-Security-Policy: script-src 'none'"
     /svg/symbols.svg        an SVG document with a <symbol>
     /engine/<module>        addon/capture, so harness.html can run the content side without the extension
+    /big.html               a synthesized measurement page:
+                            ?elements=&styles=&uses=&inline= (never part of the digest baseline)
 """
 
 import os
 import struct
+import urllib.parse
 import sys
 import threading
 import zlib
@@ -46,6 +49,40 @@ def wav():
     samples = bytes(((i // 20) % 2) * 100 + 64 for i in range(rate // 4))
     header = b"RIFF" + struct.pack("<I", 36 + len(samples)) + b"WAVE" + b"fmt " + struct.pack("<IHHIIHH", 16, 1, 1, rate, rate, 1, 8)
     return header + b"data" + struct.pack("<I", len(samples)) + samples
+
+
+def big(elements, styles, uses, inline):
+    """A synthesized page for performance measurement: many elements, many <style> tags (the
+    divergentSheetRules path), many <use> references to one sprite (the DOMParser path) and many inline
+    style attributes. Sizes come from the query string; see the module docstring."""
+    nl = chr(10)
+    q = chr(34)
+    out = ["<!DOCTYPE html>" + nl + "<html>" + nl + "<head>" + nl
+           + "<meta charset=" + q + "utf-8" + q + ">" + nl + "<title>big fixture</title>" + nl]
+
+    for i in range(styles):
+        out.append("<style>.s%d { color: #%06x; background-image: url(/img/s%d.png); }</style>%s"
+                   % (i, i * 7919 % 0xFFFFFF, i % 8, nl))
+
+    out.append("</head>" + nl + "<body>" + nl)
+
+    for i in range(uses):
+        out.append("<svg width=%s8%s height=%s8%s><use href=%s/svg/symbols.svg#star%s/></svg>"
+                   % (q, q, q, q, q, q))
+
+    out.append(nl)
+
+    for i in range(elements):
+        cls = "s%d" % (i % max(1, styles))
+        if i < inline:
+            out.append("<div class=%s%s%s style=%smargin:0;background-image:url(/img/i%d.png)%s>"
+                       "<span>cell %d</span></div>%s" % (q, cls, q, q, i % 8, q, i, nl))
+        else:
+            out.append("<div class=%s%s%s><span>row %d word%d text</span></div>%s" % (q, cls, q, i, i, nl))
+
+    out.append("</body>" + nl + "</html>" + nl)
+
+    return "".join(out).encode("utf-8")
 
 
 def color_of(name):
@@ -98,6 +135,15 @@ class Handler(SimpleHTTPRequestHandler):
                 with open(file, "rb") as f:
                     return self.send_bytes(f.read(), "text/javascript; charset=utf-8")
             return self.send_error(404)
+        if path == "/big.html":   # synthesized measurement page, never part of the digest baseline
+            query = urllib.parse.parse_qs(self.path.partition("?")[2])
+            def number(name, default):
+                try:
+                    return max(0, min(200000, int(query.get(name, [default])[0])))
+                except ValueError:
+                    return default
+            return self.send_bytes(big(number("elements", 20000), number("styles", 120), number("uses", 200),
+                                       number("inline", 2000)), "text/html; charset=utf-8")
         if path == "/csp.html":
             with open(os.path.join(HERE, "csp.html"), "rb") as f:
                 return self.send_bytes(f.read(), "text/html; charset=utf-8", {"Content-Security-Policy": "script-src 'none'"})

@@ -20,6 +20,7 @@ function neuter(el, tag) {
 export const scriptRules = [
     {
         name: "script",
+        tags: ["script"],
         match: el => el.localName === "script" && isHTML(el),
 
         discover(el, ctx) {

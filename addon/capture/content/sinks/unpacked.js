@@ -18,6 +18,22 @@ export class UnpackedSink {
     constructor(options, port) {
         this.options = options;
         this.port = port;
+        // locate() runs once per referencing element and once per CSS url(); the path depends only on the
+        // pair of archive paths, and relativePath() splits and rejoins both every time
+        /** @type {Map<string, string>} */
+        this._relative = new Map();
+    }
+
+    _relativePath(from, to) {
+        const memo = from + "\n" + to;
+        let path = this._relative.get(memo);
+
+        if (path === undefined) {
+            path = relativePath(from, to);
+            this._relative.set(memo, path);
+        }
+
+        return path;
     }
 
     /** @param {CaptureContext} ctx */
@@ -63,7 +79,7 @@ export class UnpackedSink {
         if (resource.status !== "success" || !resource.path)
             return null;
 
-        return relativePath(ctx.documentPath || "index.html", resource.path) + fragment;
+        return this._relativePath(ctx.documentPath || "index.html", resource.path) + fragment;
     }
 
     /**
@@ -88,7 +104,7 @@ export class UnpackedSink {
         const reply = await this.port.request(MESSAGE.write, {kind: "resource", mime: MIME.css, encoding: "text",
             data: rewritten, hash, url: sheet.url});
 
-        tag.replace("href", relativePath(ctx.documentPath, reply.path));
+        tag.replace("href", this._relativePath(ctx.documentPath, reply.path));
         tag.text = "";
     }
 
@@ -126,7 +142,7 @@ export class UnpackedSink {
             mime: MIME.html, encoding: "text", data: html});
 
         tag.set(childCtx.crossFrame? MARK.crossOrigin: MARK.sameOrigin, "");
-        tag.replace("src", relativePath(ctx.documentPath, reply.path));
+        tag.replace("src", this._relativePath(ctx.documentPath, reply.path));
     }
 
     /**

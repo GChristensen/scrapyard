@@ -24,6 +24,7 @@ export const MARK = Object.freeze({
     disabled: `data-${PREFIX}-disabled`,
     shadowRoot: `data-${PREFIX}-shadowroot`,
     sheetRules: `data-${PREFIX}-sheetrules`,
+    sheetChecked: `data-${PREFIX}-sheetchecked`,
     blobDataUri: `data-${PREFIX}-blobdatauri`,
     canvasDataUri: `data-${PREFIX}-canvasdatauri`,
     fontFace: `data-${PREFIX}-fontface`,
@@ -31,7 +32,8 @@ export const MARK = Object.freeze({
     loading: `data-${PREFIX}-loading`,
 
     /* transient attributes removed from the output and the live DOM */
-    transient: [`data-${PREFIX}-key`, `data-${PREFIX}-sheetrules`, `data-${PREFIX}-blobdatauri`, `data-${PREFIX}-canvasdatauri`],
+    transient: [`data-${PREFIX}-key`, `data-${PREFIX}-sheetrules`, `data-${PREFIX}-sheetchecked`,
+        `data-${PREFIX}-blobdatauri`, `data-${PREFIX}-canvasdatauri`],
 
     /* CSS comments */
     cssUrl: url => `/*${PREFIX}-url=${url}*/`,

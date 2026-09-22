@@ -82,3 +82,26 @@ Phase 6 (host switch-over)
 | saved.html | the old `savepage-*` metas are dropped, new `scrapyard-*` metas are written, the data URIs pass through |
 
 Plus five live sites of the maintainer's choice including one heavy CSS-in-JS site and reddit.
+
+## Performance work (version 2.3.2, Group A of `.local/architecture/PERFORMANCE.md`)
+
+`node tests/capture/digest.mjs` proves the 65 fixture/option combinations are byte-identical, but it drives the
+harness, whose mock port supplies no frame HTML and no background loads. These paths are therefore unproven by
+it and need the extension:
+
+- [ ] **A1 frame gating** — `frames.html` across both origins: the cross-origin frame (port 8081) still carries
+      `data-scrapyard-crossorigin` **with its content**, same-origin frames are still `srcdoc`, and the
+      `frame_deep.html` nesting still captures. A frame nested as same-origin → cross-origin → same-origin must
+      still send its html (`reachableFromTop` tests every ancestor, not just `window.top`).
+- [ ] **A2 sheet markers** — `cssinjs.html`: the `insertRule` rules are still in the captured `<style>`, and
+      neither `data-scrapyard-sheetchecked` nor `data-scrapyard-sheetrules` appears in the saved page or is left
+      behind on the live DOM after the capture.
+- [ ] **A3 data URIs** — `images.html` and `media.html` with the background available: a resource referenced
+      several times is inlined identically at every reference (the encode is now cached).
+- [ ] **A4 snapshot cache** — a page with a cross-origin frame captures the frame's content, not an empty
+      element: the parsed snapshot is now shared by all three passes.
+- [ ] **A11 unpacked writes** — Phase 5 run: `index.html` exists exactly once and matches the captured page;
+      full-text search still finds words of the page and of its frames. (The host no longer writes `index.html`
+      a second time after the sink already wrote it.)
+- [ ] **A15 injection** — Chrome, cold tab with frames: capture still succeeds; the polyfill is no longer
+      injected into frame 0 twice.

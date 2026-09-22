@@ -27,6 +27,7 @@ function isInputImage(el) {
 export const imageRules = [
     {
         name: "body",
+        tags: ["body"],
         match: el => el.localName === "body" && isHTML(el),
 
         discover(el, ctx) {
@@ -40,6 +41,7 @@ export const imageRules = [
     },
     {
         name: "img",
+        tags: ["img"],
         match: el => el.localName === "img" && isHTML(el),
 
         discover(el, ctx) {
@@ -109,6 +111,7 @@ export const imageRules = [
     },
     {
         name: "input-image",
+        tags: ["input"],
         match: isInputImage,
 
         discover(el, ctx) {
@@ -123,6 +126,7 @@ export const imageRules = [
     },
     {
         name: "picture-source",
+        tags: ["source"],
         match: el => el.localName === "source" && isHTML(el) && el.parentElement != null && el.parentElement.localName === "picture",
 
         serialize(el, ctx, tag) {

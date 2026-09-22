@@ -78,7 +78,16 @@ export function resolveFrame(el, ctx) {
         return null;
     }
 
-    const doc = new DOMParser().parseFromString(snapshot.html, "text/html");
+    // resolveFrame runs once per pass and the three passes walk the same tree, so without a cache every
+    // cross-origin frame's html is parsed three times and two of the three documents are thrown away.
+    // Discovery does not mutate the parsed DOM, so one document per frame serves all three passes.
+    const cache = ctx.run.frameDocs;
+    let doc = cache?.get(frameKey);
+
+    if (!doc) {
+        doc = new DOMParser().parseFromString(snapshot.html, "text/html");
+        cache?.set(frameKey, doc);
+    }
 
     return ctx.child({
         doc,

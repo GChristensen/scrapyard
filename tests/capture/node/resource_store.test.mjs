@@ -8,6 +8,22 @@ function image(url, extra = {}) {
 }
 
 export const tests = {
+    "the key memo does not confuse the same relative url under different bases"() {
+        const store = new ResourceStore("http://example.com/index.html");
+
+        assert.equal(store.key("a.png", "http://example.com/one/"), "http://example.com/one/a.png");
+        assert.equal(store.key("a.png", "http://example.com/two/"), "http://example.com/two/a.png");
+        assert.equal(store.key("a.png", "http://example.com/one/"), "http://example.com/one/a.png");
+
+        /* a rejected key is memoized as a rejection, not recomputed into a value */
+        assert.equal(store.key("#top", "http://example.com/one/"), null);
+        assert.equal(store.key("#top", "http://example.com/one/"), null);
+
+        /* a self-reference stays rejected under its own base */
+        assert.equal(store.key("index.html", "http://example.com/"), null);
+        assert.equal(store.key("index.html", "http://example.com/"), null);
+    },
+
     "dedup by URL without fragment, refs counted"() {
         const store = new ResourceStore(DOC);
         const a = store.remember(image("a.png#x"));

@@ -7,6 +7,7 @@ import {setDebug} from "/engine/shared/log.js";
 import {frameKeyOf, identifyFrames} from "/engine/content/frame_keys.js";
 import {annotateLiveState, loadedFontsOf} from "/engine/content/snapshot.js";
 import {indexWords, collectLinks} from "/engine/content/extras.js";
+import {sha256hex, utf8Encode} from "/engine/shared/bytes.js";
 
 const params = new URLSearchParams(location.search);
 const page = params.get("page") || "css.html";
@@ -92,6 +93,103 @@ function mockPort(targetWindow) {
     };
 }
 
+/**
+ * Blanks the values a capture cannot reproduce byte for byte: the wall clock, and the PNGs that the browser
+ * renders through a canvas. Nothing else may be normalized — the point of the digest is to be brittle.
+ * @param {string} text
+ * @returns {string}
+ */
+function normalizeVolatile(text) {
+    /* not even the byte length is stable: a muted autoplay video yields a different frame on every run */
+    const drop = (match, head) => head + "[canvas]";
+
+    return text
+        /* wall clock: rules/head.js:91 (MARK.metaDate) and the manifest written as archive.json */
+        .replace(/(<meta name="scrapyard-date" content=")[^"]*(">)/g, "$1$2")
+        .replace(/("captured":\s*")[^"]*(")/g, "$1$2")
+        /* canvas pixels: rules/canvas.js (MARK.cssCanvasImage) */
+        .replace(/(\/\*scrapyard-canvas-image\*\/ background-image: url\(data:image\/png;base64,)([^)]*)/g, drop)
+        /* a blob: image drawn on a canvas: rules/image.js (MARK.blobDataUri) */
+        .replace(/(src="data:image\/png;base64,)([^"]*)(?=" data-scrapyard-src="blob:)/g, drop)
+        /* a blob: video's poster frame drawn on a canvas: rules/media.js */
+        .replace(/(data-scrapyard-poster="" poster="data:image\/png;base64,)([^"]*)/g, drop)
+        /* the page mints a fresh blob: URL on every run; it survives in the preserved original attributes */
+        .replace(/blob:https?:\/\/[^/]*\/[0-9a-f-]+/gi, "blob:[url]");
+}
+
+/**
+ * A stable digest of everything the capture produced: the document, the manifest (minus the timestamp), the
+ * word index, the links and, in unpacked mode, every written file. Group-A performance changes must not move it.
+ * @param {object} result
+ * @returns {Promise<string>}
+ */
+async function digestOf(result) {
+    const manifest = {...result.manifest, captured: ""};
+    const html = normalizeVolatile(result.html || "");
+
+    const files = [...written]
+        .map(([path, file]) => `${path}\t${file.mime}\t${file.size}\t${normalizeVolatile(file.text ?? "")}`)
+        .sort();
+
+    const payload = [
+        html,
+        JSON.stringify(manifest),
+        JSON.stringify(result.index || []),
+        JSON.stringify(result.links || []),
+        files.join("\n")
+    ].join("\n\u0000\n");
+
+    if (params.has("digestslices")) {
+        const step = Math.ceil(html.length / 16);
+
+        for (let i = 0; i < html.length; i += step)
+            log("slice", i, (await sha256hex(utf8Encode(html.slice(i, i + step)))).slice(0, 12),
+                params.has("show")? JSON.stringify(html.slice(i, i + step)): "");
+    }
+
+    if (params.has("digestparts"))
+        for (const [name, part] of [["html", html], ["manifest", JSON.stringify(manifest)],
+                ["index", JSON.stringify(result.index || [])], ["links", JSON.stringify(result.links || [])],
+                ["files", files.join("\n")]])
+            log("part", name, part.length, (await sha256hex(utf8Encode(part))).slice(0, 16));
+
+    return sha256hex(utf8Encode(payload));
+}
+
+/**
+ * ?probe counts the expensive operations of a run. Wall-clock timings are useless under
+ * --virtual-time-budget (Chrome does not advance the clock while a task runs), but these counts are
+ * deterministic and are exactly what the caching work is meant to reduce.
+ * @param {Window} targetWindow  the fixture's window; divergentSheetRules works in its realm
+ * @returns {{report: () => object}}
+ */
+function installProbe(targetWindow) {
+    const counts = {parseFromString: 0, btoa: 0, styleProbe: 0};
+
+    const parse = DOMParser.prototype.parseFromString;
+    DOMParser.prototype.parseFromString = function (...args) {
+        counts.parseFromString++;
+        return parse.apply(this, args);
+    };
+
+    const encode = globalThis.btoa;
+    globalThis.btoa = function (...args) {
+        counts.btoa++;
+        return encode.apply(this, args);
+    };
+
+    /* divergentSheetRules appends a duplicate <style> to the fixture's body and removes it again */
+    const append = targetWindow.Node.prototype.appendChild;
+    targetWindow.Node.prototype.appendChild = function (node) {
+        if (node && node.localName === "style")
+            counts.styleProbe++;
+
+        return append.call(this, node);
+    };
+
+    return {report: () => counts};
+}
+
 async function run() {
     setDebug(params.has("debug"));
 
@@ -121,6 +219,7 @@ async function run() {
         onProgress: progress => status.textContent = progress.stage
     });
 
+    const probe = params.has("probe")? installProbe(targetWindow): null;
     const started = performance.now();
     // &selection=<css selector>: capture the outer HTML of the matching element as if it were the user's selection
     const selector = params.get("selection");
@@ -129,12 +228,19 @@ async function run() {
     const mode = params.get("mode") === "unpacked"? "unpacked": "packed";
     const result = await capture.run({mode, selection, extras: {index: true, links: true}});
 
-    window.__capture = {result, html: result.html, manifest: result.manifest, error: null};
+    const digest = await digestOf(result);
+
+    window.__capture = {result, html: result.html, manifest: result.manifest, digest, error: null};
+    log("digest:", digest);
 
     const blob = new Blob([result.html], {type: "text/html"});
     document.getElementById("archive").src = URL.createObjectURL(blob);
 
     status.textContent = `done in ${Math.round(performance.now() - started)} ms, ${result.html.length} chars`;
+    if (probe)
+        log("probe:", probe.report());
+
+    log("timing:", result.timing.stages);
     log("failures:", result.failures);
     log("resources:", result.manifest.resources.map(r => `${r.status} ${r.kind} ${r.url} refs=${r.refs.html}/${r.refs.css}`));
     log("frames:", result.manifest.frames);

@@ -577,12 +577,18 @@ export class BookmarkManager extends EntityManager {
         }
     }
 
-    async storeArchive(node, data, contentType, index) {
+    // options.indexFileWritten: the caller already wrote index.html of the unpacked archive (the capture
+    // engine's UnpackedSink does, through the FileWriter), so writing it here would upload the whole document
+    // to the backend a second time
+    async storeArchive(node, data, contentType, index, options = {}) {
         const archive = Archive.entity(node, data, contentType);
 
         if (node.contains === ARCHIVE_TYPE_FILES) {
             await Archive.storeIndex(node, index.words);
-            await Archive.saveFile(node, "index.html", data);
+
+            if (!options.indexFileWritten)
+                await Archive.saveFile(node, "index.html", data);
+
             await Archive.updateContentModified(node, archive, true);
         }
         else

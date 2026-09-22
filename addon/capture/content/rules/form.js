@@ -8,6 +8,7 @@ import {syncInputValue} from "./image.js";
 export const formRules = [
     {
         name: "input",
+        tags: ["input"],
         match: el => el.localName === "input" && isHTML(el),
 
         serialize(el, ctx, tag) {
@@ -16,6 +17,7 @@ export const formRules = [
     },
     {
         name: "textarea",
+        tags: ["textarea"],
         match: el => el.localName === "textarea" && isHTML(el),
 
         serialize(el, ctx, tag) {
@@ -24,6 +26,7 @@ export const formRules = [
     },
     {
         name: "option",
+        tags: ["option"],
         match: el => el.localName === "option" && isHTML(el),
 
         serialize(el, ctx, tag) {

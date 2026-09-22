@@ -12,6 +12,7 @@ const FIXED = "background-attachment: scroll !important; background-blend-mode: 
 export const canvasRules = [
     {
         name: "canvas",
+        tags: ["canvas"],
         match: el => el.localName === "canvas" && isHTML(el),
 
         serialize(el, ctx, tag) {

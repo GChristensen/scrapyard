@@ -19,6 +19,7 @@ function rememberMedia(el, url, kind, ctx, passive) {
 export const mediaRules = [
     {
         name: "audio",
+        tags: ["audio"],
         match: el => el.localName === "audio" && isHTML(el),
 
         discover(el, ctx) {
@@ -32,6 +33,7 @@ export const mediaRules = [
     },
     {
         name: "video",
+        tags: ["video"],
         match: el => el.localName === "video" && isHTML(el),
 
         discover(el, ctx) {
@@ -62,6 +64,7 @@ export const mediaRules = [
     },
     {
         name: "media-source",
+        tags: ["source"],
         match: isMediaSource,
 
         discover(el, ctx) {
@@ -85,6 +88,7 @@ export const mediaRules = [
     },
     {
         name: "track",
+        tags: ["track"],
         match: el => el.localName === "track" && isHTML(el),
 
         discover(el, ctx) {

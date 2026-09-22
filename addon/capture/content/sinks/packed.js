@@ -16,6 +16,38 @@ export class PackedSink {
     constructor(options) {
         this.options = options;
         this.maxSize = options.maxResourceSize * 1024 * 1024;
+        // locate() is called once per referencing element, once per url() of every stylesheet and once per font
+        // occurrence, and each call encoded the whole resource again. Only resources with more than one
+        // reference are cached: ctx.out already holds one copy of the data URI per reference, so caching a
+        // single-reference resource would retain a second copy and save no work.
+        /** @type {Map<number, string>} resource id -> the encoded body, without the "data:...," head */
+        this._encoded = new Map();
+    }
+
+    /**
+     * @param {Resource} resource
+     * @returns {number} how many times the emitted form of this resource is needed
+     */
+    _references(resource) {
+        return resource.refs.html + resource.refs.css + resource.refs.frames.size;
+    }
+
+    /**
+     * @param {Resource} resource
+     * @returns {string} base64 of the bytes, computed once when the resource is referenced more than once
+     */
+    _base64(resource) {
+        const cached = this._encoded.get(resource.id);
+
+        if (cached !== undefined)
+            return cached;
+
+        const encoded = toBase64(resource.bytes);
+
+        if (this._references(resource) > 1)
+            this._encoded.set(resource.id, encoded);
+
+        return encoded;
     }
 
     /** @param {CaptureContext} ctx */
@@ -39,8 +71,18 @@ export class PackedSink {
         if (resource.status !== "success")
             return null;
 
-        if (resource.text != null)
-            return "data:" + resource.mime + ";charset=utf-8," + encodeURIComponent(resource.text) + fragment;
+        if (resource.text != null) {
+            let encoded = this._encoded.get(resource.id);
+
+            if (encoded === undefined) {
+                encoded = encodeURIComponent(resource.text);
+
+                if (this._references(resource) > 1)
+                    this._encoded.set(resource.id, encoded);
+            }
+
+            return "data:" + resource.mime + ";charset=utf-8," + encoded + fragment;
+        }
 
         if (!resource.bytes)
             return null;
@@ -50,7 +92,7 @@ export class PackedSink {
         if (resource.size * count > this.maxSize)   /* skip large and/or repeated resources */
             return null;
 
-        return "data:" + resource.mime + ";base64," + toBase64(resource.bytes) + fragment;
+        return "data:" + resource.mime + ";base64," + this._base64(resource) + fragment;
     }
 
     /**
@@ -117,26 +159,24 @@ export class PackedSink {
             return "";
 
         const prefix = headPrefix(ctx);
-        let variables = "";
+        const variables = [];
 
         for (const resource of ctx.store.forFrame(ctx.frameKey)) {
             if (resource.status !== "success" || !resource.bytes || !this._withinMergedSize(resource))
                 continue;
 
-            variables += prefix + "    " + MARK.cssVariable(resource.id) + ": url(data:" + resource.mime + ";base64,"
-                + toBase64(resource.bytes) + ");";
+            variables.push(prefix, "    ", MARK.cssVariable(resource.id), ": url(data:", resource.mime, ";base64,",
+                this._base64(resource), ");");
         }
 
-        if (variables === "")
+        if (variables.length === 0)
             return "";
 
-        let html = prefix + "<style id=\"" + MARK.cssVariables + "\">";
-        html += prefix + "  :root {";
-        html += variables;
-        html += prefix + "  }";
-        html += prefix + "</style>";
-
-        return html;
+        return prefix + "<style id=\"" + MARK.cssVariables + "\">"
+            + prefix + "  :root {"
+            + variables.join("")
+            + prefix + "  }"
+            + prefix + "</style>";
     }
 
     /**
