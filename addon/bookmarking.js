@@ -322,10 +322,34 @@ export async function packPage(url, bookmark, initializer, resolver, hide_tab) {
     }
 }
 
-// Resolves with the latest tab object once the tab has loaded; rejects when the tab is closed before that.
-function waitForTabComplete(tabId) {
+// A page that never reaches "complete" (one stalled subresource is enough) used to hold this promise open
+// forever. That is worst for the crawler, which visits arbitrary pages unattended: a single bad page stalled
+// the whole crawl and left its hidden tab behind. On expiry the page is captured in the state it is in,
+// which is what the rest of the engine does with anything it cannot fetch.
+const TAB_LOAD_TIMEOUT = 60000;
+
+// Resolves with the latest tab object once the tab has loaded or the timeout expires;
+// rejects when the tab is closed before that.
+function waitForTabComplete(tabId, timeout = TAB_LOAD_TIMEOUT) {
     return new Promise((resolve, reject) => {
         let latestTab;
+
+        const onTimeout = async () => {
+            console.warn(`Scrapyard: the page did not finish loading within ${timeout / 1000} s,`
+                + " capturing it in the state it is in");
+
+            try {
+                const tab = latestTab || await browser.tabs.get(tabId);
+                removeListeners();
+                resolve(tab);
+            }
+            catch (e) {   /* the tab is gone: the same outcome as onRemoved */
+                removeListeners();
+                reject(new Error("The tab was closed before the page loaded"));
+            }
+        };
+
+        const timer = setTimeout(onTimeout, timeout);
 
         const onUpdated = (id, changed, tab) => {
             if (id !== tabId)
@@ -353,6 +377,7 @@ function waitForTabComplete(tabId) {
         };
 
         function removeListeners() {
+            clearTimeout(timer);
             browser.tabs.onUpdated.removeListener(onUpdated);
             browser.tabs.onRemoved.removeListener(onRemoved);
         }

@@ -194,7 +194,13 @@ async function run() {
     setDebug(params.has("debug"));
 
     const source = document.getElementById("source");
-    await new Promise(resolve => { source.onload = resolve; source.src = page; });
+    // raced with a deadline so a fixture whose load event never fires (stall.html) can still be captured;
+    // the engine's own loadTimeout is what the run then relies on
+    await new Promise(resolve => {
+        const timer = setTimeout(resolve, +(params.get("loadwait") || 20000));
+        source.onload = () => { clearTimeout(timer); resolve(); };
+        source.src = page;
+    });
     await new Promise(resolve => setTimeout(resolve, +(params.get("wait") || 1000)));   /* let scripts of the fixture run */
 
     const targetWindow = source.contentWindow;

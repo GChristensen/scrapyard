@@ -67,6 +67,8 @@
  * @property {boolean} lazyImages
  * @property {number} startDelay          seconds
  * @property {number} frameReplyTimeout   ms
+ * @property {number} loadTimeout         seconds to wait for readyState "complete" before capturing anyway
+ * @property {number} maxCaptureTime      seconds; the whole run is aborted when it exceeds this
  * @property {boolean} lockOverlay
  * @property {string} lockIconUrl
  * @property {string} version

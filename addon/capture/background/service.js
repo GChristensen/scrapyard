@@ -77,13 +77,28 @@ export async function captureTab(tabId, request) {
             session.reject(new Error("The tab was closed during the capture"));
     };
 
-    const onAbort = () => {
+    // tells the content side to unwind: it takes the same cleanup path as any other failure, restoring the
+    // page, undoing the shrink and unlocking
+    const stopRun = error => {
         session.notify(MESSAGE.abort, {});
         Promise.resolve(browser.tabs.sendMessage(tabId, {type: MESSAGE.abort}, {frameId: 0})).catch(() => {});
-        const error = new Error("The capture was aborted");
-        error.name = "AbortError";
         session.reject(error);
     };
+
+    const onAbort = () => {
+        const error = new Error("The capture was aborted");
+        error.name = "AbortError";
+        stopRun(error);
+    };
+
+    // the backstop for every wait that is not individually bounded: without it a single unanswered request
+    // holds the run open forever, which to the caller is indistinguishable from a capture still in progress
+    const budget = setTimeout(() => {
+        log("error", "the capture exceeded its budget of", options.maxCaptureTime, "s");
+        const error = new Error(`The capture did not finish within ${options.maxCaptureTime} s`);
+        error.name = "TimeoutError";
+        stopRun(error);
+    }, options.maxCaptureTime * 1000);
 
     browser.tabs.onRemoved.addListener(onRemoved);
     signal?.addEventListener("abort", onAbort, {once: true});
@@ -118,6 +133,7 @@ export async function captureTab(tabId, request) {
         throw e;
     }
     finally {
+        clearTimeout(budget);
         browser.tabs.onRemoved.removeListener(onRemoved);
         signal?.removeEventListener("abort", onAbort);
         session.close();

@@ -1,6 +1,7 @@
 // The prepare stage: readiness wait, encoding meta removal, lock overlay, selection container, saved-page detection.
 
 import {MARK} from "../shared/constants.js";
+import {log} from "../shared/log.js";
 
 /**
  * @param {number} ms
@@ -34,27 +35,47 @@ export function abortError() {
 }
 
 /**
- * Resolves when document.readyState is "complete".
+ * Resolves when document.readyState is "complete", or when the timeout expires.
+ *
+ * A single stalled subresource keeps readyState at "interactive" indefinitely, and the load event a page like
+ * that never fires used to hold the whole capture in the prepare stage with no error and no diagnostic. On
+ * expiry the capture proceeds with the document as it stands: a partially loaded page is a far better outcome
+ * than a hang, and every reference that could not be saved is recorded with a reason anyway.
+ *
  * @param {Document} doc
  * @param {AbortSignal} [signal]
+ * @param {number} [timeout]  ms; 0 waits forever
  */
-export function waitForLoad(doc, signal) {
+export function waitForLoad(doc, signal, timeout = 0) {
     if (doc.readyState === "complete")
         return Promise.resolve();
 
     return new Promise((resolve, reject) => {
         const win = doc.defaultView;
+        const timer = timeout > 0? setTimeout(onTimeout, timeout): null;
+
+        function done() {
+            clearTimeout(timer);
+            win.removeEventListener("load", onLoad);
+            signal?.removeEventListener("abort", onAbort);
+        }
 
         function onLoad() {
             if (doc.readyState === "complete") {
-                win.removeEventListener("load", onLoad);
-                signal?.removeEventListener("abort", onAbort);
+                done();
                 resolve();
             }
         }
 
+        function onTimeout() {
+            log("warn", "the page did not finish loading within", timeout / 1000,
+                "s; capturing it in the state it is in (readyState:", doc.readyState + ")");
+            done();
+            resolve();
+        }
+
         function onAbort() {
-            win.removeEventListener("load", onLoad);
+            done();
             reject(abortError());
         }
 

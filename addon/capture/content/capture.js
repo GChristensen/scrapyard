@@ -64,7 +64,7 @@ export class PageCapture {
         try {
             /* prepare */
             this._enter("prepare");
-            await waitForLoad(doc, this.signal);
+            await waitForLoad(doc, this.signal, options.loadTimeout * 1000);
 
             if (options.startDelay > 0)
                 await delay(options.startDelay * 1000, this.signal);

@@ -115,3 +115,21 @@ it and need the extension:
       while that checkbox is off, and the row does not wrap at the default options-window width.
 - [ ] **The bound bites** — a real infinite-scroll page (a social feed) with "Scroll down page" enabled now
       finishes instead of scrolling until aborted. This is the reason for the change.
+
+## Bounded waits (version 2.3.4)
+
+`waitForLoad` is unit-tested (`tests/capture/node/prepare.test.mjs`); the other two are host-side and need the
+extension. `serve.py` serves `/stall.html`, whose subresource never answers so the load event never fires —
+note that **headless Chrome cannot drive it** (virtual time does not advance while a load is pending), so use a
+real browser window.
+
+- [ ] **Tab wait** — archive a bookmark pointing at `http://localhost:8080/stall.html`: after ~60 s the capture
+      proceeds instead of hanging, the console carries "the page did not finish loading within 60 s", and the
+      hidden tab is closed afterwards.
+- [ ] **Crawl** — a site capture that includes `/stall.html` completes the whole crawl instead of stopping at
+      that page. This is the failure this change exists for.
+- [ ] **Page wait** — capture `/stall.html` in the foreground: after ~15 s the capture runs and the console
+      carries "the page did not finish loading within 15 s".
+- [ ] **Run budget** — through the automation API, capture any page with `maxCaptureTime` set to a few seconds:
+      the run ends with "The capture did not finish within N s", the lock overlay is removed, the page is
+      restored (no shrink left applied) and no partial archive is stored.

@@ -15,10 +15,13 @@ Routes on both origins (default 8080 and 8081):
     /engine/<module>        addon/capture, so harness.html can run the content side without the extension
     /big.html               a synthesized measurement page:
                             ?elements=&styles=&uses=&inline= (never part of the digest baseline)
+    /stall.html             a page whose subresource never answers, so the load event never fires
+    /stall/<anything>       accepts the connection and answers after ?s=<seconds> (default 600)
 """
 
 import os
 import struct
+import time
 import urllib.parse
 import sys
 import threading
@@ -144,6 +147,23 @@ class Handler(SimpleHTTPRequestHandler):
                     return default
             return self.send_bytes(big(number("elements", 20000), number("styles", 120), number("uses", 200),
                                        number("inline", 2000)), "text/html; charset=utf-8")
+        if path == "/stall.html":   # a page that never reaches readyState "complete"
+            nl, q = chr(10), chr(34)
+            body = nl.join([
+                "<!DOCTYPE html>",
+                "<html><head><meta charset=" + q + "utf-8" + q + "><title>stall fixture</title></head><body>",
+                "<p>this page has a subresource that never answers, so the load event never fires</p>",
+                "<img src=" + q + "/stall/hang.png" + q + " alt=" + q + "stalled" + q + ">",
+                "</body></html>", ""])
+            return self.send_bytes(body.encode("utf-8"), "text/html; charset=utf-8")
+        if path.startswith("/stall/"):   # accepts the connection and then never answers
+            query = urllib.parse.parse_qs(self.path.partition("?")[2])
+            try:
+                seconds = min(3600, max(0, float(query.get("s", ["600"])[0])))
+            except ValueError:
+                seconds = 600
+            time.sleep(seconds)
+            return self.send_error(504, "stalled on purpose")
         if path == "/csp.html":
             with open(os.path.join(HERE, "csp.html"), "rb") as f:
                 return self.send_bytes(f.read(), "text/html; charset=utf-8", {"Content-Security-Policy": "script-src 'none'"})

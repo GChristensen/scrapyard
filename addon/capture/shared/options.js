@@ -20,7 +20,9 @@ const NUMBERS = {
     lazyLoadScrollScreens: {min: 1, max: 100, integer: true},
     lazyLoadShrinkTime: {min: 0, max: 60},
     startDelay: {min: 0, max: 600},
-    frameReplyTimeout: {min: 0, max: 60000, integer: true}
+    frameReplyTimeout: {min: 0, max: 60000, integer: true},
+    loadTimeout: {min: 1, max: 600},
+    maxCaptureTime: {min: 60, max: 7200}
 };
 
 const BOOLEANS = ["audioVideo", "objectEmbed", "scripts", "executeScripts", "crossOriginFrames", "shadowDom",
@@ -61,6 +63,8 @@ export function defaultOptions() {
         lazyImages: true,
         startDelay: 0,
         frameReplyTimeout: 1500,
+        loadTimeout: 15,
+        maxCaptureTime: 600,
         lockOverlay: true,
         lockIconUrl: "",
         version: "",

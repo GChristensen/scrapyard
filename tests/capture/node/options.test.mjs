@@ -15,6 +15,18 @@ export const tests = {
         assert.equal(defaultOptions().lazyLoadScrollScreens, 5);
     },
 
+    "the run is bounded even when nothing else bounds it"() {
+        /* both are safety nets: neither may be switched off by passing something silly */
+        assert.equal(defaultOptions().loadTimeout, 15);
+        assert.equal(defaultOptions().maxCaptureTime, 600);
+        assert.equal(normalizeOptions({loadTimeout: 0}).loadTimeout, 1);
+        assert.equal(normalizeOptions({loadTimeout: -1}).loadTimeout, 1);
+        assert.equal(normalizeOptions({loadTimeout: 99999}).loadTimeout, 600);
+        assert.equal(normalizeOptions({maxCaptureTime: 0}).maxCaptureTime, 60);
+        assert.equal(normalizeOptions({maxCaptureTime: 99999}).maxCaptureTime, 7200);
+        assert.equal(normalizeOptions({maxCaptureTime: "nope"}).maxCaptureTime, 600);
+    },
+
     "concurrency default and range"() {
         assert.equal(defaultOptions().concurrency, 12);
         assert.equal(normalizeOptions({concurrency: 200}).concurrency, 64);
