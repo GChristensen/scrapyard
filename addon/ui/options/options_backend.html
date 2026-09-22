@@ -1,50 +1,46 @@
-<div style="max-width: 600px; font-size: 110%; text-align: justify">
-    <h2>Scrapyard Backend Application</h2>
+<div style="max-width: 600px; font-size: 110%">
+    <h2>Backend Application</h2>
 
-    <p>Scrapyard backend application allows to transcend the limits of WebExtensions
-        by providing access to the filesystem and several other features that are otherwise impossible
-        to implement.</p>
+    <p class="backend-description">
+        The backend application extends Scrapyard beyond WebExtensions limits,
+        providing filesystem access and other native features.
+        On Windows it can be installed automatically; other platforms use the CLI-based
+        installer (requires Python 3.7+).
+    </p>
 
-    <p>On Windows, the application could be installed automatically without the need for any configuration.
-       The CLI-based installer runs on any OS but requires Python 3.7+.</p>
+    <!-- INSTALL -->
+    <div class="backend-section">
+        <h3 class="backend-section-label">Install</h3>
+        <ul class="backend-downloads">
+            <li><a id="helper-windows-inst" href="#backend">Automated Windows installer</a></li>
+            <li><a id="helper-manual-inst" href="#backend">CLI-based installer (macOS, Linux, Windows)</a></li>
+        </ul>
+        <p><b>Restart your browser after installing. Close it completely before updating.</b></p>
+    </div>
 
-    <p>It is necessary to restart the browser after the application has been installed.
-    Please close your browser completely before updating to a new version.</p>
+    <!-- STATUS -->
+    <fieldset class="backend-status-group">
+        <legend>Status</legend>
+        <div class="backend-version-row" id="helper-app-version-installed">
+            <b>Installed version:</b> checking...
+        </div>
+        <div class="backend-version-row" id="helper-app-version">
+            <b>Latest version:</b> checking...
+        </div>
+    </fieldset>
 
-    <p>The backend application could also be hosted on a server and shared by several browsers.
-    Install it with the <code>--server</code> option of the CLI-based installer or with Docker, and select
-    the <b>Server</b> content location in the <a href="#settings">settings</a>. It is recommended to access
-    the server only through LAN or <a href="https://tailscale.com" target="_blank">Tailscale</a>.</p>
-
-    <p id="helper-app-version-installed"><b>Installed version:</b> checking...</p>
-    <p id="helper-app-version"><b>Latest version:</b> checking...</p>
-
-    <h3>Downloads</h3>
-    <ul>
-        <li style="padding-bottom: 5px"><a id="helper-windows-inst" href="#backend">Automated Windows installer</a></li>
-        <li><a id="helper-manual-inst" href="#backend">CLI-based installer (MacOS, Linux, Windows)</a></li>
-    </ul>
-
-    <table id="helper-settings" width="600px" cellspacing="" cellpadding="" border="0" class="form-table">
-    <tr>
-        <td style="text-align: left;">
-            <div class="panel double-container" id="helper">
-                <div class="double-first" style="width: 320px">
-                    <form>
-                        <fieldset style="border: none;">
-                            <label for="option-helper-port">Backend HTTP port:</label>
-                            <input id="option-helper-port" type="text" maxlength="5" size="6"/>
-                        </fieldset>
-                    </form>
-                </div>
-                <div class="double-last">
-                    <form>
-                        <fieldset style="border: none;">
-                        </fieldset>
-                    </form>
-                </div>
-            </div>
-        </td>
-    </tr>
-    </table>
+    <!-- CONFIGURATION -->
+    <fieldset class="backend-status-group" id="helper-settings">
+        <legend>Configuration</legend>
+        <div class="backend-port-field">
+            <label for="option-helper-port">HTTP port:</label>
+            <input id="option-helper-port" type="text" maxlength="5" size="6"/>
+        </div>
+        <p class="backend-install-note" style="margin-top: 12px">
+            The backend can also run as a shared server - install with
+            the <code>--server</code> option and select <b>Server</b> as the content location in
+            <a href="#settings">settings</a>.
+            Access via LAN or <a href="https://tailscale.com" target="_blank">Tailscale</a>.
+        </p>
+    </fieldset>
 </div>

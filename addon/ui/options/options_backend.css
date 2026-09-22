@@ -1,3 +1,68 @@
-#div-helperapp p, li {
-    /*font-size: 11pt;*/
+#div-backend .backend-description {
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+#div-backend .backend-section {
+    padding-top: 16px;
+    margin-top: 16px;
+    border-top: 1px solid #777;
+}
+
+#div-backend .backend-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 0 0 8px 0;
+}
+
+#div-backend .backend-status-group {
+    margin-top: 16px;
+    padding: 10px;
+    line-height: 20px;
+}
+
+#div-backend .backend-status-group legend {
+    color: #777;
+    padding: 0 4px;
+}
+
+#div-backend .backend-version-row {
+    margin-bottom: 4px;
+    line-height: 1.6;
+}
+
+#div-backend .backend-version-row b {
+    display: inline-block;
+    width: 140px;
+}
+
+#div-backend .backend-downloads {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+#div-backend .backend-downloads li {
+    padding: 4px 0;
+}
+
+#div-backend .backend-downloads li::before {
+    content: "\2192";
+    margin-right: 8px;
+    color: #777;
+}
+
+#div-backend .backend-install-note {
+    font-size: 90%;
+    color: #777;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+#div-backend .backend-port-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
