@@ -55,7 +55,7 @@ export function defaultOptions() {
         maxResourceTime: 30,
         allowPassiveMixedContent: false,
         referer: "strict",
-        concurrency: 12,
+        concurrency: 6,
         lazyLoad: "none",
         lazyLoadScrollTime: 0.2,
         lazyLoadScrollScreens: 5,

@@ -28,10 +28,11 @@ export const tests = {
     },
 
     "concurrency default and range"() {
-        assert.equal(defaultOptions().concurrency, 12);
+        /* 6, not higher: 12 made some sites answer 429 */
+        assert.equal(defaultOptions().concurrency, 6);
         assert.equal(normalizeOptions({concurrency: 200}).concurrency, 64);
         assert.equal(normalizeOptions({concurrency: "16"}).concurrency, 16);
-        assert.equal(normalizeOptions({}).concurrency, 12);
+        assert.equal(normalizeOptions({}).concurrency, 6);
     },
 
     "normalizeOptions fills defaults and rejects invalid values"() {

@@ -109,8 +109,10 @@ it and need the extension:
 ## Capture options (version 2.3.3)
 
 - [ ] **Concurrency** — the "Resources loaded simultaneously" input in *Limits* shows its stored value, survives
-      a reload of the options page, and reaches the engine: capture a resource-heavy page with `debug` on and
-      count the in-flight `[scrapyard capture] fetch` lines (12 by default, 6 before).
+      a reload of the options page, and reaches the engine: set it to a distinctive value, capture a
+      resource-heavy page with `debug` on and count the in-flight `[scrapyard capture] fetch` lines.
+      The default is 6; raising it is what a user does for their own sites, not something to ship raised —
+      12 made some sites answer 429.
 - [ ] **Screens** — the input sits on the same line as "Scroll down page to force lazy loads", is greyed out
       while that checkbox is off, and the row does not wrap at the default options-window width.
 - [ ] **The bound bites** — a real infinite-scroll page (a social feed) with "Scroll down page" enabled now

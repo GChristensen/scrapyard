@@ -32,7 +32,7 @@ export const CAPTURE_SETTINGS_DEFAULTS = Object.freeze({
     "options-lazyloadshrinktime": 0.5,
     "options-loadlazyimages": true,
     "options-savedelaytime": 0,
-    "options-concurrency": 12
+    "options-concurrency": 6
 });
 
 /**
