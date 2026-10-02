@@ -14,7 +14,7 @@ const manifest = browser.runtime.getManifest();
 const hasBlockingWebRequest = !!(browser.webRequest?.onBeforeSendHeaders && (manifest.permissions || []).includes("webRequestBlocking"));
 const hasSessionRules = !hasBlockingWebRequest && !!(browser.declarativeNetRequest?.updateSessionRules);
 
-/** ids of session rules never collide with the static rules of net_rules.json */
+/** ids of session rules never collide with the session rule installed in core.js (id 1) */
 let nextRuleId = 10000;
 
 let listenerRegistered = false;

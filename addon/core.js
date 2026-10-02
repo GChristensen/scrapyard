@@ -84,6 +84,24 @@ if (browser.webRequest) {
     );
 }
 
+if (!_BACKGROUND_PAGE && browser.declarativeNetRequest?.updateSessionRules) {
+    // OneDrive's token endpoint rejects the extension Origin. Strip it from this extension's own requests only:
+    // a static rule would also apply to web pages (e.g. MSAL sign-in flows) and break their logins.
+    browser.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: [1],
+        addRules: [{
+            id: 1,
+            priority: 1,
+            action: {type: "modifyHeaders", requestHeaders: [{header: "origin", operation: "remove"}]},
+            condition: {
+                urlFilter: "||login.microsoftonline.com/",
+                initiatorDomains: [browser.runtime.id],
+                resourceTypes: ["xmlhttprequest"]
+            }
+        }]
+    }).catch(e => console.error(e));
+}
+
 browser.commands.onCommand.addListener(function(command, tab) {
     if (command === "toggle_sidebar_window") {
         if (_SIDE_PANEL)
