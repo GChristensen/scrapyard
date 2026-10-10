@@ -600,7 +600,12 @@ class BookmarkTree {
         let jnode = BookmarkTree.toJsTreeNode(node);
 
         jnode.a_attr.class += " node-pending";
-        return this._jstree.create_node(node.parent_id, jnode, "last");
+
+        // gallery capture puts the new item first (see bookmarking_gallery.js)
+        const parent = this._jstree.get_node(node.parent_id);
+        const position = node.type === NODE_TYPE_ARCHIVE && o(parent)?.gallery? "first": "last";
+
+        return this._jstree.create_node(node.parent_id, jnode, position);
     }
 
     updateTentativeNode(node) {

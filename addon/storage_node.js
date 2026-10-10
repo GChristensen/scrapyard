@@ -152,7 +152,7 @@ export class NodeIDB extends EntityIDB {
         };
 
         if (ids)
-            this._db.nodes.where("id").anyOf(ids).modify(withPostprocessing)
+            await this._db.nodes.where("id").anyOf(ids).modify(withPostprocessing);
         else
             await this._db.nodes.toCollection().modify(withPostprocessing);
     }

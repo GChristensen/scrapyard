@@ -11,6 +11,7 @@ import {fetchWithTimeout} from "./utils_io.js";
 import {Archive, Node, Comments} from "./storage_entities.js";
 import {settings} from "./settings.js";
 import {Bookmark} from "./bookmarks_bookmark.js";
+import {byPosition} from "./storage.js";
 import {getGalleryShelf, isGalleryTarget, readGallerySelectors} from "./gallery.js";
 import {clearNodePending} from "./storage_pending.js";
 import {toBase64} from "./capture/shared/bytes.js";
@@ -157,8 +158,25 @@ export async function captureGalleryTab(tab, bookmark) {
         }
     }
 
+    try {
+        await moveToFirstPosition(bookmark);
+    }
+    catch (e) {
+        console.error(e);
+    }
+
     clearNodePending(bookmark);
     finalizeCapture(bookmark);
+}
+
+// The newest item of a gallery goes first, both in the grid and in the sidebar.
+async function moveToFirstPosition(bookmark) {
+    const siblings = await Node.getChildren(bookmark.parent_id);
+    const others = siblings.filter(n => n.id !== bookmark.id).sort(byPosition);
+    const positions = [bookmark, ...others].map((n, i) => ({id: n.id, pos: i}));
+
+    await Bookmark.reorder(positions);
+    bookmark.pos = 0;
 }
 
 // The type of a video must be video/* to mark the item as a video (see ui/gallery.js), while servers often send
