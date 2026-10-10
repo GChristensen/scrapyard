@@ -1,5 +1,5 @@
 {
-    "version": "2.3.2.3",
+    "version": "2.3.2.4",
     "applications": {
         "gecko": {
             "id": "scrapyard@firefox",

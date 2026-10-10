@@ -284,9 +284,6 @@ async function renderItem(node) {
 
         $("#gallery-item-image").append(video);
         playVideo(video[0]);
-
-        if (node.uri)
-            $("#gallery-source-link").attr("href", node.uri).show();
     }
     else if (url) {
         const image = $("<img/>").attr("alt", node.name || "").attr("src", url);
@@ -300,6 +297,9 @@ async function renderItem(node) {
     }
     else
         showMessage("No media is stored for this item.");
+
+    if (node.uri)
+        $("#gallery-source-link").attr("href", node.uri).show();
 
     // the prompt, negative prompt and resources are shown in the "Image Info" popup rather than on the page itself;
     // the link that opens it is only shown when there is at least one of them to show. Whichever of them ends up
