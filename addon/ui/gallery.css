@@ -91,6 +91,10 @@ a {
        fewer the rows, the more spare height there is to dump into each gap, so the row-gap below inflates far
        past its declared value exactly when the gallery is sparse */
     align-content: start;
+    /* the tiles are overflow:hidden, which makes their minimum contribution to an auto row zero, so with the
+       grid's definite (flex-stretched) height the auto rows would shrink until every row fits the viewport and
+       the square tiles would overlap the rows below them; max-content rows always take the full tile height */
+    grid-auto-rows: max-content;
     column-gap: 8px;
     row-gap: 24px;
     padding: 20px;
