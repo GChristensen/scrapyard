@@ -210,6 +210,19 @@ export class StorageAdapterDisk {
             return response.json();
     }
 
+    // side files are stored in the object directory beside the archive and are not stored internally
+    async saveSideFile(params) {
+        params.content = new Blob([params.content]);
+        return this._write(`/storage/save_object_file`, params, true, false);
+    }
+
+    async fetchSideFile(params) {
+        const response = await this._read(`/storage/fetch_object_file`, params);
+
+        if (response)
+            return response.arrayBuffer();
+    }
+
     async persistNotesIndex(params) {
         return this._write("/storage/persist_notes_index", params);
     }

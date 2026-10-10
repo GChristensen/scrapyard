@@ -184,6 +184,24 @@ def save_archive_file():
         return "[]"
 
 
+@app.route("/storage/save_object_file", methods=['POST'])
+@requires_auth
+def save_object_file():
+    server.storage_manager.save_object_file(request.form, request.files)
+    return "", 204
+
+
+@app.route("/storage/fetch_object_file", methods=['POST'])
+@requires_auth
+def fetch_object_file():
+    result = server.storage_manager.fetch_object_file(request.json)
+
+    if result:
+        return result
+    else:
+        return "", 404
+
+
 @app.route("/storage/persist_notes_index", methods=['POST'])
 @requires_auth
 def persist_notes_index():

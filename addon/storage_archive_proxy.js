@@ -38,6 +38,22 @@ export class ArchiveProxy extends StorageProxy {
         return this.#saveArchiveFile(node, file, content);
     }
 
+    async getSideFile(node, file) {
+        const adapter = this.adapter(node);
+
+        if (adapter?.fetchSideFile)
+            return adapter.fetchSideFile({uuid: node.uuid, file});
+    }
+
+    async saveSideFile(node, file, content) {
+        const adapter = this.adapter(node);
+
+        if (!adapter?.saveSideFile)
+            throw new Error("Side files are supported only in the backend storage.");
+
+        return adapter.saveSideFile({uuid: node.uuid, file, content});
+    }
+
     async #persistArchiveIndex(node, words) {
         const adapter = this.adapter(node);
 

@@ -167,6 +167,17 @@ export class ArchiveIDB extends EntityIDB {
         // NOP, implemented in proxy
     }
 
+    // get a side file stored beside the archive (e.g., the poster of a gallery video),
+    // side files exist only in the backend storage
+    async getSideFile(node, file) {
+        // NOP, implemented in proxy
+    }
+
+    // save a side file beside the archive
+    async saveSideFile(node, file, content) {
+        // NOP, implemented in proxy
+    }
+
     async delete(node) {
         if (this._db.tables.some(t => t.name === "blobs"))
             await this._db.blobs.where("node_id").equals(node.id).delete();

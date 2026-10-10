@@ -10,11 +10,11 @@ import time
 
 from pathlib import Path
 
-from werkzeug.exceptions import Conflict
+from werkzeug.exceptions import Conflict, BadRequest
 
 from . import storage_sync
 from .rwlock import path_lock
-from .server_paths import validate_uuid, safe_join_path
+from .server_paths import validate_uuid, safe_join_path, validate_file_name
 from .storage_node_db import NodeDB
 from .utils_fs import atomic_write, atomic_file, atomic_directory, DirectoryLock, DirectoryLockedError
 
@@ -477,6 +477,41 @@ class StorageManager:
 
             if compute_index:
                 return build_archive_index(archive_directory_path)
+
+    # Side files are stored in the object directory beside the archive (e.g., the poster of a gallery video),
+    # they may not replace the files of the object itself
+
+    RESERVED_OBJECT_FILES = {NODE_OBJECT_FILE, ICON_OBJECT_FILE, ARCHIVE_INDEX_OBJECT_FILE, ARCHIVE_OBJECT_FILE,
+                             ARCHIVE_CONTENT_FILE, NOTES_INDEX_OBJECT_FILE, NOTES_OBJECT_FILE,
+                             COMMENTS_INDEX_OBJECT_FILE, COMMENTS_OBJECT_FILE, ARCHIVE_DIRECTORY}
+
+    def get_object_file_path(self, object_directory_path, file):
+        file = validate_file_name(file)
+
+        if not file or os.path.basename(file.replace("\\", "/")) != file or file in (".", "..") \
+                or file.lower() in StorageManager.RESERVED_OBJECT_FILES:
+            raise BadRequest("Invalid file name.")
+
+        return os.path.join(object_directory_path, file)
+
+    def save_object_file(self, params, files):
+        object_directory_path = self.get_object_directory(params)
+        object_file_path = self.get_object_file_path(object_directory_path, params["file"])
+
+        with path_lock(object_directory_path).write_locked():
+            with atomic_file(object_file_path) as object_file:
+                files["content"].save(object_file)
+
+        self.touch_batch_session()
+
+    def fetch_object_file(self, params):
+        object_directory_path = self.get_object_directory(params)
+        object_file_path = self.get_object_file_path(object_directory_path, params["file"])
+
+        with path_lock(object_directory_path).read_locked():
+            if os.path.exists(object_file_path):
+                with open(object_file_path, "rb") as object_file:
+                    return object_file.read()
 
     def fetch_object(self, object_file_name, params):
         object_directory_path = self.get_object_directory(params)

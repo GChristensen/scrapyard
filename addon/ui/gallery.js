@@ -84,6 +84,39 @@ async function archiveObjectURL(node) {
     return trackObjectURL(URL.createObjectURL(new Blob([content], {type})));
 }
 
+// A video is marked by its content type (see captureGalleryTab in bookmarking_gallery.js).
+function isVideo(node) {
+    return !!node.content_type?.startsWith("video/");
+}
+
+// The poster of a video is a side file of its archive, named in the metadata.
+async function posterObjectURL(node, metadata) {
+    if (!metadata.poster?.file)
+        return null;
+
+    const content = await Archive.getSideFile(node, metadata.poster.file);
+
+    if (!content)
+        return null;
+
+    const type = metadata.poster.type || "application/octet-stream";
+    return trackObjectURL(URL.createObjectURL(new Blob([content], {type})));
+}
+
+// The video is played with sound. A browser may refuse that when the page was opened without a user gesture (e.g.,
+// from the sidebar), in which case it is played muted instead, to be unmuted from its controls.
+function playVideo(video) {
+    video.muted = false;
+
+    video.play().catch(e => {
+        if (e.name !== "NotAllowedError")
+            return console.error(e);
+
+        video.muted = true;
+        video.play().catch(e => console.error(e));
+    });
+}
+
 // Resources come in two shapes depending on how the gallery selector was written (see content_gallery.js): a CSS
 // selector produces a list of {name, url} pairs, an XPath selector produces one newline-joined string, each line
 // being one resource with no separate address. Both are normalized here into the same {name, url} list so the
@@ -126,6 +159,7 @@ function resetViews() {
     $("#gallery-item").hide();
     $("#gallery-item-image").empty();
     $("#gallery-back").hide();
+    $("#gallery-source-link").hide().attr("href", "#");
 
     closeInfoPopup();
     $("#gallery-info-link").hide();
@@ -169,7 +203,10 @@ async function renderGrid(node) {
     const template = document.getElementById("gallery-thumbnail-template");
     const pending = new Map();
 
-    // the stored thumbnail is a small node icon and would be blurry at this size, so the grid draws the full image
+    // A tile shows the poster of the item: the reduced copy of an image or the poster of a video. Without one (items
+    // captured in the internal storage mode or before posters existed, small images) an image tile draws the full
+    // image - the stored thumbnail is a small node icon and would be blurry at this size - and a video tile shows
+    // the first frame of the video itself.
     const loadTile = element => {
         const image = pending.get(element);
 
@@ -178,9 +215,25 @@ async function renderGrid(node) {
 
         pending.delete(element);
 
-        archiveObjectURL(image)
-            .then(url => { if (url) $(element).find("img").attr("src", url); })
-            .catch(e => console.error(e));
+        loadTileContent(element, image).catch(e => console.error(e));
+    };
+
+    const loadTileContent = async (element, image) => {
+        const poster = await posterObjectURL(image, await readMetadata(image)).catch(e => console.error(e));
+
+        if (poster)
+            return $(element).find("img").attr("src", poster);
+
+        const url = await archiveObjectURL(image);
+
+        if (!url)
+            return;
+
+        if (isVideo(image))
+            $(element).find("img").replaceWith($("<video/>")
+                .prop("muted", true).attr("preload", "metadata").attr("title", image.name || "").attr("src", url));
+        else
+            $(element).find("img").attr("src", url);
     };
 
     gridObserver = new IntersectionObserver((entries, observer) => {
@@ -196,6 +249,7 @@ async function renderGrid(node) {
 
         anchor.find("img").attr("title", image.name || "");
         anchor.attr("href", "#" + image.uuid);
+        anchor.toggleClass("gallery-video", isVideo(image));
         grid.append(anchor);
 
         pending.set(anchor[0], image);
@@ -221,7 +275,20 @@ async function renderItem(node) {
 
     const url = await archiveObjectURL(node);
 
-    if (url) {
+    if (url && isVideo(node)) {
+        const video = $("<video/>").attr("controls", "").attr("preload", "auto").attr("src", url);
+        const poster = await posterObjectURL(node, metadata).catch(e => console.error(e));
+
+        if (poster)
+            video.attr("poster", poster);
+
+        $("#gallery-item-image").append(video);
+        playVideo(video[0]);
+
+        if (node.uri)
+            $("#gallery-source-link").attr("href", node.uri).show();
+    }
+    else if (url) {
         const image = $("<img/>").attr("alt", node.name || "").attr("src", url);
 
         // the stored image links back to the page it was taken from
@@ -232,7 +299,7 @@ async function renderItem(node) {
             $("#gallery-item-image").append(image);
     }
     else
-        showMessage("No image is stored for this item.");
+        showMessage("No media is stored for this item.");
 
     // the prompt, negative prompt and resources are shown in the "Image Info" popup rather than on the page itself;
     // the link that opens it is only shown when there is at least one of them to show. Whichever of them ends up

@@ -5,10 +5,11 @@
 // place, and addon/content_gallery.js for the extraction content script this dispatches to.
 
 import {injectScriptFile, showNotification} from "./utils_browser.js";
-import {getMimetypeByExt} from "./utils.js";
+import {CONTENT_TYPE_TO_EXT, getMimetypeByExt} from "./utils.js";
 import {send} from "./proxy.js";
 import {fetchWithTimeout} from "./utils_io.js";
-import {Node, Comments} from "./storage_entities.js";
+import {Archive, Node, Comments} from "./storage_entities.js";
+import {settings} from "./settings.js";
 import {Bookmark} from "./bookmarks_bookmark.js";
 import {getGalleryShelf, isGalleryTarget, readGallerySelectors} from "./gallery.js";
 import {clearNodePending} from "./storage_pending.js";
@@ -52,6 +53,10 @@ export async function captureGalleryTab(tab, bookmark) {
     if (!extracted?.image_url)
         return abortGalleryCapture(bookmark, "No image was found on this page.");
 
+    // the poster of a video is stored as a side file, which exists only in the backend storage
+    if (extracted.video && settings.storage_mode_internal())
+        return abortGalleryCapture(bookmark, "Videos can only be archived in the backend storage mode.");
+
     let response;
 
     try {
@@ -64,10 +69,10 @@ export async function captureGalleryTab(tab, bookmark) {
     if (!response?.ok)
         return abortGalleryCapture(bookmark, "Could not download the image.");
 
-    let contentType = response.headers.get("content-type");
-
-    if (!contentType)
-        contentType = getMimetypeByExt(new URL(extracted.image_url).pathname) || "application/octet-stream";
+    const contentType = extracted.video
+        ? videoContentType(response, extracted.image_url)
+        : response.headers.get("content-type")
+            || getMimetypeByExt(new URL(extracted.image_url).pathname) || "application/octet-stream";
 
     bookmark.content_type = contentType;
     bookmark.name = galleryItemName(bookmark, extracted);
@@ -84,7 +89,20 @@ export async function captureGalleryTab(tab, bookmark) {
         return abortGalleryCapture(bookmark, "Error archiving the image.");
     }
 
-    // the image is stored by now, so neither the metadata nor the thumbnail may fail the capture
+    // the image is stored by now, so neither the metadata, the poster nor the thumbnail may fail the capture
+
+    let poster;
+
+    try {
+        if (extracted.video_poster_url)
+            poster = await storeVideoPoster(bookmark, extracted.video_poster_url);
+        // side files exist only in the backend storage, in the internal storage mode the grid draws the full images
+        else if (!extracted.video && !settings.storage_mode_internal())
+            poster = await storeImagePoster(bookmark, imageBytes, contentType);
+    }
+    catch (e) {
+        console.error(e);
+    }
 
     try {
         // the page url is kept in the node, so the original page remains reachable; the image address is recorded
@@ -95,6 +113,10 @@ export async function captureGalleryTab(tab, bookmark) {
             negative_prompt: extracted.image_negative_prompt,
             resources: extracted.image_resources
         };
+
+        // the side file with the poster of a video (with its original name) or the reduced copy of an image
+        if (poster)
+            metadata.poster = {file: poster.file, name: poster.name, type: poster.type};
 
         // the automation API stores the comments it was given before the capture runs, without updating
         // has_comments on this object, so the stored comments are looked up and retained here instead of being
@@ -122,7 +144,13 @@ export async function captureGalleryTab(tab, bookmark) {
 
     if (!bookmark.__mute_ui) {
         try {
-            await notifyGalleryCaptured(bookmark, imageBytes, contentType);
+            // a video is shown by its poster, if any
+            if (!extracted.video)
+                await notifyGalleryCaptured(bookmark, imageBytes, contentType);
+            else if (poster)
+                await notifyGalleryCaptured(bookmark, poster.bytes, poster.type);
+            else
+                showNotification({title: "Scrapyard", message: bookmark.name || "Video captured"});
         }
         catch (e) {
             console.error(e);
@@ -131,6 +159,94 @@ export async function captureGalleryTab(tab, bookmark) {
 
     clearNodePending(bookmark);
     finalizeCapture(bookmark);
+}
+
+// The type of a video must be video/* to mark the item as a video (see ui/gallery.js), while servers often send
+// a generic type such as application/octet-stream.
+function videoContentType(response, url) {
+    const isVideo = type => type?.split(";")[0].trim().toLowerCase().startsWith("video/");
+
+    const header = response.headers.get("content-type");
+    if (isVideo(header))
+        return header;
+
+    const byExt = getMimetypeByExt(new URL(url).pathname);
+    if (isVideo(byExt))
+        return byExt;
+
+    return "video/mp4";
+}
+
+// Downloads the poster of a video and stores it as a side file of the archive, named "poster" with the extension
+// of the original file. Returns its file name, original name and type along with the bytes, or nothing if the poster
+// is not an image.
+async function storeVideoPoster(bookmark, url) {
+    const response = await fetchWithTimeout(url, {timeout: 60000, headers: {"Cache-Control": "no-store"}});
+
+    if (!response.ok)
+        return;
+
+    const pathname = new URL(url).pathname;
+    let type = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+
+    if (!type?.startsWith("image/"))
+        type = getMimetypeByExt(pathname);
+
+    if (!type?.startsWith("image/"))
+        return;
+
+    let name;
+    try {
+        name = decodeURIComponent(pathname.split("/").pop());
+    }
+    catch (e) {
+        name = pathname.split("/").pop();
+    }
+
+    const ext = name.match(/\.([a-z0-9]{1,5})$/i)?.[1]?.toLowerCase() || CONTENT_TYPE_TO_EXT[type];
+    const file = ext? `poster.${ext}`: "poster";
+    const bytes = await response.arrayBuffer();
+
+    await Archive.saveSideFile(bookmark, file, bytes);
+
+    return {file, name: name || undefined, type, bytes};
+}
+
+// The longest side of the poster made of a captured image, the size of a grid tile (see ui/gallery.css).
+const IMAGE_POSTER_SIZE = 300;
+
+// Stores a copy of the captured image reduced to IMAGE_POSTER_SIZE as its poster, so the grid does not have to
+// fetch and decode the full images. Nothing is stored for an image that is already small enough, or that can not be
+// decoded here (e.g., SVG). OffscreenCanvas is used, since there is no DOM in the MV3 service worker.
+async function storeImagePoster(bookmark, imageBytes, contentType) {
+    const bitmap = await createImageBitmap(new Blob([imageBytes], {type: contentType}));
+
+    try {
+        const scale = IMAGE_POSTER_SIZE / Math.max(bitmap.width, bitmap.height);
+
+        if (scale >= 1)
+            return;
+
+        const width = Math.max(1, Math.round(bitmap.width * scale));
+        const height = Math.max(1, Math.round(bitmap.height * scale));
+        const canvas = new OffscreenCanvas(width, height);
+        const context = canvas.getContext("2d");
+
+        context.imageSmoothingQuality = "high";
+        context.drawImage(bitmap, 0, 0, width, height);
+
+        // a browser that can not encode WebP produces PNG instead, the actual type is taken from the result
+        const blob = await canvas.convertToBlob({type: "image/webp", quality: 0.85});
+        const type = blob.type || "image/png";
+        const file = `poster.${CONTENT_TYPE_TO_EXT[type] || "png"}`;
+
+        await Archive.saveSideFile(bookmark, file, await blob.arrayBuffer());
+
+        return {file, type};
+    }
+    finally {
+        bitmap.close();
+    }
 }
 
 // Shows an OS notification with the captured picture itself - not the thumbnail, deliberately: the point of the

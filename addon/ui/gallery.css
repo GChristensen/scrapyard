@@ -50,7 +50,9 @@ a {
     border-bottom: 1px solid var(--gallery-border);
 }
 
+/* takes the free room, which pins the links after it to the right of the header */
 #gallery-title {
+    flex: 1 1 auto;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -63,7 +65,8 @@ a {
 }
 
 /* pinned to the right of the header regardless of how much room the title takes */
-#gallery-info-link {
+#gallery-info-link,
+#gallery-source-link {
     flex: none;
     margin-left: auto;
     text-decoration: none;
@@ -116,11 +119,37 @@ a {
 }
 
 /* the whole image is fitted inside the tile rather than cropped to fill it */
-.gallery-thumbnail img {
+.gallery-thumbnail img,
+.gallery-thumbnail video {
     width: 100%;
     height: 100%;
     object-fit: contain;
     display: block;
+}
+
+/* a video tile shows its poster (or its first frame) under a play badge */
+.gallery-video {
+    position: relative;
+}
+
+.gallery-video::after {
+    /* the variation selector keeps the triangle from being drawn as an emoji */
+    content: "\25B6\FE0E";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 48px;
+    height: 48px;
+    margin: -24px 0 0 -24px;
+    box-sizing: border-box;
+    padding-left: 4px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.55);
+    color: #ffffff;
+    font-size: 20px;
+    line-height: 48px;
+    text-align: center;
+    pointer-events: none;
 }
 
 /* single image view */
@@ -161,7 +190,8 @@ a {
 
 /* the actual containment: an unconstrained img/a pair, scaled down to fit the box, aspect ratio preserved, never
    upscaled past its natural size */
-#gallery-item-image img {
+#gallery-item-image img,
+#gallery-item-image video {
     display: block;
     max-width: 100%;
     max-height: 100%;

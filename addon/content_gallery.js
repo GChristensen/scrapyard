@@ -4,6 +4,8 @@
 // document.evaluate instead of querySelector; anything else is a plain CSS selector. This does misfire on a CSS
 // selector that happens to use a parenthesized pseudo-class, such as ":nth-child(2)" or ":not(.x)" - such a
 // selector must be phrased as XPath instead, since there is no separate escape hatch for it.
+// When the image selector matches a <video> (or an attribute of one), the item is a video: its source with the .mp4
+// extension is taken (or the first source if there is none), along with the address of its poster.
 
 (() => {
     // the script may be injected into the same page more than once
@@ -205,10 +207,65 @@
         return resources.length? resources: undefined;
     }
 
+    // The first node the image selector matches, used only to tell whether it is a <video>.
+    function firstMatch(selector) {
+        if (!selector?.trim())
+            return null;
+
+        return isXPathSelector(selector)? (evaluateXPath(selector)[0] || null): queryFirst(selector);
+    }
+
+    // The <video> element a matched node is or belongs to (an attribute such as "//video/@src" is owned by one).
+    function matchedVideo(node) {
+        if (node instanceof HTMLVideoElement)
+            return node;
+
+        if (node?.nodeType === Node.ATTRIBUTE_NODE && node.ownerElement instanceof HTMLVideoElement)
+            return node.ownerElement;
+
+        return null;
+    }
+
+    // The source of a video: the first one with the .mp4 extension, or the first one at all. blob: and data: addresses
+    // are skipped - a streamed (MSE) video has no downloadable address.
+    function pickVideoSource(video) {
+        const candidates = [video.getAttribute("src"),
+                            ...Array.from(video.querySelectorAll("source[src]")).map(s => s.getAttribute("src"))]
+            .map(url => url?.trim() && absoluteURL(url.trim()))
+            .filter(url => url && !/^(blob|data):/i.test(url));
+
+        const isMP4 = url => {
+            try {
+                return new URL(url).pathname.toLowerCase().endsWith(".mp4");
+            }
+            catch (e) {
+                return false;
+            }
+        };
+
+        return candidates.find(isMP4) || candidates[0];
+    }
+
     function extractGalleryItem(selectors) {
         const result = {};
 
-        const image = extractURLField(selectors?.image_url);
+        const match = firstMatch(selectors?.image_url);
+        const video = matchedVideo(match);
+        let image;
+
+        if (video) {
+            result.video = true;
+
+            const poster = video.getAttribute("poster")?.trim();
+            if (poster)
+                result.video_poster_url = absoluteURL(poster);
+
+            // an explicitly selected attribute (e.g. "//video/@src") is taken as is
+            image = match === video? pickVideoSource(video): extractURLField(selectors?.image_url);
+        }
+        else
+            image = extractURLField(selectors?.image_url);
+
         if (image)
             result.image_url = image;
 
