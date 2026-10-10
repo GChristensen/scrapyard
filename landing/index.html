@@ -19,6 +19,7 @@
     <span class="brand__name">Scrapyard</span>
   </a>
   <nav class="site-nav">
+    <a href="#storage">Storage</a>
     <a href="#features">Features</a>
     <a href="#shelves">Shelves</a>
     <a href="#notes">Notes</a>
@@ -54,7 +55,7 @@
             aria-label="Scrapyard in a browser window. On the left, the sidebar has a toolbar, a search field and a tree of shelves, folders and saved pages. On the right, the Bookmark to Scrapyard popup has a name field, a folder picker, a tags field, and Bookmark and Archive buttons."></object>
   </figure>
 
-  <div class="captions captions--2">
+  <div class="captions captions--2 captions--interface">
     <div class="caption">
       <span class="mono-label">The sidebar</span>
       <h3 class="title-sm">Browse</h3>
@@ -74,10 +75,6 @@
     <div class="mono-label eyebrow"><span class="eyebrow__num">01</span><span>What it is</span></div>
   </div>
   <p class="split__main intro__statement">Links rot. <span class="intro__statement-rest">Pages get edited, paywalled, moved or deleted. Scrapyard stores the whole page, or just the part you need, so what you saved still opens when the original doesn't.</span></p>
-  <figure class="hero__figure intro__figure">
-    <object class="diagram diagram--hero" type="image/svg+xml" data="img/hero-diagram.svg" role="img"
-            aria-label="Diagram. A plain bookmark keeps only an address, and months later that address leads to a 404. Scrapyard keeps a full copy of the page on your device, and months later it still opens, even offline."></object>
-  </figure>
   <p class="split__main mono-label intro__kinds-head">Two ways to save a page</p>
   <div class="split__main storage-grid intro__kinds">
     <div class="storage-item">
@@ -89,8 +86,22 @@
       <p class="storage-item__text">Save a copy of the page as you saw it, layout and images included. Or only a selected fragment, or a PDF. It opens offline, and after the original is gone.</p>
     </div>
   </div>
-  <p class="split__main mono-label intro__kinds-head" id="storage">Choose where archives live</p>
-  <div class="split__main storage-grid intro__storage">
+  <figure class="hero__figure intro__figure">
+    <object class="diagram diagram--hero" type="image/svg+xml" data="img/hero-diagram.svg" role="img"
+            aria-label="Diagram. A plain bookmark keeps only an address, and months later that address leads to a 404. Scrapyard keeps a full copy of the page on your device, and months later it still opens, even offline."></object>
+  </figure>
+  <p class="split__main intro__note">Either way, the page goes into a tree of folders in the sidebar. Scrapyard lets you create any number of trees, called shelves, so you can keep each subject on its own.</p>
+  <p class="split__main intro__note">Coming from the legacy ScrapBook add-on? Scrapyard can copy its RDF folders into its own storage, or open them in place and keep editing them.</p>
+</section>
+
+<!-- STORAGE -->
+<section class="section section--rule-top" id="storage">
+  <div class="section-head">
+    <div class="mono-label eyebrow"><span class="eyebrow__num">02</span><span>Storage</span></div>
+    <h2 class="section-title">Choose where archives live.</h2>
+  </div>
+
+  <div class="storage-grid storage__options">
     <div class="storage-item">
       <span class="mono-label">Filesystem</span>
       <p class="storage-item__text">Kept in a folder you choose. Needs the Scrapyard backend app on your computer.</p>
@@ -104,14 +115,17 @@
       <p class="storage-item__text">Kept inside the browser profile. No backend app needed, but only for simple use cases.</p>
     </div>
   </div>
-  <p class="split__main intro__note">Either way, the page goes into a tree of folders in the sidebar. Scrapyard lets you create any number of trees, called shelves, so you can keep each subject on its own.</p>
-  <p class="split__main intro__note">Coming from the legacy ScrapBook add-on? Scrapyard can copy its RDF folders into its own storage, or open them in place and keep editing them.</p>
+
+  <figure class="hero__figure storage__figure">
+    <object class="diagram diagram--storage" type="image/svg+xml" data="img/storage.svg" role="img"
+            aria-label="Diagram in three parts. Filesystem: the browser reaches a database on your computer through the backend app. Server: a desktop and a laptop both connect to a database on a self-hosted server. Browser storage: the database sits inside the browser window, with no backend."></object>
+  </figure>
 </section>
 
 <!-- FEATURES -->
 <section class="section section--alt" id="features">
   <div class="section-head">
-    <div class="mono-label eyebrow"><span class="eyebrow__num">02</span><span>Features</span></div>
+    <div class="mono-label eyebrow"><span class="eyebrow__num">03</span><span>Features</span></div>
     <h2 class="section-title">Four things it gets right.</h2>
   </div>
 
@@ -168,9 +182,9 @@
 <!-- SHELVES -->
 <section class="section" id="shelves">
   <div class="section-head section-head--narrow">
-    <div class="mono-label eyebrow"><span class="eyebrow__num">03</span><span>Shelves</span></div>
+    <div class="mono-label eyebrow"><span class="eyebrow__num">04</span><span>Shelves</span></div>
     <h2 class="section-title">Everything, or one thing.</h2>
-    <p class="lede">The menu above the tree picks the shelf. Leave it on everything and the tree lists all you saved; choose a subject and it narrows to that shelf alone.</p>
+    <p class="lede">The menu above the tree picks the shelf. Leave it on <span class="ui-label">everything</span> and the tree lists all you saved; choose a subject and it narrows to that shelf alone.</p>
   </div>
 
   <figure class="shelves-figure">
@@ -182,7 +196,7 @@
 <!-- NOTES -->
 <section class="section section--alt" id="notes">
   <div class="section-head section-head--narrow">
-    <div class="mono-label eyebrow"><span class="eyebrow__num">04</span><span>Notes</span></div>
+    <div class="mono-label eyebrow"><span class="eyebrow__num">05</span><span>Notes</span></div>
     <h2 class="section-title">Notes, attached or on their own.</h2>
     <p class="lede">Attach a rich text note to any bookmark or archive, or keep it as a note in its own right. Notes can hold images and tables; Markdown and Org are first-class formats, not an afterthought.</p>
   </div>
@@ -214,7 +228,7 @@
 <!-- TEXT INTERFACE (iShell) -->
 <section class="section" id="text-interface">
   <div class="section-head section-head--wide">
-    <div class="mono-label eyebrow"><span class="eyebrow__num">05</span><span>Text interface</span></div>
+    <div class="mono-label eyebrow"><span class="eyebrow__num">06</span><span>Text interface</span></div>
     <h2 class="section-title">Bookmark with a sentence.</h2>
     <p class="lede">Scrapyard also works with <a href="https://gchristensen.github.io/ishell/"><u>iShell</u></a>, a keyboard-first command prompt.
         It follows the interface principles of Jef Raskin, author of <em>The Humane Interface</em>, to cut the bookmarking down to three steps: summon the prompt with <kbd>Ctrl</kbd>+<kbd>Space</kbd>,
@@ -249,7 +263,7 @@
 <!-- USE CASES -->
 <section class="section section--ruled" id="use-cases">
   <div class="section-head section-head--narrow">
-    <div class="mono-label eyebrow"><span class="eyebrow__num">06</span><span>Use cases</span></div>
+    <div class="mono-label eyebrow"><span class="eyebrow__num">07</span><span>Use cases</span></div>
     <h2 class="section-title">Four ways to use it.</h2>
     <p class="lede">Small situations where a plain bookmark falls short.</p>
   </div>
@@ -296,7 +310,7 @@
 <!-- DEMO -->
 <section class="section section--ruled" id="demo">
   <div class="section-head section-head--narrow">
-    <div class="mono-label eyebrow"><span class="eyebrow__num">07</span><span>Demo</span></div>
+    <div class="mono-label eyebrow"><span class="eyebrow__num">08</span><span>Demo</span></div>
     <h2 class="section-title">See it in action.</h2>
     <p class="lede">A quick tour: capturing a page, editing an archive, driving Scrapyard from the text interface, and browsing it all from the Everything shelf.</p>
   </div>
@@ -329,6 +343,7 @@
     <span class="brand__name">Scrapyard</span>
   </a>
   <nav class="site-nav">
+    <a href="#storage">Storage</a>
     <a href="#features">Features</a>
     <a href="#shelves">Shelves</a>
     <a href="#notes">Notes</a>

@@ -95,6 +95,17 @@ kbd {
   white-space: nowrap;
 }
 
+/* a value as the extension shows it, drawn like the selected shelf picker in shelves.svg */
+.ui-label {
+  display: inline-block;
+  padding: 0 .4em;
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  line-height: 1.3;
+}
+
 /* ---------- layout ---------- */
 
 .section {
@@ -227,6 +238,7 @@ kbd {
 .diagram--ishell { aspect-ratio: 1200 / 640; }
 .diagram--shelves { aspect-ratio: 1320 / 850; }
 .diagram--notes { aspect-ratio: 1200 / 700; }
+.diagram--storage { aspect-ratio: 1120 / 290; }
 
 /* the isometric scene carries its own shadows: no frame, it sits on the page */
 .shelves-figure { margin: 56px 0 0; }
@@ -278,7 +290,6 @@ kbd {
 .intro__kinds-head { margin-top: 48px; }
 .intro__kinds { margin-top: 20px; }
 .storage-grid.intro__kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.intro__storage { margin-top: 20px; }
 .intro__note {
   margin-top: 32px;
   max-width: 640px;
@@ -286,6 +297,11 @@ kbd {
   line-height: 1.5;
   color: var(--ink-2);
 }
+
+/* ---------- storage ---------- */
+
+.storage__options { margin-top: 56px; }
+.storage__figure { margin-top: 56px; }
 
 /* ---------- cards (features, use cases) ---------- */
 
@@ -372,6 +388,10 @@ kbd {
 .captions { display: grid; gap: 40px; margin-top: 40px; }
 .captions--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .captions--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* under the interface picture: the second caption starts where the popup does (x 812 of the 1200-wide svg) */
+.captions--interface { grid-template-columns: minmax(0, 812fr) minmax(0, 388fr); column-gap: 0; }
+/* and the first caption's text is as wide as the sidebar (380 of the 812 the first column stands for) */
+.captions--interface .caption:first-child .caption__text { max-width: calc(380 / 812 * 100%); }
 
 .caption { display: flex; flex-direction: column; gap: 10px; }
 .caption__text { font-size: 17px; line-height: 1.55; color: var(--ink-2); }
@@ -431,7 +451,8 @@ kbd {
   .lede, .intro__note { font-size: 18px; }
   .intro__statement { font-size: 28px; }
 
-  .card-grid, .captions--2, .storage-grid, .storage-grid.intro__kinds { grid-template-columns: minmax(0, 1fr); }
+  .card-grid, .captions--2, .captions--interface, .storage-grid, .storage-grid.intro__kinds { grid-template-columns: minmax(0, 1fr); }
+  .captions--interface .caption:first-child .caption__text { max-width: 520px; }
   .card { min-height: 0; padding: 24px; }
   .subsection { padding-top: 40px; }
 

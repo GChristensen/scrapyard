@@ -30,7 +30,7 @@
      inkscape:window-maximized="1"
      inkscape:current-layer="svg130" />
   <style
-     id="style1"><![CDATA[@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");]]></style>
+     id="style1"><![CDATA[@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");#callouts{transition:opacity .25s ease;pointer-events:none}svg:not(:hover) #callouts{opacity:0}@media (prefers-reduced-motion:reduce){#callouts{transition:none}}]]></style>
   <!-- tab strip -->
   <rect
      x="0"
@@ -1363,4 +1363,379 @@
      stroke-width="1.2"
      stroke-linejoin="round"
      id="path130" />
+  <!-- callouts: shown while the pointer is over the picture -->
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Callouts"
+     id="callouts">
+    <rect
+       x="381"
+       y="93"
+       width="431"
+       height="607"
+       fill="#FFFFFF"
+       opacity="0.8"
+       id="callout-scrim" />
+    <g
+       fill="none"
+       stroke="#1D1B18"
+       stroke-width="1.3"
+       stroke-linejoin="round"
+       id="callout-lines">
+      <path
+         d="M18 152v-5h124v5M80 147V132H400"
+         id="callout-line1" />
+      <path
+         d="M186 182v4h176v-4M362 186H388V170H400"
+         id="callout-line2" />
+      <path
+         d="M362 208H400"
+         id="callout-line3" />
+      <path
+         d="M300 225V236H388V246H400"
+         id="callout-line4" />
+      <path
+         d="M116 250h4v44h-4M120 272H388V290H400"
+         id="callout-line5" />
+      <path
+         d="M176 312h4v244h-4M180 434H400"
+         id="callout-line6" />
+      <path
+         d="M366 566h4v118h-4M370 626H400"
+         id="callout-line7" />
+      <path
+         d="M832 206H796"
+         id="callout-line8" />
+      <path
+         d="M1098 256v-4h54v4M1125 252V236H796"
+         id="callout-line9" />
+      <path
+         d="M832 274H796"
+         id="callout-line10" />
+      <path
+         d="M832 466H796"
+         id="callout-line11" />
+      <path
+         d="M1140 483V494H796"
+         id="callout-line12" />
+      <path
+         d="M832 526H796"
+         id="callout-line13" />
+      <path
+         d="M1040 549V558H796"
+         id="callout-line14" />
+      <path
+         d="M1124 538V594H796"
+         id="callout-line15" />
+    </g>
+    <g
+       fill="#FF9D33"
+       stroke="#1D1B18"
+       stroke-width="1.2"
+       id="callout-dots">
+      <circle
+         cx="362"
+         cy="208"
+         r="3.2"
+         id="callout-dot3" />
+      <circle
+         cx="300"
+         cy="225"
+         r="3.2"
+         id="callout-dot4" />
+      <circle
+         cx="832"
+         cy="206"
+         r="3.2"
+         id="callout-dot8" />
+      <circle
+         cx="832"
+         cy="274"
+         r="3.2"
+         id="callout-dot10" />
+      <circle
+         cx="832"
+         cy="466"
+         r="3.2"
+         id="callout-dot11" />
+      <circle
+         cx="1140"
+         cy="483"
+         r="3.2"
+         id="callout-dot12" />
+      <circle
+         cx="832"
+         cy="526"
+         r="3.2"
+         id="callout-dot13" />
+      <circle
+         cx="1040"
+         cy="549"
+         r="3.2"
+         id="callout-dot14" />
+      <circle
+         cx="1124"
+         cy="538"
+         r="3.2"
+         id="callout-dot15" />
+    </g>
+    <g
+       id="callout-labels">
+      <rect
+         x="400"
+         y="121"
+         width="295"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill1" />
+      <text
+         x="547.5"
+         y="136"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text1">Reload · Full-text search · Settings · Help</text>
+      <rect
+         x="400"
+         y="159"
+         width="218"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill2" />
+      <text
+         x="509"
+         y="174"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text2">Shelf picker · Shelf operations menu</text>
+      <rect
+         x="400"
+         y="197"
+         width="206"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill3" />
+      <text
+         x="503"
+         y="212"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text3">Filter: title, tags, content…</text>
+      <rect
+         x="400"
+         y="235"
+         width="122"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill4" />
+      <text
+         x="461"
+         y="250"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text4">Search the shelf</text>
+      <rect
+         x="400"
+         y="279"
+         width="238"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill5" />
+      <text
+         x="519"
+         y="294"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text5">Cloud and browser-bookmark shelves</text>
+      <rect
+         x="400"
+         y="423"
+         width="174"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill6" />
+      <text
+         x="487"
+         y="438"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text6">Your shelves and folders</text>
+      <rect
+         x="400"
+         y="615"
+         width="244"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill7" />
+      <text
+         x="522"
+         y="630"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text7">Saved pages: bookmarks and archives</text>
+      <rect
+         x="648"
+         y="195"
+         width="148"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill8" />
+      <text
+         x="722"
+         y="210"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text8">Page title, editable</text>
+      <rect
+         x="635"
+         y="225"
+         width="161"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill9" />
+      <text
+         x="715.5"
+         y="240"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text9">New shelf · New folder</text>
+      <rect
+         x="654"
+         y="263"
+         width="142"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill10" />
+      <text
+         x="725"
+         y="278"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text10">Folder to save into</text>
+      <rect
+         x="750"
+         y="455"
+         width="46"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill11" />
+      <text
+         x="773"
+         y="470"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text11">Tags</text>
+      <rect
+         x="635"
+         y="483"
+         width="161"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill12" />
+      <text
+         x="715.5"
+         y="498"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text12">Save page scripts: off</text>
+      <rect
+         x="661"
+         y="515"
+         width="135"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill13" />
+      <text
+         x="728.5"
+         y="530"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text13">Save the link only</text>
+      <rect
+         x="597"
+         y="547"
+         width="199"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill14" />
+      <text
+         x="696.5"
+         y="562"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text14">Save a full copy of the page</text>
+      <rect
+         x="514"
+         y="583"
+         width="282"
+         height="22"
+         rx="11"
+         fill="#1D1B18"
+         id="callout-pill15" />
+      <text
+         x="655"
+         y="598"
+         font-family="'Instrument Sans', system-ui, sans-serif"
+         font-size="12"
+         font-weight="500"
+         text-anchor="middle"
+         fill="#FFFFFF"
+         id="callout-text15">Archive mode: this page or the whole site</text>
+    </g>
+  </g>
 </svg>

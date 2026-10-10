@@ -97,6 +97,9 @@ if (plain) {
   // attributes from their targets (the typing cursor stops moving). So SVGs containing <animate*>/<set>
   // get only cosmetic plugins that never restructure elements; verified frame by frame (0 px difference)
   // against the unminified file. Static SVGs get the full default preset.
+  // inlineStyles evaluates :hover as "never" and :not(:hover) as "always": it bakes the resting state of a
+  // hover rule into an attribute that the rule can then no longer override (and removeHiddenElems drops an
+  // element that is hidden until hovered), so it is off for SVGs with :hover in their CSS.
   const CAREFUL = ["removeDoctype", "removeXMLProcInst", "removeComments", "removeMetadata",
     "removeEditorsNSData", "cleanupAttrs", "removeUnusedNS", "cleanupNumericValues", "convertColors",
     "sortAttrs", "removeEmptyAttrs"];
@@ -104,7 +107,8 @@ if (plain) {
     multipass: true,
     plugins: /<(animate|set)\b/.test(src)
       ? CAREFUL
-      : [{ name: "preset-default", params: { overrides: { removeViewBox: false } } }],
+      : [{ name: "preset-default", params: { overrides: {
+          removeViewBox: false, ...(/:hover\b/.test(src) && { inlineStyles: false }) } } }],
   });
   const svgs = new Map();                   // url -> minified text
   for (const [, , url] of html.matchAll(/(\s(?:src|href|data)=")([^"]+\.svg)"/g)) {

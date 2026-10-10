@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 290">
+<style><![CDATA[@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");]]></style>
+
+<!-- column headers -->
+<text x="185" y="22" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">FILESYSTEM</text>
+<text x="571" y="22" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">SERVER</text>
+<text x="946" y="22" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="1" fill="#6F6A60">BROWSER STORAGE</text>
+
+<!-- column dividers -->
+<path d="M370 52V278" stroke="#E3DFD5" stroke-width="1.5" stroke-dasharray="3 5"></path>
+<path d="M773 52V278" stroke="#E3DFD5" stroke-width="1.5" stroke-dasharray="3 5"></path>
+
+<!-- FILESYSTEM: the browser reaches the archive through the backend app -->
+<g transform="translate(14 112)">
+<rect x="1" y="1" width="130" height="94" rx="9" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5"></rect>
+<path d="M1 25H131" stroke="#1D1B18" stroke-width="1.5"></path>
+<circle cx="14" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="25" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="36" cy="13" r="3" fill="#D6D0C2"></circle>
+<rect x="54" y="7" width="62" height="12" rx="6" fill="#F1EEE6"></rect>
+<rect x="14" y="39" width="57" height="9" rx="2" fill="#1D1B18"></rect>
+<rect x="14" y="58" width="104" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="70" width="89" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="14" y="82" width="97" height="5" rx="2.5" fill="#CFC9BB"></rect>
+</g>
+<path d="M154 160H188" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linejoin="round"></path>
+<path d="M180 154L188 160L180 166" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<rect x="192" y="132" width="56" height="56" rx="12" fill="#FF9D33" stroke="#1D1B18" stroke-width="1.5"></rect>
+<path d="M225.9 150.2L225.9 153.8L222.1 154.8L221.1 157.2L223.1 160.6L220.6 163.1L217.2 161.1L214.8 162.1L213.8 165.9L210.2 165.9L209.2 162.1L206.8 161.1L203.4 163.1L200.9 160.6L202.9 157.2L201.9 154.8L198.1 153.8L198.1 150.2L201.9 149.2L202.9 146.8L200.9 143.4L203.4 140.9L206.8 142.9L209.2 141.9L210.2 138.1L213.8 138.1L214.8 141.9L217.2 142.9L220.6 140.9L223.1 143.4L221.1 146.8L222.1 149.2Z" fill="#1D1B18" stroke="#1D1B18" stroke-width="1" stroke-linejoin="round"></path>
+<circle cx="212" cy="152" r="4.5" fill="#FF9D33"></circle>
+<path d="M242.4 171.4L242.4 174.6L239.6 175.4L238.4 177.5L239.1 180.3L236.3 181.9L234.2 179.9L231.8 179.9L229.7 181.9L226.9 180.3L227.6 177.5L226.4 175.4L223.6 174.6L223.6 171.4L226.4 170.6L227.6 168.5L226.9 165.7L229.7 164.1L231.8 166.1L234.2 166.1L236.3 164.1L239.1 165.7L238.4 168.5L239.6 170.6Z" fill="#1D1B18" stroke="#1D1B18" stroke-width="1" stroke-linejoin="round"></path>
+<circle cx="233" cy="173" r="3" fill="#FF9D33"></circle>
+<rect x="165" y="203" width="110" height="22" rx="11" fill="#1D1B18"></rect>
+<text x="220" y="218" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="0.6" fill="#FBFAF7">BACKEND APP</text>
+<path d="M256 160H290" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linejoin="round"></path>
+<path d="M282 154L290 160L282 166" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M296 128V194A30 9.0 0 0 0 356 194V128Z" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5" stroke-linejoin="round"></path>
+<path d="M296 150A30 9.0 0 0 0 356 150" fill="none" stroke="#1D1B18" stroke-width="1.5"></path>
+<path d="M296 172A30 9.0 0 0 0 356 172" fill="none" stroke="#1D1B18" stroke-width="1.5"></path>
+<ellipse cx="326" cy="128" rx="30" ry="9.0" fill="#FF9D33" stroke="#1D1B18" stroke-width="1.5"></ellipse>
+
+<!-- SERVER: a desktop and a laptop share one archive on a server -->
+<g transform="translate(11 0)">
+<g fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5" stroke-linejoin="round">
+<rect x="395" y="84" width="104" height="70" rx="6"></rect>
+<path d="M447 154V166M427 168H467" fill="none" stroke-linecap="round"></path>
+<rect x="401" y="194" width="92" height="58" rx="5"></rect>
+<path d="M391 252H503L509 261H385Z"></path>
+</g>
+<rect x="405" y="95" width="44" height="7" rx="2" fill="#1D1B18"></rect>
+<rect x="405" y="110" width="66" height="4" rx="2" fill="#CFC9BB"></rect>
+<rect x="405" y="120" width="54" height="4" rx="2" fill="#CFC9BB"></rect>
+<rect x="405" y="130" width="60" height="4" rx="2" fill="#CFC9BB"></rect>
+<rect x="411" y="205" width="39" height="7" rx="2" fill="#1D1B18"></rect>
+<rect x="411" y="220" width="56" height="4" rx="2" fill="#CFC9BB"></rect>
+<rect x="411" y="230" width="46" height="4" rx="2" fill="#CFC9BB"></rect>
+<rect x="411" y="240" width="52" height="4" rx="2" fill="#CFC9BB"></rect>
+<path d="M507 119H552V168H592" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linejoin="round"></path>
+<path d="M584 162L592 168L584 174" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M501 223H552V188H592" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linejoin="round"></path>
+<path d="M584 182L592 188L584 194" stroke="#1D1B18" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<rect x="600" y="104" width="96" height="132" rx="8" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5"></rect>
+<circle cx="616" cy="126" r="3.5" fill="#FF9D33" stroke="#1D1B18" stroke-width="1.2"></circle>
+<path d="M630 122H664M630 130H656" stroke="#CFC9BB" stroke-width="4" stroke-linecap="round"></path>
+<path d="M600 148H696" stroke="#1D1B18" stroke-width="1.5"></path>
+<circle cx="616" cy="170" r="3.5" fill="#FF9D33" stroke="#1D1B18" stroke-width="1.2"></circle>
+<path d="M630 166H664M630 174H656" stroke="#CFC9BB" stroke-width="4" stroke-linecap="round"></path>
+<path d="M600 192H696" stroke="#1D1B18" stroke-width="1.5"></path>
+<circle cx="616" cy="214" r="3.5" fill="#FF9D33" stroke="#1D1B18" stroke-width="1.2"></circle>
+<path d="M630 210H664M630 218H656" stroke="#CFC9BB" stroke-width="4" stroke-linecap="round"></path>
+<path d="M672 182V236A26 7.8 0 0 0 724 236V182Z" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5" stroke-linejoin="round"></path>
+<path d="M672 200A26 7.8 0 0 0 724 200" fill="none" stroke="#1D1B18" stroke-width="1.5"></path>
+<path d="M672 218A26 7.8 0 0 0 724 218" fill="none" stroke="#1D1B18" stroke-width="1.5"></path>
+<ellipse cx="698" cy="182" rx="26" ry="7.8" fill="#FF9D33" stroke="#1D1B18" stroke-width="1.5"></ellipse>
+<rect x="593" y="93" width="110" height="22" rx="11" fill="#1D1B18"></rect>
+<text x="648" y="108" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="0.6" fill="#FBFAF7">SELF-HOSTED</text>
+</g>
+
+<!-- BROWSER STORAGE: the archive lives inside the browser -->
+<g transform="translate(13 0)">
+<g transform="translate(823 80)">
+<rect x="1" y="1" width="218" height="162" rx="9" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5"></rect>
+<path d="M1 25H219" stroke="#1D1B18" stroke-width="1.5"></path>
+<circle cx="14" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="25" cy="13" r="3" fill="#D6D0C2"></circle>
+<circle cx="36" cy="13" r="3" fill="#D6D0C2"></circle>
+<rect x="54" y="7" width="150" height="12" rx="6" fill="#F1EEE6"></rect>
+</g>
+<rect x="837" y="119" width="58" height="9" rx="2" fill="#1D1B18"></rect>
+<rect x="837" y="138" width="76" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="837" y="150" width="62" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="837" y="162" width="70" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="837" y="174" width="54" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="837" y="186" width="66" height="5" rx="2.5" fill="#CFC9BB"></rect>
+<rect x="837" y="204" width="72" height="26" rx="3" fill="#E9E4D8"></rect>
+<path d="M948 128V200A32 9.6 0 0 0 1012 200V128Z" fill="#FFFFFF" stroke="#1D1B18" stroke-width="1.5" stroke-linejoin="round"></path>
+<path d="M948 152A32 9.6 0 0 0 1012 152" fill="none" stroke="#1D1B18" stroke-width="1.5"></path>
+<path d="M948 176A32 9.6 0 0 0 1012 176" fill="none" stroke="#1D1B18" stroke-width="1.5"></path>
+<ellipse cx="980" cy="128" rx="32" ry="9.6" fill="#FF9D33" stroke="#1D1B18" stroke-width="1.5"></ellipse>
+<rect x="882" y="69" width="102" height="22" rx="11" fill="#1D1B18"></rect>
+<text x="933" y="84" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="12" letter-spacing="0.6" fill="#FBFAF7">NO BACKEND</text>
+</g>
+</svg>
