@@ -462,3 +462,5 @@ kbd {
   .site-footer { height: auto; padding-block: 32px; flex-direction: column; gap: 20px; text-align: center; }
   .site-footer .site-nav { flex-wrap: wrap; justify-content: center; gap: 12px 24px; }
 }
+
+.gc-credit a { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
