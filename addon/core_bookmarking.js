@@ -293,34 +293,48 @@ receive.addNotes = message => Bookmark.addNotes(message.parent_id, message.name)
 
 receive.storeNotes = message => Bookmark.storeNotes(message.options, message.property_change);
 
+async function uploadFileContent(parentId, file) {
+    const isOrg = /\.org$/i.test(file.file_name);
+    const isMarkdown = /\.md$/i.test(file.file_name);
+    const isText = /\.txt$/i.test(file.file_name);
+
+    if (isOrg || isMarkdown || isText) {
+        const notes = await Bookmark.addNotes(parentId, file.file_name);
+        await Bookmark.storeNotes({node_id: notes.id, format: isOrg ? "org" : isMarkdown ? "markdown" : "text",
+                                   content: file.content});
+    }
+    else {
+        const contentType = file.content_type || getMimetypeByExt(file.file_name);
+        const bookmark = await Bookmark.add({uri: "", parent_id: parentId, name: file.file_name}, NODE_TYPE_ARCHIVE);
+        await Bookmark.storeArchive(bookmark, file.content, contentType);
+    }
+}
+
 receive.uploadFiles = async message => {
     send.startProcessingIndication();
 
     try {
         // content was already read in the foreground from a file picker; no backend round-trip needed
-        if (message.content !== undefined) {
-            const isOrg = /\.org$/i.test(message.file_name);
-            const isMarkdown = /\.md$/i.test(message.file_name);
-            const isText = /\.txt$/i.test(message.file_name);
+        const files = message.files
+            || (message.content !== undefined
+                    ? [{file_name: message.file_name, content: message.content, content_type: message.content_type}]
+                    : null);
 
-            let bookmark = {uri: "", parent_id: message.parent_id, name: message.file_name};
+        if (files) {
+            let uploaded = false;
 
-            try {
-                if (isOrg || isMarkdown || isText) {
-                    bookmark = await Bookmark.addNotes(message.parent_id, bookmark.name);
-                    await Bookmark.storeNotes({node_id: bookmark.id, format: isOrg ? "org" : isMarkdown ? "markdown" : "text",
-                                                content: message.content});
+            for (const file of files) {
+                try {
+                    await uploadFileContent(message.parent_id, file);
+                    uploaded = true;
+                } catch (e) {
+                    console.error(e);
+                    showNotification(`Can not upload ${file.file_name}`);
                 }
-                else {
-                    const contentType = message.content_type || getMimetypeByExt(message.file_name);
-                    bookmark = await Bookmark.add(bookmark, NODE_TYPE_ARCHIVE);
-                    await Bookmark.storeArchive(bookmark, message.content, contentType);
-                }
-                send.nodesUpdated();
-            } catch (e) {
-                console.error(e);
-                showNotification(`Can not upload ${bookmark.name}`);
             }
+
+            if (uploaded)
+                send.nodesUpdated();
 
             return;
         }

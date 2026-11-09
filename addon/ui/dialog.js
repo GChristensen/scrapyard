@@ -281,11 +281,12 @@ function showUploadDlg() {
                 return;
             }
 
-            const file = fileInput.files && fileInput.files[0];
-            if (!file)
+            const files = fileInput.files ? [...fileInput.files] : [];
+            if (!files.length)
                 return;
 
-            if (/\.html?$/i.test(file.name)) {
+            // capture with linked resources needs the full path, so it is offered only for a single HTML file
+            if (files.length === 1 && /\.html?$/i.test(files[0].name)) {
                 $dlg.hide();
                 const proceed = await confirm("Upload",
                     "Capture this page with its linked resources <br>(images, stylesheets, etc.)?<br>"
@@ -302,7 +303,7 @@ function showUploadDlg() {
             }
 
             close();
-            resolve({file});
+            resolve({files});
         });
     });
 }

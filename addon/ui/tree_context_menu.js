@@ -655,13 +655,14 @@ export function buildContextMenu(bookmarkTree, ctxJNode) {
                     return;
                 }
 
-                const file = picked.file;
-                const isOrg = /\.org$/i.test(file.name);
-                const isMarkdown = /\.md$/i.test(file.name);
-                const isText = /\.txt$/i.test(file.name);
-                const content = isOrg || isMarkdown || isText ? await file.text() : await file.arrayBuffer();
+                const files = [];
+                for (const file of picked.files) {
+                    const isText = /\.(org|md|txt)$/i.test(file.name);
+                    const content = isText ? await file.text() : await file.arrayBuffer();
+                    files.push({file_name: file.name, content, content_type: file.type});
+                }
 
-                send.uploadFiles({parent_id: ctxNode.id, file_name: file.name, content, content_type: file.type});
+                send.uploadFiles({parent_id: ctxNode.id, files});
             }
         },
         exportItem: {
