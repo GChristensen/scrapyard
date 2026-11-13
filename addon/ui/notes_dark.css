@@ -1,0 +1,296 @@
+/* Dark theme of the notes page. Active when <html> has the "dark-theme" class, set by notes_theme.js from the
+   interface theme setting. The greys are the ones sidebar_dark.css uses. */
+
+html.dark-theme {
+    --notes-chrome: #38383d;     /* tab bar, bottom bar, toolbars */
+    --notes-surface: #2a2a2e;    /* reading and editing area */
+    --notes-well: #1f1f22;       /* code blocks, text area, inputs */
+    --notes-text: #d7d7db;
+    --notes-text-strong: #f9f9fa;
+    --notes-text-muted: #b1b1b3;
+    --notes-border: #4a4a4f;
+    --notes-border-strong: #737373;
+    --notes-accent: #4fb8d6;
+    --notes-accent-tint: #1f3a42;
+    --notes-link: #6cb8ff;
+    --notes-code: #ffd28a;
+
+    color-scheme: dark;
+}
+
+html.dark-theme body {
+    background: var(--notes-surface);
+    color: var(--notes-text);
+}
+
+/* Page chrome */
+
+html.dark-theme #root-container {
+    background: var(--notes-surface);
+    color: var(--notes-text);
+}
+
+html.dark-theme #tabbar {
+    background: var(--notes-chrome);
+    border-bottom-color: var(--notes-border);
+}
+
+html.dark-theme a#notes-button, html.dark-theme a#edit-button {
+    color: var(--notes-text-muted);
+}
+
+html.dark-theme a#notes-button.focus, html.dark-theme a#edit-button.focus {
+    color: var(--notes-text-strong);
+    background: var(--notes-surface);
+    border-bottom-color: var(--notes-accent);
+}
+
+html.dark-theme #notes-for, html.dark-theme span#source-url.notes-title {
+    color: var(--notes-text-strong) !important;
+}
+
+html.dark-theme .source-url {
+    color: var(--notes-link) !important;
+}
+
+html.dark-theme #notes-error {
+    background: #4a2626;
+    color: #ffb4b4;
+    border-bottom-color: #7a3a3a;
+}
+
+html.dark-theme #bottomline {
+    background: var(--notes-chrome);
+    border-top-color: var(--notes-border);
+    color: var(--notes-text-muted);
+}
+
+html.dark-theme select {
+    background: var(--notes-surface);
+    color: var(--notes-text-strong);
+    border: 1px solid var(--notes-border-strong);
+    border-radius: 3px;
+}
+
+/* The width and font-size buttons are dark SVG icons. */
+html.dark-theme .font-button, html.dark-theme .width-button {
+    filter: invert(0.85);
+}
+
+html.dark-theme #close-button {
+    background: var(--notes-accent);
+    color: #0c0c0d;
+}
+
+/* Format rail */
+
+html.dark-theme #format-rail-title {
+    color: var(--notes-text-muted);
+}
+
+html.dark-theme .format-button {
+    color: var(--notes-text);
+}
+
+html.dark-theme .format-button:hover {
+    background: #45454b;
+}
+
+html.dark-theme .format-button[aria-pressed="true"],
+html.dark-theme .format-button[aria-pressed="true"]:disabled:hover {
+    background: var(--notes-accent-tint);
+    color: var(--notes-accent);
+    box-shadow: inset 3px 0 0 var(--notes-accent);
+}
+
+html.dark-theme .format-button:disabled:hover {
+    background: transparent;
+}
+
+html.dark-theme .format-rail-separator {
+    background: var(--notes-border);
+}
+
+/* Rendered notes */
+
+html.dark-theme #notes {
+    color: var(--notes-text);
+}
+
+html.dark-theme #notes h1, html.dark-theme #notes h2, html.dark-theme #notes h3,
+html.dark-theme #notes h4, html.dark-theme #notes h5, html.dark-theme #notes h6 {
+    color: var(--notes-text-strong);
+}
+
+html.dark-theme a, html.dark-theme a:visited,
+html.dark-theme .ql-snow a {
+    color: var(--notes-link);
+}
+
+html.dark-theme #notes code, html.dark-theme .ql-snow .ql-editor code {
+    background-color: var(--notes-well);
+    color: var(--notes-code);
+}
+
+html.dark-theme pre, html.dark-theme .ql-snow .ql-editor pre {
+    background-color: var(--notes-well);
+    color: var(--notes-text);
+    border-color: var(--notes-border);
+}
+
+html.dark-theme pre code, html.dark-theme .ql-snow .ql-editor pre code {
+    background-color: inherit;
+    color: inherit;
+}
+
+html.dark-theme pre.plaintext {
+    background-color: transparent;
+}
+
+html.dark-theme .ql-snow .ql-editor pre.ql-syntax {
+    background-color: var(--notes-well);
+    color: var(--notes-text);
+}
+
+html.dark-theme blockquote, html.dark-theme .ql-snow .ql-editor blockquote {
+    border-left-color: var(--notes-border-strong);
+    color: var(--notes-text-muted);
+}
+
+html.dark-theme hr {
+    border-color: var(--notes-border);
+}
+
+html.dark-theme table {
+    border-color: var(--notes-border);
+}
+
+html.dark-theme table th, html.dark-theme table td,
+html.dark-theme table tr + tr td, html.dark-theme table th + th, html.dark-theme table td + td {
+    border-color: var(--notes-border);
+}
+
+html.dark-theme .zebra-striped tbody tr:nth-child(odd) td {
+    background-color: #313136;
+}
+
+html.dark-theme .zebra-striped tbody tr:hover td {
+    background-color: #3a3a40;
+}
+
+html.dark-theme .section-number {
+    color: var(--notes-link);
+}
+
+/* Quill editor and the markup toolbar (which reuses Quill's toolbar classes) */
+
+html.dark-theme .ql-toolbar.ql-snow {
+    background: var(--notes-chrome);
+    border-color: var(--notes-border);
+}
+
+html.dark-theme .ql-container.ql-snow {
+    border-color: var(--notes-border);
+}
+
+html.dark-theme .ql-editor.ql-blank::before {
+    color: var(--notes-text-muted);
+}
+
+html.dark-theme .ql-snow .ql-stroke,
+html.dark-theme .ql-snow .ql-stroke-miter {
+    stroke: var(--notes-text);
+}
+
+html.dark-theme .ql-snow .ql-fill,
+html.dark-theme .ql-snow .ql-stroke.ql-fill {
+    fill: var(--notes-text);
+}
+
+html.dark-theme .ql-snow .ql-picker,
+html.dark-theme #markup-toolbar .markup-heading-btn {
+    color: var(--notes-text);
+}
+
+html.dark-theme .ql-snow.ql-toolbar button:hover .ql-stroke,
+html.dark-theme .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-item:hover .ql-stroke,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke {
+    stroke: var(--notes-accent);
+}
+
+html.dark-theme .ql-snow.ql-toolbar button:hover .ql-fill,
+html.dark-theme .ql-snow.ql-toolbar button.ql-active .ql-fill,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-label:hover .ql-fill,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-fill,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-item:hover .ql-fill,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-fill {
+    fill: var(--notes-accent);
+}
+
+html.dark-theme .ql-snow.ql-toolbar button:hover,
+html.dark-theme .ql-snow.ql-toolbar button.ql-active,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-label:hover,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-label.ql-active,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-item:hover,
+html.dark-theme .ql-snow.ql-toolbar .ql-picker-item.ql-selected,
+html.dark-theme #markup-toolbar .markup-heading-btn:hover {
+    color: var(--notes-accent);
+}
+
+html.dark-theme .ql-snow .ql-picker.ql-expanded .ql-picker-label {
+    color: var(--notes-text-muted);
+}
+
+html.dark-theme .ql-snow .ql-picker-options {
+    background-color: var(--notes-chrome);
+}
+
+html.dark-theme .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label,
+html.dark-theme .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options {
+    border-color: var(--notes-border-strong);
+}
+
+html.dark-theme .ql-snow .ql-tooltip {
+    background-color: var(--notes-chrome);
+    border-color: var(--notes-border-strong);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    color: var(--notes-text);
+}
+
+html.dark-theme .ql-snow .ql-tooltip input[type=text] {
+    background: var(--notes-well);
+    color: var(--notes-text);
+    border-color: var(--notes-border-strong);
+}
+
+html.dark-theme .ql-snow .ql-tooltip a.ql-action::after {
+    border-right-color: var(--notes-border-strong);
+}
+
+/* Toolbar icons that are background images (HTML source, horizontal rule) */
+html.dark-theme button.ql-showHtml, html.dark-theme button.ql-hr {
+    filter: invert(0.85);
+}
+
+/* Source editors */
+
+html.dark-theme textarea, html.dark-theme .quill-html-editor {
+    background: var(--notes-well);
+    color: var(--notes-text);
+    caret-color: var(--notes-accent);
+}
+
+html.dark-theme textarea {
+    border-color: var(--notes-border-strong);
+}
+
+html.dark-theme textarea:focus {
+    border-color: var(--notes-accent);
+}
+
+html.dark-theme #editor-container:has(#markup-toolbar) #editor {
+    border-color: var(--notes-border);
+}

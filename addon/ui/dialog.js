@@ -247,65 +247,80 @@ function confirm(title, message) {
     return showDlg("confirm", {title, message});
 }
 
-function showUploadDlg() {
-    if ($(".dlg-dim:visible").length)
-        return;
+// Opens the native file dialog. Must be called synchronously from a user gesture handler (before any await),
+// otherwise the browser blocks the picker.
+function pickFiles() {
+    return new Promise(resolve => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.multiple = true;
+        input.style.display = "none";
 
+        const finish = files => {
+            input.remove();
+            resolve(files);
+        };
+
+        input.addEventListener("change", () => finish([...input.files]));
+        input.addEventListener("cancel", () => finish([]));
+
+        // kept in the document while the picker is open, so the input is not collected before it reports back
+        document.body.appendChild(input);
+        input.click();
+    });
+}
+
+function showUploadPathDlg() {
     let $dlg = $(".dlg-dim.dlg-upload").clone().prependTo(document.body);
     $dlg.show();
 
-    const fileRow = $dlg.find("#upload-file-row");
-    const pathRow = $dlg.find("#upload-path-row");
-    const fileInput = $dlg.find("#upload-file-input")[0];
     const pathInput = $dlg.find("#upload-path-input")[0];
-
-    const close = () => $dlg.remove();
+    pathInput.value = "";
+    pathInput.focus();
 
     return new Promise(resolve => {
-        $dlg.find("input.button-cancel").bind("click.dlg", () => {
-            close();
-            resolve(null);
-        });
+        const close = result => {
+            $dlg.remove();
+            resolve(result);
+        };
+
+        $dlg.find("input.button-cancel").bind("click.dlg", () => close(null));
 
         $dlg.find("input.dialog-input").bind("keydown.dlg", ev => {
             if (ev.key === "Enter")
                 $dlg.find("input.button-ok").trigger("click");
+            else if (ev.key === "Escape")
+                close(null);
         });
 
-        $dlg.find("input.button-ok").bind("click.dlg", async () => {
-            if (pathRow.is(":visible")) {
-                if (pathInput.value) {
-                    close();
-                    resolve({path: pathInput.value});
-                }
-                return;
-            }
-
-            const files = fileInput.files ? [...fileInput.files] : [];
-            if (!files.length)
-                return;
-
-            // capture with linked resources needs the full path, so it is offered only for a single HTML file
-            if (files.length === 1 && /\.html?$/i.test(files[0].name)) {
-                $dlg.hide();
-                const proceed = await confirm("Upload",
-                    "Capture this page with its linked resources <br>(images, stylesheets, etc.)?<br>"
-                    + "This requires the full path of the file.");
-
-                if (proceed) {
-                    fileRow.hide();
-                    pathRow.show();
-                    pathInput.value = "";
-                    $dlg.show();
-                    pathInput.focus();
-                    return;
-                }
-            }
-
-            close();
-            resolve({files});
+        $dlg.find("input.button-ok").bind("click.dlg", () => {
+            if (pathInput.value)
+                close({path: pathInput.value});
         });
     });
+}
+
+// Shows the native file dialog right away. An HTML dialog appears only when the full path of a single
+// HTML file is needed to capture it with its linked resources (the browser does not expose the path of a picked file).
+async function showUploadDlg() {
+    if ($(".dlg-dim:visible").length)
+        return null;
+
+    const files = await pickFiles();
+
+    if (!files.length)
+        return null;
+
+    if (files.length === 1 && /\.html?$/i.test(files[0].name)) {
+        const proceed = await confirm("Upload",
+            "Capture this page with its linked resources <br>(images, stylesheets, etc.)?<br>"
+            + "This requires the full path of the file.");
+
+        if (proceed)
+            return showUploadPathDlg();
+    }
+
+    return {files};
 }
 
 export {showDlg, alert, confirm, showUploadDlg}
