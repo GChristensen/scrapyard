@@ -31,6 +31,19 @@ const isLocal = (url) => !/^([a-z][a-z0-9+.-]*:|\/|#)/i.test(url);
 const bytes = (s) => Buffer.byteLength(s, "utf8");
 const read = (rel) => readFile(path.join(here, rel), "utf8");
 
+// Fonts referenced by url() in a local stylesheet are embedded as data: URIs.
+const fontTypes = { woff2: "font/woff2", woff: "font/woff", ttf: "font/ttf", otf: "font/otf" };
+async function inlineFonts(cssUrl, css) {
+  const re = /url\(\s*(['"]?)([^'")]+\.(woff2?|ttf|otf))\1\s*\)/gi;
+  const data = new Map();
+  for (const [, , ref, ext] of css.matchAll(re)) {
+    if (/^([a-z]+:)?\/\//i.test(ref) || ref.startsWith("data:") || data.has(ref)) continue;
+    const file = await readFile(path.join(here, path.dirname(cssUrl), ref));
+    data.set(ref, `data:${fontTypes[ext.toLowerCase()]};base64,${file.toString("base64")}`);
+  }
+  return css.replace(re, (m, q, ref) => data.has(ref) ? `url(${data.get(ref)})` : m);
+}
+
 // Rewrites every local src/href/data attribute. fn(url, attr) returns the new value.
 const mapUrls = (html, fn) =>
   html.replace(/(\s(src|href|data)=")([^"]+)(")/g,
@@ -49,7 +62,7 @@ if (plain) {
   await writeFile(path.join(outDir, "index.html"), html, "utf8");
   // a custom --out has no landing/ next to it: bring the assets along
   if (path.resolve(outDir, "landing") !== here) {
-    for (const f of ["styles.css", "main.js", "img"])
+    for (const f of ["fonts", "styles.css", "main.js", "img"])
       await cp(path.join(here, f), path.join(outDir, "landing", f), { recursive: true });
     log.push(`  + landing/{styles.css,main.js,img/} copied to ${path.join(outDir, "landing")}`);
   }
@@ -63,7 +76,7 @@ if (plain) {
   const styles = new Map();
   for (const [, url] of html.matchAll(linkRe)) {
     if (!isLocal(url) || styles.has(url)) continue;
-    const css = await read(url);
+    const css = await inlineFonts(url, await read(url));
     if (/url\(\s*['"]?(?![a-z]+:|#)/i.test(css))
       throw new Error(`${url}: relative url() references are not supported by the inliner`);
     styles.set(url, css);
